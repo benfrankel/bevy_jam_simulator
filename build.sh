@@ -3,7 +3,7 @@
 set -u
 shopt -s globstar
 
-NAME='bevy_jam_template'
+NAME='bevy_jam4'
 BUILD_DIR='build'
 
 function usage() {

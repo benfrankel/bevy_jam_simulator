@@ -777,7 +777,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "bevy_jam_template"
+name = "bevy_jam4"
 version = "0.1.0"
 dependencies = [
  "bevy",

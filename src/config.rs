@@ -42,7 +42,7 @@ impl Plugin for ConfigPlugin {
     }
 }
 
-const WINDOW_TITLE: &str = "bevy_jam_template";
+const WINDOW_TITLE: &str = "bevy_jam4";
 
 // TODO: DevConfig
 #[derive(Resource, Reflect, Serialize, Deserialize)]
