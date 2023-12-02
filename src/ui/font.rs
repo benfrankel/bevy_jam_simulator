@@ -8,7 +8,7 @@ impl Plugin for FontPlugin {
         load_internal_binary_asset!(
             app,
             FONT_HANDLE,
-            "../../assets/font/DungeonFont.ttf",
+            "../../assets/font/Kenney/Kenney Future.ttf",
             |bytes: &[u8], _path: String| Font::try_from_bytes(bytes.to_vec()).unwrap()
         );
     }
