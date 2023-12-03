@@ -8,6 +8,7 @@ use crate::state::game::GameAssets;
 use crate::state::AppState;
 use crate::state::AppState::*;
 use crate::ui::vh;
+use crate::ui::vmin;
 use crate::ui::vw;
 use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
@@ -43,13 +44,13 @@ const BOLD_TEXT_STYLE: TextStyle = TextStyle {
 
 const BACKGROUND_COLOR: Color = Color::rgb(0.580, 0.682, 0.839);
 const BORDER_COLOR: Color = Color::rgb(0.510, 0.612, 0.769);
-const BORDER_WIDTH: f32 = 1.5;
+const BORDER_WIDTH: Val = Val::VMin(1.0);
 
-const HEADER_BACKGROUND_COLOR: Color = Color::rgb(0.549, 0.647, 0.796);
-const HEADER_FONT_SIZE: f32 = 12.0;
-const HEADER_TEXT: &str = "Bevy Jam #4: The Game";
+const TITLE_BACKGROUND_COLOR: Color = Color::rgb(0.549, 0.647, 0.796);
+const TITLE_FONT_SIZE: Val = Val::Vw(4.5);
+const TITLE_TEXT: &str = "Bevy Jam #4: The Game";
 
-const BODY_FONT_SIZE: f32 = 7.0;
+const BODY_FONT_SIZE: Val = Val::Vw(2.2);
 const BODY_TEXT: &str = "Welcome to the fourth official Bevy Jam!\n \nIn this 9 day event, your goal is to make a game in Bevy Engine,\nthe free and open-source game engine built in Rust.\n \nThe theme is: That's a LOT of Entities!";
 const THEME: &str = "That's a LOT of Entities!";
 
@@ -58,7 +59,7 @@ const BUTTON_TEXT_STYLE: TextStyle = TextStyle {
     font_size: 0.0,
     color: Color::WHITE,
 };
-const BUTTON_FONT_SIZE: f32 = 12.0;
+const BUTTON_FONT_SIZE: Val = Val::Vw(4.5);
 const BUTTON_NORMAL_COLOR: Color = Color::rgb(0.000, 0.188, 0.702);
 const BUTTON_HOVERED_COLOR: Color = Color::rgb(0.039, 0.227, 0.741);
 const BUTTON_PRESSED_COLOR: Color = Color::rgb(0.000, 0.176, 0.690);
@@ -78,9 +79,9 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                 style: Style {
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
-                    padding: UiRect::axes(Val::VMin(3.5), Val::VMin(3.5)),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
+                    padding: UiRect::all(vmin(4.5)),
                     ..default()
                 },
                 background_color: BACKGROUND_COLOR.into(),
@@ -98,7 +99,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
                     align_items: AlignItems::Center,
-                    border: UiRect::axes(vw(BORDER_WIDTH), vh(BORDER_WIDTH)),
+                    border: UiRect::all(BORDER_WIDTH),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
@@ -110,20 +111,20 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
         .set_parent(screen)
         .id();
 
-    let header_container = commands
+    let title_container = commands
         .spawn((
-            Name::new("HeaderContainer"),
+            Name::new("TitleContainer"),
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: vh(40.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    border: UiRect::bottom(vh(BORDER_WIDTH)),
+                    padding: UiRect::vertical(vh(8.0)),
+                    border: UiRect::bottom(BORDER_WIDTH),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: HEADER_BACKGROUND_COLOR.into(),
+                background_color: TITLE_BACKGROUND_COLOR.into(),
                 border_color: BORDER_COLOR.into(),
                 ..default()
             },
@@ -133,12 +134,12 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
 
     commands
         .spawn((
-            Name::new("HeaderText"),
-            TextBundle::from_section(HEADER_TEXT, BOLD_TEXT_STYLE)
+            Name::new("TitleText"),
+            TextBundle::from_section(TITLE_TEXT, BOLD_TEXT_STYLE)
                 .with_text_alignment(TextAlignment::Center),
-            FontSize::new(vh(HEADER_FONT_SIZE)),
+            FontSize::new(TITLE_FONT_SIZE),
         ))
-        .set_parent(header_container);
+        .set_parent(title_container);
 
     let body_container = commands
         .spawn((
@@ -173,7 +174,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             .spawn((
                 Name::new(format!("BodyTextLine{}", i)),
                 TextBundle::from_sections(sections),
-                FontSize::new(vh(BODY_FONT_SIZE)),
+                FontSize::new(BODY_FONT_SIZE),
             ))
             .set_parent(body_container);
     }
@@ -185,7 +186,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                 style: Style {
                     margin: UiRect::top(vh(12.0)),
                     padding: UiRect::axes(vw(10.0), vh(6.0)),
-                    border: UiRect::axes(vw(BORDER_WIDTH), vh(BORDER_WIDTH)),
+                    border: UiRect::all(BORDER_WIDTH),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
@@ -208,7 +209,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
         .spawn((
             Name::new("JoinButtonText"),
             TextBundle::from_section("Join", BUTTON_TEXT_STYLE),
-            FontSize::new(vh(BUTTON_FONT_SIZE)),
+            FontSize::new(BUTTON_FONT_SIZE),
         ))
         .set_parent(join_button);
 }

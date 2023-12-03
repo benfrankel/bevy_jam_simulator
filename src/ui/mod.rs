@@ -17,13 +17,14 @@ impl Plugin for UiPlugin {
     }
 }
 
-pub const VH_UNIT: Val = Val::Vh(100.0 / CAMERA_HEIGHT);
-pub const VW_UNIT: Val = Val::Vw(100.0 / CAMERA_WIDTH);
-
 pub fn vw(units: f32) -> Val {
-    VW_UNIT * units
+    Val::Vw(100.0 / CAMERA_WIDTH * units)
 }
 
 pub fn vh(units: f32) -> Val {
-    VH_UNIT * units
+    Val::Vh(100.0 / CAMERA_HEIGHT * units)
+}
+
+pub fn vmin(units: f32) -> Val {
+    Val::VMin(100.0 / CAMERA_HEIGHT * units)
 }
