@@ -6,7 +6,7 @@ use iyes_progress::prelude::*;
 use crate::config::Config;
 use crate::state::game::GameAssets;
 use crate::state::AppState::*;
-use crate::ui::FONT_HANDLE;
+use crate::ui::BOLD_FONT_HANDLE;
 use crate::AppRoot;
 
 pub struct LoadingScreenStatePlugin;
@@ -76,7 +76,7 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
                     text: Text::from_section(
                         "Loading...",
                         TextStyle {
-                            font: FONT_HANDLE,
+                            font: BOLD_FONT_HANDLE,
                             font_size: 64.0,
                             color: config.fg_color,
                         },

@@ -7,7 +7,7 @@ use leafwing_input_manager::prelude::*;
 use crate::config::Config;
 use crate::state::AppState;
 use crate::state::AppState::*;
-use crate::ui::FONT_HANDLE;
+use crate::ui::BOLD_FONT_HANDLE;
 use crate::AppRoot;
 
 pub struct EndScreenStatePlugin;
@@ -34,7 +34,7 @@ impl Plugin for EndScreenStatePlugin {
 #[reflect(Resource)]
 pub struct EndScreenAssets {}
 
-#[derive(Actionlike, Reflect, Clone)]
+#[derive(Actionlike, Reflect, PartialEq, Eq, Hash, Clone)]
 enum EndScreenAction {
     Restart,
     Quit,
@@ -81,7 +81,7 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Conf
                 text: Text::from_section(
                     "The End",
                     TextStyle {
-                        font: FONT_HANDLE,
+                        font: BOLD_FONT_HANDLE,
                         font_size: 64.0,
                         color: config.fg_color,
                     },

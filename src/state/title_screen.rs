@@ -9,6 +9,10 @@ use crate::config::Config;
 use crate::state::game::GameAssets;
 use crate::state::AppState;
 use crate::state::AppState::*;
+use crate::ui::vh;
+use crate::ui::vw;
+use crate::ui::FontSize;
+use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
 use crate::AppRoot;
 
@@ -37,13 +41,32 @@ impl Plugin for TitleScreenStatePlugin {
     }
 }
 
-const TITLE: &str = "bevy_jam4";
+const TEXT_COLOR: Color = Color::rgb(0.149, 0.149, 0.149);
+const TEXT_STYLE: TextStyle = TextStyle {
+    font: FONT_HANDLE,
+    font_size: 0.0,
+    color: TEXT_COLOR,
+};
+const BOLD_TEXT_STYLE: TextStyle = TextStyle {
+    font: BOLD_FONT_HANDLE,
+    font_size: 0.0,
+    color: TEXT_COLOR,
+};
+const BORDER_COLOR: Color = Color::rgb(0.510, 0.612, 0.769);
+const BORDER_WIDTH: f32 = 2.0;
+const BACKGROUND_COLOR: Color = Color::rgb(0.580, 0.682, 0.839);
+const HEADER_BACKGROUND_COLOR: Color = Color::rgb(0.549, 0.647, 0.796);
+const HEADER_FONT_SIZE: f32 = 12.0;
+const HEADER_TEXT: &str = "Bevy Jam #4: The Game";
+const BODY_FONT_SIZE: f32 = 7.0;
+const BODY_TEXT: &str = "Welcome to the fourth official Bevy Jam!\n \nIn this 9 day event, your goal is to make a game in Bevy Engine,\nthe free and open-source game engine built in Rust.\n \nThe theme is: That's a LOT of Entities!";
+const THEME: &str = "That's a LOT of Entities!";
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct TitleScreenAssets {}
 
-#[derive(Actionlike, Reflect, Clone)]
+#[derive(Actionlike, Reflect, PartialEq, Eq, Hash, Clone)]
 enum TitleScreenAction {
     Start,
     Quit,
@@ -78,27 +101,99 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
         .set_parent(root.ui)
         .id();
 
-    commands
+    let container = commands
         .spawn((
-            Name::new("Title"),
-            TextBundle {
+            Name::new("Container"),
+            NodeBundle {
                 style: Style {
-                    margin: UiRect::new(Val::Auto, Val::Auto, Val::Percent(5.0), Val::Auto),
-                    height: Val::Percent(8.0),
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    border: UiRect::axes(vw(BORDER_WIDTH), vh(BORDER_WIDTH)),
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                text: Text::from_section(
-                    TITLE,
-                    TextStyle {
-                        font: FONT_HANDLE,
-                        font_size: 64.0,
-                        color: config.fg_color,
-                    },
-                ),
+                background_color: BackgroundColor(BACKGROUND_COLOR),
+                border_color: BorderColor(BORDER_COLOR),
                 ..default()
             },
         ))
-        .set_parent(screen);
+        .set_parent(screen)
+        .id();
+
+    let header_container = commands
+        .spawn((
+            Name::new("HeaderContainer"),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: vh(40.0),
+                    align_items: AlignItems::Center,
+                    justify_items: JustifyItems::Center,
+                    align_content: AlignContent::Center,
+                    justify_content: JustifyContent::Center,
+                    border: UiRect::bottom(vh(BORDER_WIDTH)),
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+                background_color: BackgroundColor(HEADER_BACKGROUND_COLOR),
+                border_color: BorderColor(BORDER_COLOR),
+                ..default()
+            },
+        ))
+        .set_parent(container)
+        .id();
+
+    commands
+        .spawn((
+            Name::new("HeaderText"),
+            TextBundle {
+                text: Text::from_section(HEADER_TEXT, BOLD_TEXT_STYLE)
+                    .with_alignment(TextAlignment::Center),
+                ..default()
+            },
+            FontSize::new(vh(HEADER_FONT_SIZE)),
+        ))
+        .set_parent(header_container);
+
+    let body_container = commands
+        .spawn((
+            Name::new("BodyContainer"),
+            NodeBundle {
+                style: Style {
+                    align_items: AlignItems::Center,
+                    justify_items: JustifyItems::Center,
+                    align_content: AlignContent::Center,
+                    justify_content: JustifyContent::Center,
+                    margin: UiRect::axes(vw(6.0), vh(9.0)),
+                    flex_direction: FlexDirection::Column,
+                    row_gap: vh(2.5),
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(container)
+        .id();
+
+    // Ugly workaround to be able to customize line spacing
+    for (i, line) in BODY_TEXT.lines().enumerate() {
+        // Ugly workaround to put the theme in bold
+        let mut sections = vec![];
+        for (j, section) in line.split(THEME).enumerate() {
+            sections.push(TextSection::new(section, TEXT_STYLE));
+            if j > 0 {
+                sections.push(TextSection::new(THEME, BOLD_TEXT_STYLE));
+            }
+        }
+
+        commands
+            .spawn((
+                Name::new(format!("BodyTextLine{}", i)),
+                TextBundle::from_sections(sections),
+                FontSize::new(vh(BODY_FONT_SIZE)),
+            ))
+            .set_parent(body_container);
+    }
 }
 
 fn exit_title_screen(mut commands: Commands, root: Res<AppRoot>) {
@@ -113,7 +208,7 @@ fn title_screen_action_start(
 ) {
     // Show loading screen only if assets are still loading
     let Progress { done, total } = progress.progress_complete();
-    next_state.set(if done >= total { Game } else { LoadingScreen });
+    //next_state.set(if done >= total { Game } else { LoadingScreen });
 }
 
 fn title_screen_action_quit(mut app_exit: EventWriter<AppExit>) {

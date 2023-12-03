@@ -98,7 +98,7 @@ impl Plugin for DebugPlugin {
         // Editor
         if self.editor {
             app.add_plugins(EditorPlugin::new().in_new_window(Window {
-                mode: WindowMode::BorderlessFullscreen,
+                mode: WindowMode::Windowed,
                 title: "bevy_editor_pls".to_string(),
                 focused: false,
                 ..default()

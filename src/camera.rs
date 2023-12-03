@@ -12,6 +12,9 @@ impl Plugin for CameraPlugin {
     }
 }
 
+pub const CAMERA_WIDTH: f32 = 320.0;
+pub const CAMERA_HEIGHT: f32 = 180.0;
+
 fn spawn_camera(mut commands: Commands, mut root: ResMut<AppRoot>) {
     root.camera = commands
         .spawn((
@@ -19,9 +22,9 @@ fn spawn_camera(mut commands: Commands, mut root: ResMut<AppRoot>) {
             Camera2dBundle {
                 projection: OrthographicProjection {
                     near: -1000.0,
-                    scaling_mode: ScalingMode::AutoMax {
-                        max_width: 1920.0,
-                        max_height: 1080.0,
+                    scaling_mode: ScalingMode::Fixed {
+                        width: CAMERA_WIDTH,
+                        height: CAMERA_HEIGHT,
                     },
                     ..default()
                 },
