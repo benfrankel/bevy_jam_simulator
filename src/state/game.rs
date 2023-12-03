@@ -7,8 +7,8 @@ use crate::ui::BOLD_FONT_HANDLE;
 use crate::AppRoot;
 
 mod code_view;
-
 mod entity_view;
+mod systems_view;
 
 pub struct GameStatePlugin;
 
@@ -24,6 +24,7 @@ impl Plugin for GameStatePlugin {
                     code_view::typing_system,
                     code_view::update_bar,
                     entity_view::update_bar,
+                    systems_view::button_color_system,
                 )
                     .run_if(in_state(Game)),
             );
@@ -42,6 +43,11 @@ const TOP_BAR_BACKGROUND_COLOR: Color = Color::rgb(0.165, 0.18, 0.184);
 const TOP_BAR_SEPARATOR_COLOR: Color = Color::rgb(0.510, 0.612, 0.769);
 const TOP_BAR_SEPARATOR_WIDTH: f32 = 1.5;
 
+// The sum of the following should add up to 100.0.
+const CODE_VIEW_WIDTH: f32 = 35.0;
+const ENTITY_VIEW_WIDTH: f32 = 45.0;
+const SYSTEMS_VIEW_WIDTH: f32 = 30.0;
+
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct GameAssets {}
@@ -50,6 +56,7 @@ fn enter_game(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
     commands.insert_resource(ClearColor(config.bg_color));
     code_view::init(&mut commands, &root);
     entity_view::init(&mut commands, &root);
+    systems_view::init(&mut commands, &root);
 }
 
 fn exit_game(root: Res<AppRoot>, mut transform_query: Query<&mut Transform>) {
