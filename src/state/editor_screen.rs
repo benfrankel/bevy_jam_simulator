@@ -10,14 +10,14 @@ mod code_view;
 mod entity_view;
 mod systems_view;
 
-pub struct GameStatePlugin;
+pub struct EditorScreenStatePlugin;
 
-impl Plugin for GameStatePlugin {
+impl Plugin for EditorScreenStatePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<GameAssets>()
-            .init_collection::<GameAssets>()
-            .add_systems(OnEnter(Game), enter_game)
-            .add_systems(OnExit(Game), exit_game)
+        app.register_type::<EditorScreenAssets>()
+            .init_collection::<EditorScreenAssets>()
+            .add_systems(OnEnter(EditorScreen), enter_editor_screen)
+            .add_systems(OnExit(EditorScreen), exit_editor_screen)
             .add_systems(
                 Update,
                 (
@@ -26,7 +26,7 @@ impl Plugin for GameStatePlugin {
                     entity_view::update_bar,
                     systems_view::button_color_system,
                 )
-                    .run_if(in_state(Game)),
+                    .run_if(in_state(EditorScreen)),
             );
     }
 }
@@ -50,16 +50,16 @@ const SYSTEMS_VIEW_WIDTH: f32 = 25.0;
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
-pub struct GameAssets {}
+pub struct EditorScreenAssets {}
 
-fn enter_game(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
-    commands.insert_resource(ClearColor(config.bg_color));
+fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config>) {
+    commands.insert_resource(ClearColor(Color::BLACK));
     code_view::init(&mut commands, &root);
     entity_view::init(&mut commands, &root);
     systems_view::init(&mut commands, &root);
 }
 
-fn exit_game(root: Res<AppRoot>, mut transform_query: Query<&mut Transform>) {
+fn exit_editor_screen(root: Res<AppRoot>, mut transform_query: Query<&mut Transform>) {
     let Ok(mut transform) = transform_query.get_mut(root.camera) else {
         return;
     };

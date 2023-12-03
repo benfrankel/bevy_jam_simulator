@@ -1,6 +1,23 @@
 (
     window_mode: Windowed,
     present_mode: AutoVsync,
-    fg_color: Rgba(red: 0.925, green: 0.925, blue: 0.925, alpha: 1.0),
-    bg_color: Rgba(red: 0.157, green: 0.157, blue: 0.157, alpha: 1.0),
+
+    title_screen: TitleScreenConfig(
+        text_color: Rgba(red: 0.149, green: 0.149, blue: 0.149, alpha: 1.000),
+        border_color: Rgba(red: 0.510, green: 0.612, blue: 0.769, alpha: 1.000),
+        border_width: VMin(1.0),
+        background_color: Rgba(red: 0.580, green: 0.682, blue: 0.839, alpha: 1.000),
+
+        title_background_color: Rgba(red: 0.549, green: 0.647, blue: 0.796, alpha: 1.000),
+        title_font_size: Vw(4.5),
+
+        body_font_size: Vw(2.2),
+
+        button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
+        button_font_size: Vw(4.5),
+        button_border_color: Rgba(red: 0.118, green: 0.306, blue: 0.820, alpha: 1.000),
+        button_normal_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
+        button_hovered_color: Rgba(red: 0.039, green: 0.227, blue: 0.741, alpha: 1.000),
+        button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
+    ),
 )

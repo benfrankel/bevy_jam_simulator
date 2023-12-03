@@ -8,6 +8,8 @@ use serde::Deserialize;
 use serde::Serialize;
 use tap::TapFallible;
 
+use crate::state::title_screen::TitleScreenConfig;
+
 pub struct ConfigPlugin;
 
 impl Plugin for ConfigPlugin {
@@ -50,9 +52,11 @@ const WINDOW_TITLE: &str = "bevy_jam4";
 pub struct Config {
     pub window_mode: WindowMode,
     pub present_mode: PresentMode,
-    // TODO: Color palette
-    pub fg_color: Color,
-    pub bg_color: Color,
+    //pub splash_screen: SplashScreenConfig,
+    pub title_screen: TitleScreenConfig,
+    //pub loading_screen: LoadingScreenConfig,
+    //pub editor_screen: EditorScreenConfig,
+    //pub end_screen: EndScreenConfig,
     // TODO: Volume
     // TODO: Mute when out of focus
     // TODO: Keybindings
@@ -63,17 +67,12 @@ impl Default for Config {
         Self {
             window_mode: WindowMode::BorderlessFullscreen,
             present_mode: PresentMode::AutoVsync,
-            fg_color: Color::WHITE,
-            bg_color: Color::BLACK,
+            title_screen: default(),
         }
     }
 }
 
-fn apply_config(
-    config: Res<Config>,
-    mut clear_color: ResMut<ClearColor>,
-    mut window_query: Query<&mut Window, With<PrimaryWindow>>,
-) {
+fn apply_config(config: Res<Config>, mut window_query: Query<&mut Window, With<PrimaryWindow>>) {
     info!("Applying config");
 
     if let Ok(mut window) = window_query.get_single_mut() {
@@ -81,5 +80,5 @@ fn apply_config(
         window.present_mode = config.present_mode;
     }
 
-    clear_color.0 = config.bg_color;
+    // TODO: Implement the rest (not important for game jam)
 }

@@ -4,7 +4,7 @@ use bevy_asset_loader::prelude::*;
 use iyes_progress::prelude::*;
 
 use crate::config::Config;
-use crate::state::game::GameAssets;
+use crate::state::editor_screen::EditorScreenAssets;
 use crate::state::AppState::*;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::AppRoot;
@@ -15,8 +15,8 @@ impl Plugin for LoadingScreenStatePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<IsLoadingBarFill>()
             .add_loading_state(LoadingState::new(LoadingScreen))
-            .add_collection_to_loading_state::<_, GameAssets>(LoadingScreen)
-            .add_plugins(ProgressPlugin::new(LoadingScreen).continue_to(Game))
+            .add_collection_to_loading_state::<_, EditorScreenAssets>(LoadingScreen)
+            .add_plugins(ProgressPlugin::new(LoadingScreen).continue_to(EditorScreen))
             .add_systems(OnEnter(LoadingScreen), enter_loading)
             .add_systems(OnExit(LoadingScreen), exit_loading)
             .add_systems(
@@ -31,8 +31,8 @@ impl Plugin for LoadingScreenStatePlugin {
 #[derive(Component, Reflect)]
 struct IsLoadingBarFill;
 
-fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
-    commands.insert_resource(ClearColor(config.bg_color));
+fn enter_loading(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config>) {
+    commands.insert_resource(ClearColor(Color::BLACK));
 
     let screen = commands
         .spawn((
@@ -78,7 +78,7 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
                         TextStyle {
                             font: BOLD_FONT_HANDLE,
                             font_size: 64.0,
-                            color: config.fg_color,
+                            color: Color::WHITE,
                         },
                     ),
                     ..default()
@@ -101,7 +101,7 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
                     commands.spawn((
                         Name::new("LoadingBarFill"),
                         NodeBundle {
-                            background_color: BackgroundColor(config.fg_color),
+                            background_color: BackgroundColor(Color::WHITE),
                             style: Style {
                                 width: Val::Percent(0.0),
                                 height: Val::Percent(100.0),

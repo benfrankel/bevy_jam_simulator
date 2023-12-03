@@ -1,8 +1,8 @@
-mod end_screen;
-mod game;
-mod loading_screen;
-mod splash_screen;
-mod title_screen;
+pub mod editor_screen;
+pub mod end_screen;
+pub mod loading_screen;
+pub mod splash_screen;
+pub mod title_screen;
 
 use bevy::prelude::*;
 use strum::EnumIter;
@@ -15,7 +15,7 @@ impl Plugin for StatePlugin {
             splash_screen::SplashScreenStatePlugin,
             title_screen::TitleScreenStatePlugin,
             loading_screen::LoadingScreenStatePlugin,
-            game::GameStatePlugin,
+            editor_screen::EditorScreenStatePlugin,
             end_screen::EndScreenStatePlugin,
         ));
     }
@@ -27,6 +27,6 @@ pub enum AppState {
     SplashScreen,
     TitleScreen,
     LoadingScreen,
-    Game,
+    EditorScreen,
     EndScreen,
 }

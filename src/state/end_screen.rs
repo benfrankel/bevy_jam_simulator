@@ -62,8 +62,8 @@ pub struct EndScreenAssets {
     // TODO: Music / SFX maybe
 }
 
-fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
-    commands.insert_resource(ClearColor(config.bg_color));
+fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config>) {
+    commands.insert_resource(ClearColor(Color::BLACK));
 
     let screen = commands
         .spawn((

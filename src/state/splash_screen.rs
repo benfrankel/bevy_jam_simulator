@@ -59,10 +59,10 @@ struct SplashScreenStartTime(f64);
 fn enter_splash_screen(
     mut commands: Commands,
     root: Res<AppRoot>,
-    config: Res<Config>,
+    _config: Res<Config>,
     time: Res<Time>,
 ) {
-    commands.insert_resource(ClearColor(config.bg_color));
+    commands.insert_resource(ClearColor(Color::BLACK));
 
     commands.insert_resource(SplashScreenStartTime(time.elapsed_seconds_f64()));
 
@@ -93,7 +93,7 @@ fn enter_splash_screen(
                 image: UiImage::new(SPLASH_SCREEN_IMAGE_HANDLE),
                 ..default()
             },
-            SplashImageFadeInOut(config.fg_color),
+            SplashImageFadeInOut(Color::WHITE),
         ))
         .set_parent(screen);
 }
