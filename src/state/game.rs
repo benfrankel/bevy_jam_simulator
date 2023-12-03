@@ -45,8 +45,8 @@ const TOP_BAR_SEPARATOR_WIDTH: f32 = 1.5;
 
 // The sum of the following should add up to 100.0.
 const CODE_VIEW_WIDTH: f32 = 35.0;
-const ENTITY_VIEW_WIDTH: f32 = 45.0;
-const SYSTEMS_VIEW_WIDTH: f32 = 30.0;
+const ENTITY_VIEW_WIDTH: f32 = 40.0;
+const SYSTEMS_VIEW_WIDTH: f32 = 25.0;
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
