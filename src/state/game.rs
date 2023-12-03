@@ -18,9 +18,16 @@ impl Plugin for GameStatePlugin {
             .init_collection::<GameAssets>()
             .add_systems(OnEnter(Game), enter_game)
             .add_systems(OnExit(Game), exit_game)
+            .add_systems(Update, typing_system.run_if(in_state(Game)))
             .add_systems(Update, update_code_view_bar.run_if(in_state(Game)));
     }
 }
+
+const CODE_VIEW_START_STRING: &str = "// Press alphanumeric characters randomly to type code.\n\n";
+const CODE_STRING: &str = include_str!("game.rs");
+/// First line in the editor will be removed when the code exceeds this length.
+/// TODO: This should be dependent on the screen size.
+const CODE_MAX_LENGTH: usize = 600;
 
 const TOP_BAR_TEXT_COLOR: Color = Color::rgb(1.0, 1.0, 1.0);
 const TOP_BAR_TEXT_STYLE: TextStyle = TextStyle {
@@ -38,7 +45,7 @@ const CODE_TEXT_STYLE: TextStyle = TextStyle {
     font_size: 0.0,
     color: CODE_TEXT_COLOR,
 };
-const CODE_FONT_SIZE: f32 = 6.0;
+const CODE_FONT_SIZE: f32 = 4.0;
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
@@ -48,11 +55,16 @@ pub struct GameAssets {}
 struct CodeModel {
     /// Lines of Code.
     loc: f64,
+    /// An infinite iterator that yields the next character that will be added to the editor.
+    next_code: std::iter::Cycle<std::str::Chars<'static>>,
 }
 
 impl Default for CodeModel {
     fn default() -> Self {
-        Self { loc: 0.0 }
+        Self {
+            loc: 0.0,
+            next_code: CODE_STRING.chars().cycle(),
+        }
     }
 }
 
@@ -136,11 +148,8 @@ fn enter_game(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
         .set_parent(code_view)
         .id();
 
-    let mut text = TextBundle::from_section(
-        "AFJLKDFJ:AFKJDA:FJDAFLKJFLJDLFJ:LDFJSLA:FJDLF",
-        CODE_TEXT_STYLE,
-    )
-    .with_text_alignment(TextAlignment::Left);
+    let mut text = TextBundle::from_section(CODE_VIEW_START_STRING, CODE_TEXT_STYLE)
+        .with_text_alignment(TextAlignment::Left);
     text.text.linebreak_behavior = BreakLineOn::AnyCharacter;
     commands
         .spawn((
@@ -162,4 +171,37 @@ fn exit_game(root: Res<AppRoot>, mut transform_query: Query<&mut Transform>) {
 fn update_code_view_bar(code_model: Res<CodeModel>, mut query: Query<&mut Text, With<LinesText>>) {
     let mut text = query.single_mut();
     text.sections[0].value = format!("Lines: {}", code_model.loc);
+}
+
+fn typing_system(
+    mut code_model: ResMut<CodeModel>,
+    keyboard_input: Res<Input<KeyCode>>,
+    mut query: Query<&mut Text, With<CodeText>>,
+) {
+    let mut text = query.single_mut();
+    for &key in keyboard_input.get_just_pressed() {
+        if KeyCode::Key1 <= key && key <= KeyCode::Z {
+            // An alphanumeric key has been pressed.
+            code_model.loc += 1.0;
+            // Add all whitespace characters at once.
+            while {
+                let c = code_model.next_code.next().unwrap();
+                text.sections[0].value.push(c);
+                c.is_whitespace()
+            } {}
+        }
+    }
+    // Check if we've exceeded the maximum length.
+    if text.sections[0].value.len() > CODE_MAX_LENGTH {
+        match text.sections[0].value.find('\n') {
+            Some(index) => {
+                // Shorten the string by removing the first line.
+                text.sections[0].value = text.sections[0].value.split_off(index + 1);
+            },
+            None => {
+                // There's no line, just clear the string (keeps capacity).
+                text.sections[0].value.clear();
+            },
+        };
+    }
 }
