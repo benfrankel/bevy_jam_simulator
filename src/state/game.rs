@@ -7,8 +7,8 @@ use crate::ui::BOLD_FONT_HANDLE;
 use crate::AppRoot;
 
 mod code_view;
-use code_view::typing_system;
-use code_view::update_code_view_bar;
+
+mod entity_view;
 
 pub struct GameStatePlugin;
 
@@ -20,7 +20,12 @@ impl Plugin for GameStatePlugin {
             .add_systems(OnExit(Game), exit_game)
             .add_systems(
                 Update,
-                (typing_system, update_code_view_bar).run_if(in_state(Game)),
+                (
+                    code_view::typing_system,
+                    code_view::update_bar,
+                    entity_view::update_bar,
+                )
+                    .run_if(in_state(Game)),
             );
     }
 }
@@ -34,13 +39,17 @@ const TOP_BAR_TEXT_STYLE: TextStyle = TextStyle {
 const TOP_BAR_FONT_SIZE: f32 = 8.0;
 const TOP_BAR_BACKGROUND_COLOR: Color = Color::rgb(0.165, 0.18, 0.184);
 
+const TOP_BAR_SEPARATOR_COLOR: Color = Color::rgb(0.510, 0.612, 0.769);
+const TOP_BAR_SEPARATOR_WIDTH: f32 = 1.5;
+
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct GameAssets {}
 
 fn enter_game(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
     commands.insert_resource(ClearColor(config.bg_color));
-    code_view::init(commands, root);
+    code_view::init(&mut commands, &root);
+    entity_view::init(&mut commands, &root);
 }
 
 fn exit_game(root: Res<AppRoot>, mut transform_query: Query<&mut Transform>) {

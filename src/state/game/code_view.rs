@@ -45,7 +45,7 @@ impl Default for CodeModel {
     }
 }
 
-pub fn init(mut commands: Commands, root: Res<AppRoot>) {
+pub fn init(commands: &mut Commands, root: &Res<AppRoot>) {
     commands.insert_resource(CodeModel::default());
 
     let code_view = commands
@@ -130,10 +130,7 @@ pub fn init(mut commands: Commands, root: Res<AppRoot>) {
         .set_parent(text_area_container);
 }
 
-pub fn update_code_view_bar(
-    code_model: Res<CodeModel>,
-    mut query: Query<&mut Text, With<LinesText>>,
-) {
+pub fn update_bar(code_model: Res<CodeModel>, mut query: Query<&mut Text, With<LinesText>>) {
     let mut text = query.single_mut();
     text.sections[0].value = format!("Lines: {}", code_model.loc);
 }
