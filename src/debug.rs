@@ -22,6 +22,7 @@ pub struct DebugPlugin {
     pub entity_count_diagnostics: bool,
     pub ambiguity_detection: bool,
     pub debug_render: bool,
+    pub debug_picking: bool,
     pub editor: bool,
     pub start: AppState,
     pub extend_loading_screen: f32,
@@ -65,7 +66,20 @@ impl Plugin for DebugPlugin {
             app.world.resource_mut::<DebugRenderContext>().enabled = false;
             app.add_systems(
                 Update,
-                toggle_debug_render.run_if(input_just_pressed(DEBUG_RENDER_TOGGLE_KEY)),
+                toggle_debug_render.run_if(input_just_pressed(DEBUG_TOGGLE_KEY)),
+            );
+        }
+
+        if self.debug_picking {
+            use bevy_mod_picking::debug::DebugPickingMode::*;
+            app.insert_resource(State::new(Disabled)).add_systems(
+                Update,
+                (
+                    (|mut next: ResMut<NextState<_>>| next.set(Normal))
+                        .run_if(in_state(Disabled).and_then(input_just_pressed(DEBUG_TOGGLE_KEY))),
+                    (|mut next: ResMut<NextState<_>>| next.set(Disabled))
+                        .run_if(in_state(Normal).and_then(input_just_pressed(DEBUG_TOGGLE_KEY))),
+                ),
             );
         }
 
@@ -130,6 +144,7 @@ impl Default for DebugPlugin {
             entity_count_diagnostics: true,
             ambiguity_detection: true,
             debug_render: true,
+            debug_picking: true,
             editor: true,
             extend_loading_screen: 0.0,
             start: default(),
@@ -137,7 +152,7 @@ impl Default for DebugPlugin {
     }
 }
 
-const DEBUG_RENDER_TOGGLE_KEY: KeyCode = KeyCode::F3;
+const DEBUG_TOGGLE_KEY: KeyCode = KeyCode::F3;
 
 fn toggle_debug_render(mut debug_render_context: ResMut<DebugRenderContext>) {
     debug_render_context.enabled = !debug_render_context.enabled;

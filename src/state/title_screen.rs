@@ -1,9 +1,11 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use bevy_mod_picking::prelude::*;
 use iyes_progress::prelude::*;
 
 use crate::config::Config;
 use crate::state::game::GameAssets;
+use crate::state::AppState;
 use crate::state::AppState::*;
 use crate::ui::vh;
 use crate::ui::vw;
@@ -23,7 +25,7 @@ impl Plugin for TitleScreenStatePlugin {
             .add_plugins(ProgressPlugin::new(TitleScreen))
             .add_systems(OnEnter(TitleScreen), enter_title_screen)
             .add_systems(OnExit(TitleScreen), exit_title_screen)
-            .add_systems(Update, do_join_button.run_if(in_state(TitleScreen)));
+            .add_systems(Update, update_button.run_if(in_state(TitleScreen)));
     }
 }
 
@@ -192,6 +194,12 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                 border_color: BUTTON_BORDER_COLOR.into(),
                 ..default()
             },
+            On::<Pointer<Click>>::run(
+                |mut next_state: ResMut<NextState<AppState>>, progress: Res<ProgressCounter>| {
+                    let Progress { done, total } = progress.progress_complete();
+                    next_state.set(if done >= total { Game } else { LoadingScreen });
+                },
+            ),
         ))
         .set_parent(container)
         .id();
@@ -210,7 +218,7 @@ fn exit_title_screen(mut commands: Commands, root: Res<AppRoot>) {
     commands.entity(root.ui).despawn_descendants();
 }
 
-fn do_join_button(
+fn update_button(
     mut interaction_query: Query<
         (&Interaction, &mut BackgroundColor),
         (Changed<Interaction>, With<Button>),
@@ -224,9 +232,4 @@ fn do_join_button(
         }
         .into()
     }
-
-    // TODO: Use this to enter LoadingScreen or Game state when Join button gets pressed
-    // Show loading screen only if assets are still loading
-    //let Progress { done, total } = progress.progress_complete();
-    //next_state.set(if done >= total { Game } else { LoadingScreen });
 }

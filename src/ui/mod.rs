@@ -1,6 +1,7 @@
 mod font;
 
 use bevy::prelude::*;
+use bevy_mod_picking::prelude::*;
 
 use crate::camera::CAMERA_HEIGHT;
 use crate::camera::CAMERA_WIDTH;
@@ -12,8 +13,7 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Selection>()
-            .add_plugins(font::FontPlugin);
+        app.add_plugins((DefaultPickingPlugins, font::FontPlugin));
     }
 }
 
@@ -26,13 +26,4 @@ pub fn vw(units: f32) -> Val {
 
 pub fn vh(units: f32) -> Val {
     VH_UNIT * units
-}
-
-#[derive(Component, Reflect)]
-pub struct Selection(pub Entity);
-
-impl Default for Selection {
-    fn default() -> Self {
-        Self(Entity::PLACEHOLDER)
-    }
 }
