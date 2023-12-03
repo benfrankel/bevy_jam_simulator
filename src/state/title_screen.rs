@@ -67,7 +67,9 @@ const BUTTON_BORDER_COLOR: Color = Color::rgb(0.118, 0.306, 0.820);
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
-pub struct TitleScreenAssets {}
+pub struct TitleScreenAssets {
+    // TODO: Music / SFX maybe
+}
 
 fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
     commands.insert_resource(ClearColor(config.bg_color));
@@ -172,7 +174,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
 
         commands
             .spawn((
-                Name::new(format!("BodyTextLine{}", i)),
+                Name::new(format!("BodyTextLine{i}")),
                 TextBundle::from_sections(sections),
                 FontSize::new(BODY_FONT_SIZE),
             ))

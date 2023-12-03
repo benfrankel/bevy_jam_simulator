@@ -1,11 +1,7 @@
-use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use leafwing_input_manager::common_conditions::action_just_pressed;
-use leafwing_input_manager::prelude::*;
 
 use crate::config::Config;
-use crate::state::AppState;
 use crate::state::AppState::*;
 use crate::ui::vh;
 use crate::ui::vmin;
@@ -20,17 +16,8 @@ impl Plugin for EndScreenStatePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<EndScreenAssets>()
             .init_collection::<EndScreenAssets>()
-            .init_resource::<ActionState<EndScreenAction>>()
-            .add_plugins(InputManagerPlugin::<EndScreenAction>::default())
             .add_systems(OnEnter(EndScreen), enter_end_screen)
-            .add_systems(OnExit(EndScreen), exit_end_screen)
-            .add_systems(
-                Update,
-                (
-                    end_screen_action_restart.run_if(action_just_pressed(EndScreenAction::Restart)),
-                    end_screen_action_quit.run_if(action_just_pressed(EndScreenAction::Quit)),
-                ),
-            );
+            .add_systems(OnExit(EndScreen), exit_end_screen);
     }
 }
 
@@ -54,13 +41,13 @@ const TABLE_HEADER_TEXT_STYLE: TextStyle = TextStyle {
 };
 const TABLE_HEADER_TEXT: [&str; 4] = ["Criteria", "Rank", "Score", "Raw Score"];
 
-const _TABLE_TEXT_STYLE: TextStyle = TextStyle {
+const TABLE_TEXT_STYLE: TextStyle = TextStyle {
     font: FONT_HANDLE,
     font_size: 0.0,
     color: Color::rgb(0.737, 0.737, 0.737),
 };
-const TABLE_FONT_SIZE: Val = Val::Vw(3.0);
-const _TABLE_CRITERIA_TEXT: [&str; 6] = [
+const TABLE_FONT_SIZE: Val = Val::Vw(2.5);
+const TABLE_CRITERIA_TEXT: [&str; 6] = [
     "Fun",
     "Presentation",
     "Theme Interpretation",
@@ -71,27 +58,12 @@ const _TABLE_CRITERIA_TEXT: [&str; 6] = [
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
-pub struct EndScreenAssets {}
-
-#[derive(Actionlike, Reflect, PartialEq, Eq, Hash, Clone)]
-enum EndScreenAction {
-    Restart,
-    Quit,
+pub struct EndScreenAssets {
+    // TODO: Music / SFX maybe
 }
 
 fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
     commands.insert_resource(ClearColor(config.bg_color));
-
-    commands.insert_resource(
-        InputMap::default()
-            .insert(MouseButton::Left, EndScreenAction::Restart)
-            .insert(GamepadButtonType::Start, EndScreenAction::Restart)
-            .insert(KeyCode::Return, EndScreenAction::Restart)
-            .insert(KeyCode::Space, EndScreenAction::Restart)
-            .insert(KeyCode::Escape, EndScreenAction::Quit)
-            .insert(KeyCode::Q, EndScreenAction::Quit)
-            .build(),
-    );
 
     let screen = commands
         .spawn((
@@ -101,8 +73,7 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Conf
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
                     align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    padding: UiRect::new(vmin(15.0), vmin(15.0), vh(7.0), vmin(15.0)),
+                    padding: UiRect::new(vmin(15.0), vmin(15.0), vh(7.0), Val::ZERO),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
@@ -126,12 +97,12 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Conf
             Name::new("Table"),
             NodeBundle {
                 style: Style {
+                    display: Display::Grid,
                     width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
-                    align_items: AlignItems::Center,
-                    margin: UiRect::top(vh(5.0)),
+                    margin: UiRect::top(vh(10.0)),
                     border: UiRect::all(BORDER_WIDTH),
-                    flex_direction: FlexDirection::Column,
+                    // FIXME: For some reason all the extra space goes to the first column
+                    grid_template_columns: vec![GridTrack::auto(); 4],
                     ..default()
                 },
                 background_color: BACKGROUND_COLOR.into(),
@@ -142,43 +113,60 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Conf
         .set_parent(screen)
         .id();
 
-    let header_row = commands
-        .spawn((
-            Name::new("TableHeader"),
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    border: UiRect::bottom(BORDER_WIDTH),
+    for (i, &entry) in TABLE_HEADER_TEXT.iter().enumerate() {
+        let cell = commands
+            .spawn((
+                Name::new(format!("HeaderCell{i}")),
+                NodeBundle {
+                    style: Style {
+                        padding: UiRect::all(vmin(3.5)),
+                        ..default()
+                    },
+                    background_color: TABLE_HEADER_BACKGROUND_COLOR.into(),
                     ..default()
                 },
-                background_color: TABLE_HEADER_BACKGROUND_COLOR.into(),
-                border_color: BORDER_COLOR.into(),
-                ..default()
-            },
-        ))
-        .set_parent(table)
-        .id();
-
-    for (i, &header) in TABLE_HEADER_TEXT.iter().enumerate() {
+            ))
+            .set_parent(table)
+            .id();
         commands
             .spawn((
-                Name::new(format!("TableHeaderCol{}", i)),
-                TextBundle::from_section(header, TABLE_HEADER_TEXT_STYLE),
+                Name::new("CellText"),
+                TextBundle::from_section(entry, TABLE_HEADER_TEXT_STYLE),
                 FontSize::new(TABLE_FONT_SIZE),
             ))
-            .set_parent(header_row);
+            .set_parent(cell);
+    }
+
+    for (row, &criteria) in TABLE_CRITERIA_TEXT.iter().enumerate() {
+        // TODO: Populate cells based on resource values like entity count / lines of code
+        let entries = vec![criteria, "#13", "4.233", "4.233"];
+        for (col, &text) in entries.iter().enumerate() {
+            let cell = commands
+                .spawn((
+                    Name::new(format!("BodyCellRow{row}Col{col}")),
+                    NodeBundle {
+                        style: Style {
+                            padding: UiRect::all(vmin(3.5)),
+                            border: UiRect::top(BORDER_WIDTH),
+                            ..default()
+                        },
+                        border_color: BORDER_COLOR.into(),
+                        ..default()
+                    },
+                ))
+                .set_parent(table)
+                .id();
+            commands
+                .spawn((
+                    Name::new("CellText"),
+                    TextBundle::from_section(text, TABLE_TEXT_STYLE),
+                    FontSize::new(TABLE_FONT_SIZE),
+                ))
+                .set_parent(cell);
+        }
     }
 }
 
 fn exit_end_screen(mut commands: Commands, root: Res<AppRoot>) {
-    commands.remove_resource::<InputMap<EndScreenAction>>();
     commands.entity(root.ui).despawn_descendants();
-}
-
-fn end_screen_action_restart(mut next_state: ResMut<NextState<AppState>>) {
-    next_state.set(TitleScreen);
-}
-
-fn end_screen_action_quit(mut app_exit: EventWriter<AppExit>) {
-    app_exit.send(AppExit);
 }
