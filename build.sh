@@ -3,7 +3,7 @@
 set -u
 shopt -s globstar
 
-NAME='bevy-jam4'
+NAME='bevy-jam-4'
 EXE='run'
 BUILD_DIR='build'
 
