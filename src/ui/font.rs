@@ -58,7 +58,6 @@ pub fn scale_font_size(
             continue;
         }
         font_size.cache = resolved;
-        println!("Updating a font size");
 
         for section in &mut text.sections {
             section.style.font_size = resolved;

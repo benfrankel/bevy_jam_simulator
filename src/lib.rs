@@ -1,3 +1,5 @@
+#![allow(clippy::type_complexity)]
+
 mod audio;
 mod camera;
 mod config;

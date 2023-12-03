@@ -1,13 +1,9 @@
-use bevy::app::AppExit;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use iyes_progress::prelude::*;
-use leafwing_input_manager::common_conditions::action_just_pressed;
-use leafwing_input_manager::prelude::*;
 
 use crate::config::Config;
 use crate::state::game::GameAssets;
-use crate::state::AppState;
 use crate::state::AppState::*;
 use crate::ui::vh;
 use crate::ui::vw;
@@ -25,19 +21,9 @@ impl Plugin for TitleScreenStatePlugin {
             .add_loading_state(LoadingState::new(TitleScreen))
             .add_collection_to_loading_state::<_, GameAssets>(TitleScreen)
             .add_plugins(ProgressPlugin::new(TitleScreen))
-            .init_resource::<ActionState<TitleScreenAction>>()
-            .add_plugins(InputManagerPlugin::<TitleScreenAction>::default())
             .add_systems(OnEnter(TitleScreen), enter_title_screen)
             .add_systems(OnExit(TitleScreen), exit_title_screen)
-            .add_systems(
-                Update,
-                (
-                    title_screen_action_start
-                        .run_if(action_just_pressed(TitleScreenAction::Start))
-                        .after(TrackedProgressSet),
-                    title_screen_action_quit.run_if(action_just_pressed(TitleScreenAction::Quit)),
-                ),
-            );
+            .add_systems(Update, do_join_button.run_if(in_state(TitleScreen)));
     }
 }
 
@@ -71,32 +57,17 @@ const BUTTON_TEXT_STYLE: TextStyle = TextStyle {
     color: Color::WHITE,
 };
 const BUTTON_FONT_SIZE: f32 = 12.0;
-const BUTTON_BACKGROUND_COLOR: Color = Color::rgb(0.000, 0.188, 0.702);
+const BUTTON_NORMAL_COLOR: Color = Color::rgb(0.000, 0.188, 0.702);
+const BUTTON_HOVERED_COLOR: Color = Color::rgb(0.039, 0.227, 0.741);
+const BUTTON_PRESSED_COLOR: Color = Color::rgb(0.000, 0.176, 0.690);
 const BUTTON_BORDER_COLOR: Color = Color::rgb(0.118, 0.306, 0.820);
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct TitleScreenAssets {}
 
-#[derive(Actionlike, Reflect, PartialEq, Eq, Hash, Clone)]
-enum TitleScreenAction {
-    Start,
-    Quit,
-}
-
 fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
     commands.insert_resource(ClearColor(config.bg_color));
-
-    commands.insert_resource(
-        InputMap::default()
-            .insert(MouseButton::Left, TitleScreenAction::Start)
-            .insert(GamepadButtonType::Start, TitleScreenAction::Start)
-            .insert(KeyCode::Return, TitleScreenAction::Start)
-            .insert(KeyCode::Space, TitleScreenAction::Start)
-            .insert(KeyCode::Escape, TitleScreenAction::Quit)
-            .insert(KeyCode::Q, TitleScreenAction::Quit)
-            .build(),
-    );
 
     let screen = commands
         .spawn((
@@ -125,8 +96,8 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: BackgroundColor(BACKGROUND_COLOR),
-                border_color: BorderColor(BORDER_COLOR),
+                background_color: BACKGROUND_COLOR.into(),
+                border_color: BORDER_COLOR.into(),
                 ..default()
             },
         ))
@@ -148,8 +119,8 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: BackgroundColor(HEADER_BACKGROUND_COLOR),
-                border_color: BorderColor(BORDER_COLOR),
+                background_color: HEADER_BACKGROUND_COLOR.into(),
+                border_color: BORDER_COLOR.into(),
                 ..default()
             },
         ))
@@ -210,13 +181,15 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             Name::new("JoinButton"),
             ButtonBundle {
                 style: Style {
-                    margin: UiRect::top(vh(10.0)),
-                    padding: UiRect::axes(vw(6.0), vh(4.0)),
+                    margin: UiRect::top(vh(12.0)),
+                    padding: UiRect::axes(vw(10.0), vh(6.0)),
                     border: UiRect::axes(vw(BORDER_WIDTH), vh(BORDER_WIDTH)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
                     ..default()
                 },
-                background_color: BackgroundColor(BUTTON_BACKGROUND_COLOR),
-                border_color: BorderColor(BUTTON_BORDER_COLOR),
+                background_color: BUTTON_NORMAL_COLOR.into(),
+                border_color: BUTTON_BORDER_COLOR.into(),
                 ..default()
             },
         ))
@@ -233,20 +206,27 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
 }
 
 fn exit_title_screen(mut commands: Commands, root: Res<AppRoot>) {
-    commands.remove_resource::<InputMap<TitleScreenAction>>();
     // TODO: This and the other despawn_decendants() should probably make use of DespawnSet...
     commands.entity(root.ui).despawn_descendants();
 }
 
-fn title_screen_action_start(
-    mut next_state: ResMut<NextState<AppState>>,
-    progress: Res<ProgressCounter>,
+fn do_join_button(
+    mut interaction_query: Query<
+        (&Interaction, &mut BackgroundColor),
+        (Changed<Interaction>, With<Button>),
+    >,
 ) {
-    // Show loading screen only if assets are still loading
-    let Progress { done, total } = progress.progress_complete();
-    //next_state.set(if done >= total { Game } else { LoadingScreen });
-}
+    for (interaction, mut color) in &mut interaction_query {
+        *color = match interaction {
+            Interaction::Pressed => BUTTON_PRESSED_COLOR,
+            Interaction::Hovered => BUTTON_HOVERED_COLOR,
+            Interaction::None => BUTTON_NORMAL_COLOR,
+        }
+        .into()
+    }
 
-fn title_screen_action_quit(mut app_exit: EventWriter<AppExit>) {
-    app_exit.send(AppExit);
+    // TODO: Use this to enter LoadingScreen or Game state when Join button gets pressed
+    // Show loading screen only if assets are still loading
+    //let Progress { done, total } = progress.progress_complete();
+    //next_state.set(if done >= total { Game } else { LoadingScreen });
 }
