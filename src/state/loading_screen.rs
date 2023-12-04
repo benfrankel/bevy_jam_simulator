@@ -2,10 +2,14 @@ use bevy::core::FrameCount;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use iyes_progress::prelude::*;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::config::Config;
 use crate::state::editor_screen::EditorScreenAssets;
 use crate::state::AppState::*;
+use crate::ui::vmin;
+use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::AppRoot;
 
@@ -28,11 +32,21 @@ impl Plugin for LoadingScreenStatePlugin {
     }
 }
 
+#[derive(Default, Reflect, Serialize, Deserialize)]
+pub struct LoadingScreenConfig {
+    foreground_color: Color,
+    background_color: Color,
+    border_color: Color,
+    border_width: Val,
+    font_size: Val,
+}
+
 #[derive(Component, Reflect)]
 struct IsLoadingBarFill;
 
-fn enter_loading(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config>) {
-    commands.insert_resource(ClearColor(Color::BLACK));
+fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
+    let config = &config.loading_screen;
+    commands.insert_resource(ClearColor(config.background_color));
 
     let screen = commands
         .spawn((
@@ -70,19 +84,20 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config
                 Name::new("LoadingHeader"),
                 TextBundle {
                     style: Style {
-                        margin: UiRect::all(Val::Percent(1.0)),
+                        margin: UiRect::all(vmin(8.0)),
                         ..default()
                     },
                     text: Text::from_section(
                         "Loading...",
                         TextStyle {
                             font: BOLD_FONT_HANDLE,
-                            font_size: 64.0,
-                            color: Color::WHITE,
+                            color: config.foreground_color,
+                            ..default()
                         },
                     ),
                     ..default()
                 },
+                FontSize::new(config.font_size),
             ));
 
             commands
@@ -90,10 +105,12 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config
                     Name::new("LoadingBarContainer"),
                     NodeBundle {
                         style: Style {
-                            width: Val::Percent(50.0),
-                            height: Val::Percent(5.0),
+                            width: Val::Percent(60.0),
+                            height: Val::Percent(7.5),
+                            border: UiRect::all(config.border_width),
                             ..default()
                         },
+                        border_color: config.border_color.into(),
                         ..default()
                     },
                 ))
@@ -101,7 +118,7 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config
                     commands.spawn((
                         Name::new("LoadingBarFill"),
                         NodeBundle {
-                            background_color: BackgroundColor(Color::WHITE),
+                            background_color: BackgroundColor(config.foreground_color),
                             style: Style {
                                 width: Val::Percent(0.0),
                                 height: Val::Percent(100.0),

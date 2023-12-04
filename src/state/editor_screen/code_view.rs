@@ -1,8 +1,13 @@
+use std::iter::Cycle;
+use std::str::Chars;
+
+use bevy::prelude::*;
 use bevy::text::BreakLineOn;
 
-use super::*;
+use crate::state::editor_screen::EditorScreenConfig;
 use crate::ui::vh;
 use crate::ui::FontSize;
+use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
 
 const CODE_VIEW_START_STRING: &str = "// Press alphanumeric characters randomly to type code.\n\n";
@@ -10,15 +15,6 @@ const CODE_STRING: &str = include_str!("code_view.rs");
 /// First line in the editor will be removed when the code exceeds this length.
 /// TODO: This should be dependent on the screen size.
 const CODE_MAX_LENGTH: usize = 600;
-
-const CODE_BACKGROUND_COLOR: Color = Color::rgb(0.106, 0.118, 0.122);
-const CODE_TEXT_COLOR: Color = Color::rgb(0.3, 0.9, 0.0);
-const CODE_TEXT_STYLE: TextStyle = TextStyle {
-    font: FONT_HANDLE,
-    font_size: 0.0,
-    color: CODE_TEXT_COLOR,
-};
-const CODE_FONT_SIZE: f32 = 4.0;
 
 /// Component for the text that displays "Lines: X"
 #[derive(Component)]
@@ -33,7 +29,7 @@ pub struct CodeModel {
     /// Lines of Code.
     loc: f64,
     /// An infinite iterator that yields the next character that will be added to the editor.
-    next_code: std::iter::Cycle<std::str::Chars<'static>>,
+    next_code: Cycle<Chars<'static>>,
 }
 
 impl Default for CodeModel {
@@ -45,15 +41,26 @@ impl Default for CodeModel {
     }
 }
 
-pub fn init(commands: &mut Commands, root: &Res<AppRoot>) {
-    commands.insert_resource(CodeModel::default());
+pub fn spawn(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
+    let top_bar_text_style = TextStyle {
+        font: BOLD_FONT_HANDLE,
+        color: config.top_bar_text_color,
+        ..default()
+    };
+    let code_text_style = TextStyle {
+        font: FONT_HANDLE,
+        color: config.code_text_color,
+        ..default()
+    };
+
+    commands.init_resource::<CodeModel>();
 
     let code_view = commands
         .spawn((
             Name::new("CodeView"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(CODE_VIEW_WIDTH),
+                    width: config.code_view_width,
                     height: Val::Percent(100.0),
                     // padding: UiRect::axes(Val::VMin(3.5), Val::VMin(3.5)),
                     // align_items: AlignItems::Center,
@@ -61,11 +68,10 @@ pub fn init(commands: &mut Commands, root: &Res<AppRoot>) {
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: CODE_BACKGROUND_COLOR.into(),
+                background_color: config.code_view_background_color.into(),
                 ..default()
             },
         ))
-        .set_parent(root.ui)
         .id();
 
     // Top bar part of the code view.
@@ -77,11 +83,11 @@ pub fn init(commands: &mut Commands, root: &Res<AppRoot>) {
                     width: Val::Percent(100.0),
                     height: vh(20.0),
                     padding: UiRect::axes(Val::VMin(3.5), Val::VMin(3.5)),
-                    // border: UiRect::bottom(vh(BORDER_WIDTH)),
+                    // border: UiRect::bottom(config.top_bar_border_width),
                     ..default()
                 },
-                background_color: TOP_BAR_BACKGROUND_COLOR.into(),
-                // border_color: BORDER_COLOR.into(),
+                background_color: config.top_bar_background_color.into(),
+                // border_color: config.top_bar_border_color.into(),
                 ..default()
             },
         ))
@@ -91,9 +97,9 @@ pub fn init(commands: &mut Commands, root: &Res<AppRoot>) {
     commands
         .spawn((
             Name::new("HeaderText"),
-            TextBundle::from_section("Lines: 0", TOP_BAR_TEXT_STYLE)
+            TextBundle::from_section("Lines: 0", top_bar_text_style)
                 .with_text_alignment(TextAlignment::Left),
-            FontSize::new(vh(TOP_BAR_FONT_SIZE)),
+            FontSize::new(config.top_bar_font_size),
             LinesText,
         ))
         .set_parent(code_header_container);
@@ -110,24 +116,26 @@ pub fn init(commands: &mut Commands, root: &Res<AppRoot>) {
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: CODE_BACKGROUND_COLOR.into(),
+                background_color: config.code_view_background_color.into(),
                 ..default()
             },
         ))
         .set_parent(code_view)
         .id();
 
-    let mut text = TextBundle::from_section(CODE_VIEW_START_STRING, CODE_TEXT_STYLE)
+    let mut text = TextBundle::from_section(CODE_VIEW_START_STRING, code_text_style)
         .with_text_alignment(TextAlignment::Left);
     text.text.linebreak_behavior = BreakLineOn::AnyCharacter;
     commands
         .spawn((
             Name::new("TextAreaText"),
             text,
-            FontSize::new(vh(CODE_FONT_SIZE)),
+            FontSize::new(config.code_font_size),
             CodeText,
         ))
         .set_parent(text_area_container);
+
+    code_view
 }
 
 pub fn update_bar(code_model: Res<CodeModel>, mut query: Query<&mut Text, With<LinesText>>) {
@@ -135,7 +143,7 @@ pub fn update_bar(code_model: Res<CodeModel>, mut query: Query<&mut Text, With<L
     text.sections[0].value = format!("Lines: {}", code_model.loc);
 }
 
-pub fn typing_system(
+pub fn type_code(
     mut code_model: ResMut<CodeModel>,
     keyboard_input: Res<Input<KeyCode>>,
     mut query: Query<&mut Text, With<CodeText>>,

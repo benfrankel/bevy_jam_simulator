@@ -8,8 +8,8 @@ impl Plugin for PhysicsPlugin {
         app.insert_resource(RapierConfiguration {
             gravity: Vec2::ZERO,
             ..default()
-        });
-        app.add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
+        })
+        .add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(
             PIXELS_PER_METER,
         ));
     }

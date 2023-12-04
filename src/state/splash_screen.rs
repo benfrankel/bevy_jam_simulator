@@ -6,6 +6,8 @@ use bevy::render::texture::ImageSampler;
 use bevy::render::texture::ImageType;
 use bevy_asset_loader::prelude::*;
 use iyes_progress::prelude::*;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::config::Config;
 use crate::state::title_screen::TitleScreenAssets;
@@ -48,7 +50,13 @@ impl Plugin for SplashScreenStatePlugin {
     }
 }
 
-const SPLASH_SCREEN_MIN_SECS: f64 = 2.0;
+#[derive(Default, Reflect, Serialize, Deserialize)]
+pub struct SplashScreenConfig {
+    foreground_color: Color,
+    background_color: Color,
+    min_duration: f64,
+}
+
 const SPLASH_SCREEN_IMAGE_HANDLE: Handle<Image> =
     Handle::weak_from_u128(145948501136218819748366695396142082634);
 
@@ -59,11 +67,12 @@ struct SplashScreenStartTime(f64);
 fn enter_splash_screen(
     mut commands: Commands,
     root: Res<AppRoot>,
-    _config: Res<Config>,
+    config: Res<Config>,
     time: Res<Time>,
 ) {
-    commands.insert_resource(ClearColor(Color::BLACK));
+    let config = &config.splash_screen;
 
+    commands.insert_resource(ClearColor(config.background_color));
     commands.insert_resource(SplashScreenStartTime(time.elapsed_seconds_f64()));
 
     let screen = commands
@@ -93,7 +102,7 @@ fn enter_splash_screen(
                 image: UiImage::new(SPLASH_SCREEN_IMAGE_HANDLE),
                 ..default()
             },
-            SplashImageFadeInOut(Color::WHITE),
+            SplashImageFadeInOut(config.foreground_color),
         ))
         .set_parent(screen);
 }
@@ -108,11 +117,13 @@ struct SplashImageFadeInOut(Color);
 
 // TODO: Replace this with some Animation component
 fn update_splash_screen(
-    mut color_query: Query<(&mut BackgroundColor, &SplashImageFadeInOut)>,
+    config: Res<Config>,
     time: Res<Time>,
     start: Res<SplashScreenStartTime>,
+    mut color_query: Query<(&mut BackgroundColor, &SplashImageFadeInOut)>,
 ) -> Progress {
-    let elapsed = (time.elapsed_seconds_f64() - start.0) / SPLASH_SCREEN_MIN_SECS;
+    let config = &config.splash_screen;
+    let elapsed = (time.elapsed_seconds_f64() - start.0) / config.min_duration;
 
     for (mut color, fade) in &mut color_query {
         let t = elapsed as f32;

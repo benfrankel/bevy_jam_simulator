@@ -8,6 +8,10 @@ use serde::Deserialize;
 use serde::Serialize;
 use tap::TapFallible;
 
+use crate::state::editor_screen::EditorScreenConfig;
+use crate::state::end_screen::EndScreenConfig;
+use crate::state::loading_screen::LoadingScreenConfig;
+use crate::state::splash_screen::SplashScreenConfig;
 use crate::state::title_screen::TitleScreenConfig;
 
 pub struct ConfigPlugin;
@@ -22,7 +26,7 @@ impl Plugin for ConfigPlugin {
             .unwrap_or_default();
         let config = from_str::<Config>(config_str)
             .tap_err(|e| error!("Deserializing config: {e}"))
-            .unwrap_or_default();
+            .unwrap();
         info!("Loaded config");
 
         app.register_type::<Config>()
@@ -47,29 +51,19 @@ impl Plugin for ConfigPlugin {
 const WINDOW_TITLE: &str = "bevy_jam4";
 
 // TODO: DevConfig
-#[derive(Resource, Reflect, Serialize, Deserialize)]
+#[derive(Resource, Default, Reflect, Serialize, Deserialize)]
 #[reflect(Resource)]
 pub struct Config {
     pub window_mode: WindowMode,
     pub present_mode: PresentMode,
-    //pub splash_screen: SplashScreenConfig,
-    pub title_screen: TitleScreenConfig,
-    //pub loading_screen: LoadingScreenConfig,
-    //pub editor_screen: EditorScreenConfig,
-    //pub end_screen: EndScreenConfig,
     // TODO: Volume
     // TODO: Mute when out of focus
     // TODO: Keybindings
-}
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            window_mode: WindowMode::BorderlessFullscreen,
-            present_mode: PresentMode::AutoVsync,
-            title_screen: default(),
-        }
-    }
+    pub splash_screen: SplashScreenConfig,
+    pub title_screen: TitleScreenConfig,
+    pub loading_screen: LoadingScreenConfig,
+    pub editor_screen: EditorScreenConfig,
+    pub end_screen: EndScreenConfig,
 }
 
 fn apply_config(config: Res<Config>, mut window_query: Query<&mut Window, With<PrimaryWindow>>) {

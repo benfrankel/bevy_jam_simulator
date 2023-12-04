@@ -1,12 +1,18 @@
 (
     window_mode: Windowed,
     present_mode: AutoVsync,
+    
+    splash_screen: SplashScreenConfig(
+        foreground_color: Rgba(red: 0.925, green: 0.925, blue: 0.925, alpha: 1.000),
+        background_color: Rgba(red: 0.157, green: 0.157, blue: 0.157, alpha: 1.000),
+        min_duration: 2.0,
+    ),
 
     title_screen: TitleScreenConfig(
         text_color: Rgba(red: 0.149, green: 0.149, blue: 0.149, alpha: 1.000),
+        background_color: Rgba(red: 0.580, green: 0.682, blue: 0.839, alpha: 1.000),
         border_color: Rgba(red: 0.510, green: 0.612, blue: 0.769, alpha: 1.000),
         border_width: VMin(1.0),
-        background_color: Rgba(red: 0.580, green: 0.682, blue: 0.839, alpha: 1.000),
 
         title_background_color: Rgba(red: 0.549, green: 0.647, blue: 0.796, alpha: 1.000),
         title_font_size: Vw(4.5),
@@ -19,5 +25,55 @@
         button_normal_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
         button_hovered_color: Rgba(red: 0.039, green: 0.227, blue: 0.741, alpha: 1.000),
         button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
+    ),
+    
+    loading_screen: LoadingScreenConfig(
+        foreground_color: Rgba(red: 0.925, green: 0.925, blue: 0.925, alpha: 1.000),
+        background_color: Rgba(red: 0.157, green: 0.157, blue: 0.157, alpha: 1.000),
+        border_color: Rgba(red: 0.925, green: 0.925, blue: 0.925, alpha: 1.000),
+        border_width: VMin(0.5),
+        font_size: Px(64.0),
+    ),
+
+    editor_screen: EditorScreenConfig(
+        top_bar_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
+        top_bar_font_size: Vh(4.5),
+        top_bar_background_color: Rgba(red: 0.165, green: 0.180, blue: 0.184, alpha: 1.000),
+        top_bar_separator_color: Rgba(red: 0.510, green: 0.612, blue: 0.769, alpha: 1.000),
+        top_bar_separator_width: Vh(0.85),
+
+        code_view_width: Percent(35.0),
+        code_view_background_color: Rgba(red: 0.106, green: 0.118, blue: 0.122, alpha: 1.000),
+        entity_view_width: Auto,
+        entity_view_background_color: Rgba(red: 0.500, green: 0.500, blue: 0.500, alpha: 1.000),
+        system_view_width: Percent(25.0),
+        system_view_background_color: Rgba(red: 0.106, green: 0.118, blue: 0.122, alpha: 1.000),
+
+        code_text_color: Rgba(red: 0.300, green: 0.900, blue: 0.000, alpha: 1.000),
+        code_font_size: Vh(2.25),
+
+        upgrade_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
+        upgrade_button_font_size: Vh(2.25),
+        upgrade_button_normal_color: Rgba(red: 0.165, green: 0.180, blue: 0.184, alpha: 1.000),
+        upgrade_button_hovered_color: Rgba(red: 0.265, green: 0.280, blue: 0.284, alpha: 1.000),
+        upgrade_button_pressed_color: Rgba(red: 0.065, green: 0.080, blue: 0.084, alpha: 1.000),
+
+        tooltip_background_color: Rgba(red: 0.106, green: 0.118, blue: 0.122, alpha: 0.750),
+        tooltip_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
+        tooltip_font_size: Vh(2.25),
+    ),
+    
+    end_screen: EndScreenConfig(
+        background_color: Rgba(red: 0.067, green: 0.067, blue: 0.067, alpha: 1.000),
+        border_color: Rgba(red: 0.161, green: 0.161, blue: 0.161, alpha: 1.000),
+        border_width: VMin(0.9),
+
+        title_text_color: Rgba(red: 0.737, green: 0.737, blue: 0.737, alpha: 1.000),
+        title_font_size: Vw(5.0),
+
+        table_header_background_color: Rgba(red: 0.106, green: 0.106, blue: 0.106, alpha: 1.000),
+        table_header_text_color: Rgba(red: 0.624, green: 0.624, blue: 0.624, alpha: 1.000),
+        table_text_color: Rgba(red: 0.737, green: 0.737, blue: 0.737, alpha: 1.000),
+        table_font_size: Vw(2.5),
     ),
 )

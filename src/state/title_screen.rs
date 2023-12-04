@@ -21,7 +21,8 @@ pub struct TitleScreenStatePlugin;
 
 impl Plugin for TitleScreenStatePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<TitleScreenAssets>()
+        app.register_type::<TitleScreenConfig>()
+            .register_type::<TitleScreenAssets>()
             .init_collection::<TitleScreenAssets>()
             .add_loading_state(LoadingState::new(TitleScreen))
             .add_collection_to_loading_state::<_, EditorScreenAssets>(TitleScreen)
@@ -32,7 +33,7 @@ impl Plugin for TitleScreenStatePlugin {
     }
 }
 
-#[derive(Reflect, Serialize, Deserialize)]
+#[derive(Default, Reflect, Serialize, Deserialize)]
 pub struct TitleScreenConfig {
     text_color: Color,
     border_color: Color,
@@ -50,26 +51,6 @@ pub struct TitleScreenConfig {
     button_normal_color: Color,
     button_hovered_color: Color,
     button_pressed_color: Color,
-}
-
-impl Default for TitleScreenConfig {
-    fn default() -> Self {
-        Self {
-            text_color: Color::BLACK,
-            border_color: Color::BLACK,
-            border_width: Val::Px(1.0),
-            background_color: Color::WHITE,
-            title_background_color: Color::GRAY,
-            title_font_size: Val::Px(10.0),
-            body_font_size: Val::Px(10.0),
-            button_text_color: Color::WHITE,
-            button_font_size: Val::Px(10.0),
-            button_border_color: Color::BLACK,
-            button_normal_color: Color::BLUE,
-            button_hovered_color: Color::CYAN,
-            button_pressed_color: Color::MIDNIGHT_BLUE,
-        }
-    }
 }
 
 const TITLE_TEXT: &str = "Bevy Jam #4: The Game";

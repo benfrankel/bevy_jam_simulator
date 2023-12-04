@@ -1,14 +1,15 @@
+mod code_view;
+mod entity_view;
+mod system_view;
+
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::config::Config;
 use crate::state::AppState::*;
-use crate::ui::BOLD_FONT_HANDLE;
 use crate::AppRoot;
-
-mod code_view;
-mod entity_view;
-mod systems_view;
 
 pub struct EditorScreenStatePlugin;
 
@@ -21,45 +22,84 @@ impl Plugin for EditorScreenStatePlugin {
             .add_systems(
                 Update,
                 (
-                    code_view::typing_system,
+                    code_view::type_code,
                     code_view::update_bar,
                     entity_view::update_bar,
-                    systems_view::button_color_system,
+                    system_view::interact_with_upgrade_buttons,
                 )
                     .run_if(in_state(EditorScreen)),
             );
     }
 }
 
-const TOP_BAR_TEXT_COLOR: Color = Color::rgb(1.0, 1.0, 1.0);
-const TOP_BAR_TEXT_STYLE: TextStyle = TextStyle {
-    font: BOLD_FONT_HANDLE,
-    font_size: 0.0,
-    color: TOP_BAR_TEXT_COLOR,
-};
-const TOP_BAR_FONT_SIZE: f32 = 8.0;
-const TOP_BAR_BACKGROUND_COLOR: Color = Color::rgb(0.165, 0.18, 0.184);
+#[derive(Default, Reflect, Serialize, Deserialize)]
+pub struct EditorScreenConfig {
+    top_bar_text_color: Color,
+    top_bar_font_size: Val,
+    top_bar_background_color: Color,
+    top_bar_separator_color: Color,
+    top_bar_separator_width: Val,
 
-const TOP_BAR_SEPARATOR_COLOR: Color = Color::rgb(0.510, 0.612, 0.769);
-const TOP_BAR_SEPARATOR_WIDTH: f32 = 1.5;
+    code_view_width: Val,
+    code_view_background_color: Color,
+    entity_view_width: Val,
+    entity_view_background_color: Color,
+    system_view_width: Val,
+    system_view_background_color: Color,
 
-// The sum of the following should add up to 100.0.
-const CODE_VIEW_WIDTH: f32 = 35.0;
-const ENTITY_VIEW_WIDTH: f32 = 40.0;
-const SYSTEMS_VIEW_WIDTH: f32 = 25.0;
+    code_text_color: Color,
+    code_font_size: Val,
+
+    upgrade_button_text_color: Color,
+    upgrade_button_font_size: Val,
+    upgrade_button_normal_color: Color,
+    upgrade_button_hovered_color: Color,
+    upgrade_button_pressed_color: Color,
+
+    tooltip_background_color: Color,
+    tooltip_text_color: Color,
+    tooltip_font_size: Val,
+}
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
-pub struct EditorScreenAssets {}
-
-fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config>) {
-    commands.insert_resource(ClearColor(Color::BLACK));
-    code_view::init(&mut commands, &root);
-    entity_view::init(&mut commands, &root);
-    systems_view::init(&mut commands, &root);
+pub struct EditorScreenAssets {
+    // TODO: Music / SFX, sprites
 }
 
-fn exit_editor_screen(root: Res<AppRoot>, mut transform_query: Query<&mut Transform>) {
+fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
+    let config = &config.editor_screen;
+    commands.insert_resource(ClearColor(config.entity_view_background_color));
+
+    let code_view = code_view::spawn(&mut commands, config);
+    let entity_view = entity_view::spawn(&mut commands, config);
+    let system_view = system_view::spawn(&mut commands, config);
+
+    commands
+        .spawn((
+            Name::new("EditorScreen"),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    justify_items: JustifyItems::Center,
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(root.ui)
+        .push_children(&[code_view, entity_view, system_view]);
+}
+
+fn exit_editor_screen(
+    mut commands: Commands,
+    root: Res<AppRoot>,
+    mut transform_query: Query<&mut Transform>,
+) {
+    commands.entity(root.ui).despawn_descendants();
+
+    // Reset camera
     let Ok(mut transform) = transform_query.get_mut(root.camera) else {
         return;
     };

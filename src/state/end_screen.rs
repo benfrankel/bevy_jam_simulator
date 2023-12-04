@@ -1,5 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use serde::Deserialize;
+use serde::Serialize;
 
 use crate::config::Config;
 use crate::state::AppState::*;
@@ -14,39 +16,31 @@ pub struct EndScreenStatePlugin;
 
 impl Plugin for EndScreenStatePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<EndScreenAssets>()
+        app.register_type::<EndScreenConfig>()
+            .register_type::<EndScreenAssets>()
             .init_collection::<EndScreenAssets>()
             .add_systems(OnEnter(EndScreen), enter_end_screen)
             .add_systems(OnExit(EndScreen), exit_end_screen);
     }
 }
 
-const BACKGROUND_COLOR: Color = Color::rgb(0.067, 0.067, 0.067);
-const BORDER_COLOR: Color = Color::rgb(0.161, 0.161, 0.161);
-const BORDER_WIDTH: Val = Val::VMin(0.9);
+#[derive(Default, Reflect, Serialize, Deserialize)]
+pub struct EndScreenConfig {
+    background_color: Color,
+    border_color: Color,
+    border_width: Val,
 
-const TITLE_TEXT_STYLE: TextStyle = TextStyle {
-    font: BOLD_FONT_HANDLE,
-    font_size: 0.0,
-    color: Color::rgb(0.737, 0.737, 0.737),
-};
+    title_text_color: Color,
+    title_font_size: Val,
+
+    table_header_background_color: Color,
+    table_header_text_color: Color,
+    table_text_color: Color,
+    table_font_size: Val,
+}
+
 const TITLE_TEXT: &str = "Results";
-const TITLE_FONT_SIZE: Val = Val::Vw(5.0);
-
-const TABLE_HEADER_BACKGROUND_COLOR: Color = Color::rgb(0.106, 0.106, 0.106);
-const TABLE_HEADER_TEXT_STYLE: TextStyle = TextStyle {
-    font: BOLD_FONT_HANDLE,
-    font_size: 0.0,
-    color: Color::rgb(0.624, 0.624, 0.624),
-};
 const TABLE_HEADER_TEXT: [&str; 4] = ["Criteria", "Rank", "Score", "Raw Score"];
-
-const TABLE_TEXT_STYLE: TextStyle = TextStyle {
-    font: FONT_HANDLE,
-    font_size: 0.0,
-    color: Color::rgb(0.737, 0.737, 0.737),
-};
-const TABLE_FONT_SIZE: Val = Val::Vw(2.5);
 const TABLE_CRITERIA_TEXT: [&str; 6] = [
     "Fun",
     "Presentation",
@@ -62,8 +56,25 @@ pub struct EndScreenAssets {
     // TODO: Music / SFX maybe
 }
 
-fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Config>) {
-    commands.insert_resource(ClearColor(Color::BLACK));
+fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
+    let config = &config.end_screen;
+    let title_text_style = TextStyle {
+        font: BOLD_FONT_HANDLE,
+        color: config.title_text_color,
+        ..default()
+    };
+    let table_header_text_style = TextStyle {
+        font: BOLD_FONT_HANDLE,
+        color: config.table_header_text_color,
+        ..default()
+    };
+    let table_text_style = TextStyle {
+        font: FONT_HANDLE,
+        color: config.table_text_color,
+        ..default()
+    };
+
+    commands.insert_resource(ClearColor(config.background_color));
 
     let screen = commands
         .spawn((
@@ -77,7 +88,7 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Con
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: BACKGROUND_COLOR.into(),
+                background_color: config.background_color.into(),
                 ..default()
             },
         ))
@@ -87,8 +98,8 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Con
     commands
         .spawn((
             Name::new("TitleText"),
-            TextBundle::from_section(TITLE_TEXT, TITLE_TEXT_STYLE),
-            FontSize::new(TITLE_FONT_SIZE),
+            TextBundle::from_section(TITLE_TEXT, title_text_style),
+            FontSize::new(config.title_font_size),
         ))
         .set_parent(screen);
 
@@ -100,13 +111,13 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Con
                     display: Display::Grid,
                     width: Val::Percent(100.0),
                     margin: UiRect::top(vh(10.0)),
-                    border: UiRect::all(BORDER_WIDTH),
+                    border: UiRect::all(config.border_width),
                     // FIXME: For some reason all the extra space goes to the first column
                     grid_template_columns: vec![GridTrack::auto(); 4],
                     ..default()
                 },
-                background_color: BACKGROUND_COLOR.into(),
-                border_color: BORDER_COLOR.into(),
+                background_color: config.background_color.into(),
+                border_color: config.border_color.into(),
                 ..default()
             },
         ))
@@ -122,7 +133,7 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Con
                         padding: UiRect::all(vmin(3.5)),
                         ..default()
                     },
-                    background_color: TABLE_HEADER_BACKGROUND_COLOR.into(),
+                    background_color: config.table_header_background_color.into(),
                     ..default()
                 },
             ))
@@ -131,15 +142,15 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Con
         commands
             .spawn((
                 Name::new("CellText"),
-                TextBundle::from_section(entry, TABLE_HEADER_TEXT_STYLE),
-                FontSize::new(TABLE_FONT_SIZE),
+                TextBundle::from_section(entry, table_header_text_style.clone()),
+                FontSize::new(config.table_font_size),
             ))
             .set_parent(cell);
     }
 
-    for (row, &criteria) in TABLE_CRITERIA_TEXT.iter().enumerate() {
+    for (row, &criterion) in TABLE_CRITERIA_TEXT.iter().enumerate() {
         // TODO: Populate cells based on resource values like entity count / lines of code
-        let entries = vec![criteria, "#13", "4.233", "4.233"];
+        let entries = [criterion, "#13", "4.233", "4.233"];
         for (col, &text) in entries.iter().enumerate() {
             let cell = commands
                 .spawn((
@@ -147,10 +158,10 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Con
                     NodeBundle {
                         style: Style {
                             padding: UiRect::all(vmin(3.5)),
-                            border: UiRect::top(BORDER_WIDTH),
+                            border: UiRect::top(config.border_width),
                             ..default()
                         },
-                        border_color: BORDER_COLOR.into(),
+                        border_color: config.border_color.into(),
                         ..default()
                     },
                 ))
@@ -159,8 +170,8 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, _config: Res<Con
             commands
                 .spawn((
                     Name::new("CellText"),
-                    TextBundle::from_section(text, TABLE_TEXT_STYLE),
-                    FontSize::new(TABLE_FONT_SIZE),
+                    TextBundle::from_section(text, table_text_style.clone()),
+                    FontSize::new(config.table_font_size),
                 ))
                 .set_parent(cell);
         }
