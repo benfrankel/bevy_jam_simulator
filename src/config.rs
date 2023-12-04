@@ -9,7 +9,7 @@ use serde::Serialize;
 use tap::TapFallible;
 
 use crate::state::editor_screen::EditorScreenConfig;
-use crate::state::end_screen::EndScreenConfig;
+use crate::state::results_screen::ResultsScreenConfig;
 use crate::state::loading_screen::LoadingScreenConfig;
 use crate::state::splash_screen::SplashScreenConfig;
 use crate::state::title_screen::TitleScreenConfig;
@@ -70,7 +70,7 @@ pub struct Config {
     pub title_screen: TitleScreenConfig,
     pub loading_screen: LoadingScreenConfig,
     pub editor_screen: EditorScreenConfig,
-    pub end_screen: EndScreenConfig,
+    pub results_screen: ResultsScreenConfig,
 }
 
 fn apply_config(config: Res<Config>, mut window_query: Query<&mut Window, With<PrimaryWindow>>) {

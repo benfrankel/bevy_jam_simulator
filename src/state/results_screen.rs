@@ -12,20 +12,20 @@ use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
 use crate::AppRoot;
 
-pub struct EndScreenStatePlugin;
+pub struct ResultsScreenStatePlugin;
 
-impl Plugin for EndScreenStatePlugin {
+impl Plugin for ResultsScreenStatePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<EndScreenConfig>()
-            .register_type::<EndScreenAssets>()
-            .init_collection::<EndScreenAssets>()
-            .add_systems(OnEnter(EndScreen), enter_end_screen)
-            .add_systems(OnExit(EndScreen), exit_end_screen);
+        app.register_type::<ResultsScreenConfig>()
+            .register_type::<ResultsScreenAssets>()
+            .init_collection::<ResultsScreenAssets>()
+            .add_systems(OnEnter(ResultsScreen), enter_results_screen)
+            .add_systems(OnExit(ResultsScreen), exit_results_screen);
     }
 }
 
 #[derive(Default, Reflect, Serialize, Deserialize)]
-pub struct EndScreenConfig {
+pub struct ResultsScreenConfig {
     background_color: Color,
     border_color: Color,
     border_width: Val,
@@ -52,12 +52,12 @@ const TABLE_CRITERIA_TEXT: [&str; 6] = [
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
-pub struct EndScreenAssets {
+pub struct ResultsScreenAssets {
     // TODO: Music / SFX maybe
 }
 
-fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
-    let config = &config.end_screen;
+fn enter_results_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
+    let config = &config.results_screen;
     let title_text_style = TextStyle {
         font: BOLD_FONT_HANDLE,
         color: config.title_text_color,
@@ -78,7 +78,7 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Conf
 
     let screen = commands
         .spawn((
-            Name::new("EndScreen"),
+            Name::new("ResultsScreen"),
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
@@ -182,6 +182,6 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Conf
     }
 }
 
-fn exit_end_screen(mut commands: Commands, root: Res<AppRoot>) {
+fn exit_results_screen(mut commands: Commands, root: Res<AppRoot>) {
     commands.entity(root.ui).despawn_descendants();
 }

@@ -79,7 +79,7 @@
 
     ),
     
-    end_screen: EndScreenConfig(
+    results_screen: ResultsScreenConfig(
         background_color: Rgba(red: 0.067, green: 0.067, blue: 0.067, alpha: 1.000),
         border_color: Rgba(red: 0.161, green: 0.161, blue: 0.161, alpha: 1.000),
         border_width: VMin(0.9),

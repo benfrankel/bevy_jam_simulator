@@ -1,5 +1,5 @@
 pub mod editor_screen;
-pub mod end_screen;
+pub mod results_screen;
 pub mod loading_screen;
 pub mod splash_screen;
 pub mod title_screen;
@@ -16,7 +16,7 @@ impl Plugin for StatePlugin {
             title_screen::TitleScreenStatePlugin,
             loading_screen::LoadingScreenStatePlugin,
             editor_screen::EditorScreenStatePlugin,
-            end_screen::EndScreenStatePlugin,
+            results_screen::ResultsScreenStatePlugin,
         ));
     }
 }
@@ -29,5 +29,5 @@ pub enum AppState {
     TitleScreen,
     LoadingScreen,
     EditorScreen,
-    EndScreen,
+    ResultsScreen,
 }

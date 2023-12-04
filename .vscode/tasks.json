@@ -6,7 +6,7 @@
 			"type": "cargo",
 			"command": "run",
 			"args": [
-				"--features=native_dev,bevy/x11"
+				"--features=native_dev"
 			],
 			"options": {
 				"env": {
@@ -30,7 +30,7 @@
 			"command": "run",
 			"args": [
 				"--release",
-				"--features=native,bevy/x11"
+				"--features=native"
 			],
 			"presentation": {
 				"clear": true
@@ -46,7 +46,7 @@
 			"command": "run",
 			"args": [
 				"--bin=debug",
-				"--features=native_dev,bevy/x11,debug_dump"
+				"--features=native_dev,debug_dump"
 			],
 			"options": {
 				"env": {
@@ -68,7 +68,7 @@
 			"args": [
 				"--release",
 				"--bin=debug",
-				"--features=native,bevy/x11,debug_dump"
+				"--features=native,debug_dump"
 			],
 			"options": {
 				"env": {
