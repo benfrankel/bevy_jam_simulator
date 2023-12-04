@@ -112,8 +112,12 @@ fn enter_end_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Conf
                     width: Val::Percent(100.0),
                     margin: UiRect::top(vh(10.0)),
                     border: UiRect::all(config.border_width),
-                    // FIXME: For some reason all the extra space goes to the first column
-                    grid_template_columns: vec![GridTrack::auto(); 4],
+                    grid_template_columns: vec![
+                        GridTrack::auto(),
+                        GridTrack::fr(1.0),
+                        GridTrack::fr(1.0),
+                        GridTrack::fr(1.5),
+                    ],
                     ..default()
                 },
                 background_color: config.background_color.into(),
