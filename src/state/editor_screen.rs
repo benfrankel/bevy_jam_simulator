@@ -1,6 +1,6 @@
-mod code_view;
-mod entity_view;
-mod system_view;
+//mod code_view;
+//mod entity_view;
+//mod system_view;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
@@ -9,6 +9,10 @@ use serde::Serialize;
 
 use crate::config::Config;
 use crate::state::AppState::*;
+use crate::ui::FontSize;
+use crate::ui::BOLD_FONT_HANDLE;
+use crate::ui::FONT_HANDLE;
+use crate::util::CodeTyper;
 use crate::AppRoot;
 
 pub struct EditorScreenStatePlugin;
@@ -18,43 +22,44 @@ impl Plugin for EditorScreenStatePlugin {
         app.register_type::<EditorScreenAssets>()
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
-            .add_systems(OnExit(EditorScreen), exit_editor_screen)
-            .add_systems(
-                Update,
-                (
-                    code_view::type_code,
-                    code_view::update_bar,
-                    entity_view::update_bar,
-                    system_view::interact_with_upgrade_buttons,
-                )
-                    .run_if(in_state(EditorScreen)),
-            );
+            .add_systems(OnExit(EditorScreen), exit_editor_screen);
     }
 }
 
 #[derive(Default, Reflect, Serialize, Deserialize)]
 pub struct EditorScreenConfig {
-    top_bar_text_color: Color,
-    top_bar_font_size: Val,
-    top_bar_background_color: Color,
-    top_bar_separator_color: Color,
-    top_bar_separator_width: Val,
+    info_bar_height: Val,
+    info_bar_background_color: Color,
+    info_bar_text_color: Color,
+    info_bar_font_size: Val,
 
-    code_view_width: Val,
+    plugin_view_width: Val,
+    plugin_view_background_color: Color,
+    plugin_view_text_color: Color,
+    plugin_view_font_size: Val,
+
+    scene_view_background_color: Color,
+
+    code_view_height: Val,
     code_view_background_color: Color,
-    entity_view_width: Val,
-    entity_view_background_color: Color,
-    system_view_width: Val,
-    system_view_background_color: Color,
+    code_view_text_color: Color,
+    code_view_font_size: Val,
+    code_view_lines_max: usize,
 
-    code_text_color: Color,
-    code_font_size: Val,
+    upgrade_view_width: Val,
+    upgrade_view_background_color: Color,
 
-    upgrade_button_text_color: Color,
-    upgrade_button_font_size: Val,
     upgrade_button_normal_color: Color,
     upgrade_button_hovered_color: Color,
     upgrade_button_pressed_color: Color,
+    upgrade_button_text_color: Color,
+    upgrade_button_font_size: Val,
+
+    submit_button_normal_color: Color,
+    submit_button_hovered_color: Color,
+    submit_button_pressed_color: Color,
+    submit_button_text_color: Color,
+    submit_button_font_size: Val,
 
     tooltip_background_color: Color,
     tooltip_text_color: Color,
@@ -69,27 +74,172 @@ pub struct EditorScreenAssets {
 
 fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
     let config = &config.editor_screen;
-    commands.insert_resource(ClearColor(config.entity_view_background_color));
+    commands.insert_resource(ClearColor(config.scene_view_background_color));
 
-    let code_view = code_view::spawn(&mut commands, config);
-    let entity_view = entity_view::spawn(&mut commands, config);
-    let system_view = system_view::spawn(&mut commands, config);
-
-    commands
+    let editor_screen = commands
         .spawn((
             Name::new("EditorScreen"),
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
                     height: Val::Percent(100.0),
-                    justify_items: JustifyItems::Center,
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 },
                 ..default()
             },
         ))
         .set_parent(root.ui)
-        .push_children(&[code_view, entity_view, system_view]);
+        .id();
+
+    let info_bar = commands
+        .spawn((
+            Name::new("InfoBar"),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: config.info_bar_height,
+                    ..default()
+                },
+                background_color: config.info_bar_background_color.into(),
+                ..default()
+            },
+        ))
+        .set_parent(editor_screen)
+        .id();
+
+    commands
+        .spawn((
+            Name::new("InfoBarText"),
+            TextBundle::from_section(
+                "",
+                TextStyle {
+                    font: BOLD_FONT_HANDLE,
+                    color: config.info_bar_text_color,
+                    ..default()
+                },
+            ),
+            FontSize::new(config.info_bar_font_size),
+        ))
+        .set_parent(info_bar);
+
+    let hbox = commands
+        .spawn((
+            Name::new("HBox"),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: Val::Percent(100.0),
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(editor_screen)
+        .id();
+
+    let _plugin_view = commands
+        .spawn((
+            Name::new("PluginView"),
+            NodeBundle {
+                style: Style {
+                    width: config.plugin_view_width,
+                    height: Val::Percent(100.0),
+                    ..default()
+                },
+                background_color: config.plugin_view_background_color.into(),
+                ..default()
+            },
+        ))
+        .set_parent(hbox)
+        .id();
+
+    // TODO: Plugin view's children
+
+    let vbox = commands
+        .spawn((
+            Name::new("VBox"),
+            NodeBundle {
+                style: Style {
+                    flex_direction: FlexDirection::Column,
+                    flex_grow: 1.0,
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(hbox)
+        .id();
+
+    commands
+        .spawn((
+            Name::new("SceneView"),
+            NodeBundle {
+                style: Style {
+                    flex_grow: 1.0,
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(vbox);
+
+    let code_view = commands
+        .spawn((
+            Name::new("CodeView"),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: config.code_view_height,
+                    padding: UiRect::all(Val::VMin(2.0)),
+                    ..default()
+                },
+                background_color: config.code_view_background_color.into(),
+                ..default()
+            },
+        ))
+        .set_parent(vbox)
+        .id();
+
+    commands
+        .spawn((
+            Name::new("CodeViewText"),
+            TextBundle::from_section(
+                "// Start typing to generate lines of code!\n\n",
+                TextStyle {
+                    font: FONT_HANDLE,
+                    color: config.code_view_text_color,
+                    ..default()
+                },
+            ),
+            FontSize::new(config.code_view_font_size),
+            CodeTyper {
+                lines_count: 3,
+                lines_max: config.code_view_lines_max,
+                ..default()
+            },
+        ))
+        .set_parent(code_view);
+
+    // TODO: Code view's children
+
+    let _upgrade_view = commands
+        .spawn((
+            Name::new("UpgradeView"),
+            NodeBundle {
+                style: Style {
+                    width: config.upgrade_view_width,
+                    height: Val::Percent(100.0),
+                    ..default()
+                },
+                background_color: config.upgrade_view_background_color.into(),
+                ..default()
+            },
+        ))
+        .set_parent(hbox)
+        .id();
+
+    // TODO: Upgrade view's children
 }
 
 fn exit_editor_screen(

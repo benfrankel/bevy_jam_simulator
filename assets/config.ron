@@ -36,31 +36,42 @@
     ),
 
     editor_screen: EditorScreenConfig(
-        top_bar_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
-        top_bar_font_size: Vh(4.5),
-        top_bar_background_color: Rgba(red: 0.165, green: 0.180, blue: 0.184, alpha: 1.000),
-        top_bar_separator_color: Rgba(red: 0.510, green: 0.612, blue: 0.769, alpha: 1.000),
-        top_bar_separator_width: Vh(0.85),
+        info_bar_height: Px(60.0),
+        info_bar_background_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
+        info_bar_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
+        info_bar_font_size: Px(32.0),
 
-        code_view_width: Percent(35.0),
-        code_view_background_color: Rgba(red: 0.106, green: 0.118, blue: 0.122, alpha: 1.000),
-        entity_view_width: Auto,
-        entity_view_background_color: Rgba(red: 0.500, green: 0.500, blue: 0.500, alpha: 1.000),
-        system_view_width: Percent(25.0),
-        system_view_background_color: Rgba(red: 0.106, green: 0.118, blue: 0.122, alpha: 1.000),
+        plugin_view_width: Px(250.0),
+        plugin_view_background_color: Rgba(red: 0.184, green: 0.188, blue: 0.239, alpha: 1.000),
+        plugin_view_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
+        plugin_view_font_size: Px(16.0),
 
-        code_text_color: Rgba(red: 0.300, green: 0.900, blue: 0.000, alpha: 1.000),
-        code_font_size: Vh(2.25),
+        scene_view_background_color: Rgba(red: 0.671, green: 0.710, blue: 0.722, alpha: 1.000),
 
-        upgrade_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
-        upgrade_button_font_size: Vh(2.25),
+        code_view_height: Px(200.0),
+        code_view_background_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
+        code_view_text_color: Rgba(red: 0.300, green: 0.900, blue: 0.000, alpha: 1.000),
+        code_view_font_size: Px(16.0),
+        code_view_lines_max: 10,
+
+        upgrade_view_width: Px(250.0),
+        upgrade_view_background_color: Rgba(red: 0.184, green: 0.188, blue: 0.239, alpha: 1.000),
+
         upgrade_button_normal_color: Rgba(red: 0.165, green: 0.180, blue: 0.184, alpha: 1.000),
         upgrade_button_hovered_color: Rgba(red: 0.265, green: 0.280, blue: 0.284, alpha: 1.000),
         upgrade_button_pressed_color: Rgba(red: 0.065, green: 0.080, blue: 0.084, alpha: 1.000),
+        upgrade_button_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
+        upgrade_button_font_size: Px(16.0),
+
+        submit_button_normal_color: Rgba(red: 0.165, green: 0.180, blue: 0.184, alpha: 1.000),
+        submit_button_hovered_color: Rgba(red: 0.265, green: 0.280, blue: 0.284, alpha: 1.000),
+        submit_button_pressed_color: Rgba(red: 0.065, green: 0.080, blue: 0.084, alpha: 1.000),
+        submit_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
+        submit_button_font_size: Px(32.0),
 
         tooltip_background_color: Rgba(red: 0.106, green: 0.118, blue: 0.122, alpha: 0.750),
         tooltip_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
-        tooltip_font_size: Vh(2.25),
+        tooltip_font_size: Px(16.0),
     ),
     
     end_screen: EndScreenConfig(

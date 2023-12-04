@@ -56,9 +56,10 @@ pub fn spawn(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: vh(20.0),
-                    padding: UiRect::axes(Val::VMin(3.5), Val::VMin(3.5)),
+                    height: config.top_bar_height,
+                    padding: UiRect::left(Val::VMin(3.5)),
                     border: UiRect::left(config.top_bar_separator_width),
+                    align_items: AlignItems::Center,
                     ..default()
                 },
                 background_color: config.top_bar_background_color.into(),
@@ -72,7 +73,7 @@ pub fn spawn(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
     commands
         .spawn((
             Name::new("HeaderText"),
-            TextBundle::from_section("Upgrades", top_bar_text_style)
+            TextBundle::from_section("Systems", top_bar_text_style)
                 .with_text_alignment(TextAlignment::Left),
             FontSize::new(config.top_bar_font_size),
         ))

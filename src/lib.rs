@@ -8,6 +8,7 @@ mod debug;
 mod physics;
 mod state;
 mod ui;
+mod util;
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
@@ -34,7 +35,12 @@ impl Plugin for AppPlugin {
         ));
 
         // Other plugins
-        app.add_plugins((camera::CameraPlugin, physics::PhysicsPlugin, ui::UiPlugin));
+        app.add_plugins((
+            camera::CameraPlugin,
+            physics::PhysicsPlugin,
+            ui::UiPlugin,
+            util::UtilPlugin,
+        ));
 
         #[cfg(feature = "dev")]
         app.add_plugins(debug::DebugPlugin {

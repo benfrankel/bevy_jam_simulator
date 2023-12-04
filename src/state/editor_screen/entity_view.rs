@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 
 use crate::state::editor_screen::EditorScreenConfig;
-use crate::ui::vh;
 use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
 
@@ -52,9 +51,10 @@ pub fn spawn(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: vh(20.0),
-                    padding: UiRect::axes(Val::VMin(3.5), Val::VMin(3.5)),
+                    height: config.top_bar_height,
+                    padding: UiRect::left(Val::VMin(3.5)),
                     border: UiRect::left(config.top_bar_separator_width),
+                    align_items: AlignItems::Center,
                     ..default()
                 },
                 background_color: config.top_bar_background_color.into(),
@@ -68,7 +68,7 @@ pub fn spawn(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
     commands
         .spawn((
             Name::new("HeaderText"),
-            TextBundle::from_section("Entities: 0", top_bar_text_style)
+            TextBundle::from_section("0 entities", top_bar_text_style)
                 .with_text_alignment(TextAlignment::Left),
             FontSize::new(config.top_bar_font_size),
             EntitiesText,
@@ -84,5 +84,5 @@ pub fn update_bar(
 ) {
     let mut text = query.single_mut();
     entity_model.count += 1.0;
-    text.sections[0].value = format!("Entities: {}", entity_model.count);
+    text.sections[0].value = format!("{} entities", entity_model.count);
 }
