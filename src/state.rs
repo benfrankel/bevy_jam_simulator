@@ -21,6 +21,7 @@ impl Plugin for StatePlugin {
     }
 }
 
+#[allow(clippy::enum_variant_names)]
 #[derive(States, Default, Copy, Clone, Eq, PartialEq, Hash, Debug, EnumIter)]
 pub enum AppState {
     #[default]
