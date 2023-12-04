@@ -3,6 +3,8 @@ use std::str::Chars;
 
 use bevy::prelude::*;
 
+use crate::simulation::Simulation;
+
 pub struct CodeTyperPlugin;
 
 impl Plugin for CodeTyperPlugin {
@@ -31,8 +33,6 @@ pub struct CodeTyper {
     pub lines_count: usize,
     /// The maximum number of lines to display before old lines start getting deleted.
     pub lines_max: usize,
-    /// The total number of \n typed over the full lifetime.
-    pub lines_typed: usize,
     /// An infinite iterator that yields the next character that will be added.
     #[reflect(ignore)]
     pub code: CodeGenerator,
@@ -44,7 +44,6 @@ impl Default for CodeTyper {
             chars_per_key: 1,
             lines_count: 1,
             lines_max: 1,
-            lines_typed: 0,
             code: default(),
         }
     }
@@ -53,7 +52,8 @@ impl Default for CodeTyper {
 pub fn type_code(
     mut char_events: EventReader<ReceivedCharacter>,
     keyboard_input: Res<Input<ScanCode>>,
-    mut query: Query<(&mut CodeTyper, &mut Text)>,
+    mut simulation: ResMut<Simulation>,
+    mut typer_query: Query<(&mut CodeTyper, &mut Text)>,
 ) {
     let count = char_events
         .read()
@@ -63,7 +63,7 @@ pub fn type_code(
         return;
     }
 
-    for (mut typer, mut text) in &mut query {
+    for (mut typer, mut text) in &mut typer_query {
         let text = &mut text.sections[0].value;
         for _ in 0..count * typer.chars_per_key {
             loop {
@@ -73,7 +73,7 @@ pub fn type_code(
 
                 // If it was a newline, update typer's lines
                 if c == '\n' {
-                    typer.lines_typed += 1;
+                    simulation.lines += 1.0;
                     typer.lines_count += 1;
                     if typer.lines_count > typer.lines_max {
                         typer.lines_count -= 1;
