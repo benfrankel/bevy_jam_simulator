@@ -50,6 +50,7 @@
 
         plugin_view_width: Px(250.0),
         plugin_view_background_color: Rgba(red: 0.184, green: 0.188, blue: 0.239, alpha: 1.000),
+        plugin_view_highlight_color: Rgba(red: 0.263, green: 0.275, blue: 0.318, alpha: 1.000),
         plugin_view_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
         plugin_view_font_size: Px(16.0),
 

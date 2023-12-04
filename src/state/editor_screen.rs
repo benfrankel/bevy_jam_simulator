@@ -12,6 +12,7 @@ use crate::config::Config;
 use crate::state::AppState::*;
 use crate::ui::CodeTyper;
 use crate::ui::FontSize;
+use crate::ui::InteractionColor;
 use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
@@ -38,6 +39,7 @@ pub struct EditorScreenConfig {
 
     plugin_view_width: Val,
     plugin_view_background_color: Color,
+    plugin_view_highlight_color: Color,
     plugin_view_text_color: Color,
     plugin_view_font_size: Val,
 
@@ -162,17 +164,23 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                 Name::new("Plugin"),
                 NodeBundle {
                     style: Style {
+                        margin: UiRect::bottom(Val::Px(1.0)),
                         padding: UiRect::vertical(Val::Px(4.0)),
                         ..default()
                     },
                     ..default()
+                },
+                Interaction::default(),
+                InteractionColor {
+                    normal: Color::NONE,
+                    hovered: config.plugin_view_highlight_color,
+                    pressed: config.plugin_view_highlight_color,
                 },
                 Tooltip {
                     text: format!("This is the description for {plugin_name}."),
                     side: TooltipSide::Right,
                     offset: vec2(12.0, 0.0),
                 },
-                Interaction::default(),
             ))
             .set_parent(plugin_view)
             .id();
