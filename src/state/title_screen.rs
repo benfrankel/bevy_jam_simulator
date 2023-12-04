@@ -12,6 +12,7 @@ use crate::state::AppState::*;
 use crate::ui::vh;
 use crate::ui::vmin;
 use crate::ui::vw;
+use crate::ui::ButtonColor;
 use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
@@ -28,8 +29,7 @@ impl Plugin for TitleScreenStatePlugin {
             .add_collection_to_loading_state::<_, EditorScreenAssets>(TitleScreen)
             .add_plugins(ProgressPlugin::new(TitleScreen))
             .add_systems(OnEnter(TitleScreen), enter_title_screen)
-            .add_systems(OnExit(TitleScreen), exit_title_screen)
-            .add_systems(Update, update_button.run_if(in_state(TitleScreen)));
+            .add_systems(OnExit(TitleScreen), exit_title_screen);
     }
 }
 
@@ -206,6 +206,11 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                 border_color: config.button_border_color.into(),
                 ..default()
             },
+            ButtonColor {
+                normal: config.button_normal_color,
+                hovered: config.button_hovered_color,
+                pressed: config.button_pressed_color,
+            },
             On::<Pointer<Click>>::run(
                 |mut next_state: ResMut<NextState<AppState>>, progress: Res<ProgressCounter>| {
                     let Progress { done, total } = progress.progress_complete();
@@ -232,22 +237,4 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
 fn exit_title_screen(mut commands: Commands, root: Res<AppRoot>) {
     // TODO: This and the other despawn_decendants() should probably make use of DespawnSet...
     commands.entity(root.ui).despawn_descendants();
-}
-
-fn update_button(
-    config: Res<Config>,
-    mut interaction_query: Query<
-        (&Interaction, &mut BackgroundColor),
-        (Changed<Interaction>, With<Button>),
-    >,
-) {
-    let config = &config.title_screen;
-    for (interaction, mut color) in &mut interaction_query {
-        *color = match interaction {
-            Interaction::Pressed => config.button_pressed_color,
-            Interaction::Hovered => config.button_hovered_color,
-            Interaction::None => config.button_normal_color,
-        }
-        .into()
-    }
 }

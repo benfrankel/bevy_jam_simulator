@@ -9,10 +9,12 @@ use serde::Serialize;
 
 use crate::config::Config;
 use crate::state::AppState::*;
+use crate::ui::CodeTyper;
 use crate::ui::FontSize;
+use crate::ui::Tooltip;
+use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
-use crate::util::CodeTyper;
 use crate::AppRoot;
 
 pub struct EditorScreenStatePlugin;
@@ -60,10 +62,6 @@ pub struct EditorScreenConfig {
     submit_button_pressed_color: Color,
     submit_button_text_color: Color,
     submit_button_font_size: Val,
-
-    tooltip_background_color: Color,
-    tooltip_text_color: Color,
-    tooltip_font_size: Val,
 }
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
@@ -138,13 +136,16 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         .set_parent(editor_screen)
         .id();
 
-    let _plugin_view = commands
+    let plugin_view = commands
         .spawn((
             Name::new("PluginView"),
             NodeBundle {
                 style: Style {
                     width: config.plugin_view_width,
                     height: Val::Percent(100.0),
+                    padding: UiRect::all(Val::Px(12.0)),
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(4.0),
                     ..default()
                 },
                 background_color: config.plugin_view_background_color.into(),
@@ -154,7 +155,28 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         .set_parent(hbox)
         .id();
 
-    // TODO: Plugin view's children
+    // TODO: Remove these dummy plugins
+    for plugin_name in ["FooPlugin", "BarPlugin", "QuuxPlugin"] {
+        commands
+            .spawn((
+                Name::new("Plugin"),
+                TextBundle::from_section(
+                    plugin_name,
+                    TextStyle {
+                        font: FONT_HANDLE,
+                        color: config.plugin_view_text_color,
+                        ..default()
+                    },
+                ),
+                FontSize::new(config.plugin_view_font_size),
+                Tooltip {
+                    text: format!("This is the description for {plugin_name}."),
+                    side: TooltipSide::Right,
+                },
+                Interaction::default(),
+            ))
+            .set_parent(plugin_view);
+    }
 
     let vbox = commands
         .spawn((
@@ -220,8 +242,6 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
             },
         ))
         .set_parent(code_view);
-
-    // TODO: Code view's children
 
     let _upgrade_view = commands
         .spawn((

@@ -8,7 +8,6 @@ mod debug;
 mod physics;
 mod state;
 mod ui;
-mod util;
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
@@ -35,12 +34,7 @@ impl Plugin for AppPlugin {
         ));
 
         // Other plugins
-        app.add_plugins((
-            camera::CameraPlugin,
-            physics::PhysicsPlugin,
-            ui::UiPlugin,
-            util::UtilPlugin,
-        ));
+        app.add_plugins((camera::CameraPlugin, physics::PhysicsPlugin, ui::UiPlugin));
 
         #[cfg(feature = "dev")]
         app.add_plugins(debug::DebugPlugin {
@@ -52,9 +46,12 @@ impl Plugin for AppPlugin {
     }
 }
 
+// Global entities
 #[derive(Resource, Reflect)]
 pub struct AppRoot {
     camera: Entity,
+    tooltip: Entity,
+    tooltip_text: Entity,
 
     // Logical entities
     ui: Entity,
@@ -65,6 +62,8 @@ impl Default for AppRoot {
     fn default() -> Self {
         Self {
             camera: Entity::PLACEHOLDER,
+            tooltip: Entity::PLACEHOLDER,
+            tooltip_text: Entity::PLACEHOLDER,
 
             ui: Entity::PLACEHOLDER,
             world: Entity::PLACEHOLDER,

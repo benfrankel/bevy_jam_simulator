@@ -9,12 +9,6 @@ use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
 
-#[derive(Component)]
-pub struct Tooltip;
-
-#[derive(Component)]
-pub struct TooltipText;
-
 pub fn spawn(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
     let top_bar_text_style = TextStyle {
         font: BOLD_FONT_HANDLE,

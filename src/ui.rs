@@ -1,19 +1,33 @@
+mod button_color;
+mod code_typer;
 mod font;
+mod tooltip;
 
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
 use crate::camera::CAMERA_HEIGHT;
 use crate::camera::CAMERA_WIDTH;
+pub use crate::ui::button_color::ButtonColor;
+pub use crate::ui::code_typer::CodeTyper;
 pub use crate::ui::font::FontSize;
 pub use crate::ui::font::BOLD_FONT_HANDLE;
 pub use crate::ui::font::FONT_HANDLE;
+pub use crate::ui::tooltip::Tooltip;
+pub use crate::ui::tooltip::TooltipConfig;
+pub use crate::ui::tooltip::TooltipSide;
 
 pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((DefaultPickingPlugins, font::FontPlugin));
+        app.add_plugins((
+            DefaultPickingPlugins,
+            button_color::ButtonColorPlugin,
+            code_typer::CodeTyperPlugin,
+            font::FontPlugin,
+            tooltip::TooltipPlugin,
+        ));
     }
 }
 

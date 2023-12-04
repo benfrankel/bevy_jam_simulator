@@ -13,6 +13,7 @@ use crate::state::end_screen::EndScreenConfig;
 use crate::state::loading_screen::LoadingScreenConfig;
 use crate::state::splash_screen::SplashScreenConfig;
 use crate::state::title_screen::TitleScreenConfig;
+use crate::ui::TooltipConfig;
 
 pub struct ConfigPlugin;
 
@@ -54,11 +55,17 @@ const WINDOW_TITLE: &str = "bevy_jam4";
 #[derive(Resource, Default, Reflect, Serialize, Deserialize)]
 #[reflect(Resource)]
 pub struct Config {
+    // Window
     pub window_mode: WindowMode,
     pub present_mode: PresentMode,
     // TODO: Volume
     // TODO: Mute when out of focus
     // TODO: Keybindings
+
+    // UI
+    pub tooltip: TooltipConfig,
+
+    // App states
     pub splash_screen: SplashScreenConfig,
     pub title_screen: TitleScreenConfig,
     pub loading_screen: LoadingScreenConfig,
