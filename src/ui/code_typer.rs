@@ -51,13 +51,14 @@ impl Default for CodeTyper {
 }
 
 pub fn type_code(
-    keyboard_input: Res<Input<KeyCode>>,
+    mut char_events: EventReader<ReceivedCharacter>,
+    keyboard_input: Res<Input<ScanCode>>,
     mut query: Query<(&mut CodeTyper, &mut Text)>,
 ) {
-    let count = keyboard_input
-        .get_just_pressed()
-        .filter(|&&key| KeyCode::Key1 <= key && key <= KeyCode::Z)
-        .count();
+    let count = char_events
+        .read()
+        .count()
+        .min(keyboard_input.get_just_pressed().count());
     if count == 0 {
         return;
     }
@@ -65,18 +66,24 @@ pub fn type_code(
     for (mut typer, mut text) in &mut query {
         let text = &mut text.sections[0].value;
         for _ in 0..count * typer.chars_per_key {
-            let c = typer.code.0.next().unwrap();
-            text.push(c);
-            if c != '\n' {
-                continue;
-            }
+            loop {
+                // Push a character
+                let c = typer.code.0.next().unwrap();
+                text.push(c);
 
-            typer.lines_typed += 1;
-            typer.lines_count += 1;
-            if typer.lines_count > typer.lines_max {
-                typer.lines_count -= 1;
-                // Remove the first line
-                *text = text.split_off(text.find('\n').unwrap() + 1)
+                // If it was a newline, update typer's lines
+                if c == '\n' {
+                    typer.lines_typed += 1;
+                    typer.lines_count += 1;
+                    if typer.lines_count > typer.lines_max {
+                        typer.lines_count -= 1;
+                        // Remove the first line
+                        *text = text.split_off(text.find('\n').unwrap() + 1)
+                    }
+                } else if !c.is_whitespace() {
+                    // Stop when a visible character is reached
+                    break;
+                }
             }
         }
     }
