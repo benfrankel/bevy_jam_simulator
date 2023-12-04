@@ -2,6 +2,7 @@
 //mod entity_view;
 //mod system_view;
 
+use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use serde::Deserialize;
@@ -143,9 +144,8 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                 style: Style {
                     width: config.plugin_view_width,
                     height: Val::Percent(100.0),
-                    padding: UiRect::all(Val::Px(12.0)),
+                    padding: UiRect::new(Val::Px(12.0), Val::Px(12.0), Val::Px(8.0), Val::Px(12.0)),
                     flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(4.0),
                     ..default()
                 },
                 background_color: config.plugin_view_background_color.into(),
@@ -157,9 +157,29 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
 
     // TODO: Remove these dummy plugins
     for plugin_name in ["FooPlugin", "BarPlugin", "QuuxPlugin"] {
-        commands
+        let plugin = commands
             .spawn((
                 Name::new("Plugin"),
+                NodeBundle {
+                    style: Style {
+                        padding: UiRect::vertical(Val::Px(4.0)),
+                        ..default()
+                    },
+                    ..default()
+                },
+                Tooltip {
+                    text: format!("This is the description for {plugin_name}."),
+                    side: TooltipSide::Right,
+                    offset: vec2(12.0, 0.0),
+                },
+                Interaction::default(),
+            ))
+            .set_parent(plugin_view)
+            .id();
+
+        commands
+            .spawn((
+                Name::new("PluginText"),
                 TextBundle::from_section(
                     plugin_name,
                     TextStyle {
@@ -169,13 +189,8 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                     },
                 ),
                 FontSize::new(config.plugin_view_font_size),
-                Tooltip {
-                    text: format!("This is the description for {plugin_name}."),
-                    side: TooltipSide::Right,
-                },
-                Interaction::default(),
             ))
-            .set_parent(plugin_view);
+            .set_parent(plugin);
     }
 
     let vbox = commands

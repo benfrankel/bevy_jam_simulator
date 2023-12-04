@@ -76,6 +76,7 @@ pub enum TooltipSide {
 pub struct Tooltip {
     pub text: String,
     pub side: TooltipSide,
+    pub offset: Vec2,
 }
 
 fn show_tooltip_on_hover(
@@ -108,7 +109,12 @@ fn show_tooltip_on_hover(
 
         let width = window.physical_width() as f32;
         let height = window.physical_height() as f32;
-        let (left, right, top, bottom) = (rect.min.x, rect.max.x, rect.min.y, rect.max.y);
+        let (left, right, top, bottom) = (
+            rect.min.x + tooltip.offset.x,
+            rect.max.x + tooltip.offset.x,
+            rect.min.y + tooltip.offset.y,
+            rect.max.y + tooltip.offset.y,
+        );
 
         *tooltip_visibility = Visibility::Inherited;
         tooltip_text.sections[0].value = tooltip.text.clone();
