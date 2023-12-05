@@ -87,6 +87,7 @@ pub struct EditorScreenConfig {
 pub struct EditorScreenUI {
     pub vbox: Entity,
     pub code_panel: Entity,
+    pub upgrade_container: Entity,
 }
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
@@ -163,10 +164,15 @@ fn enter_editor_screen(
     let code_panel = spawn_light_code_panel(&mut commands, config);
     commands.entity(code_panel).set_parent(vbox);
 
-    let upgrade_panel = spawn_upgrade_panel(&mut commands, config, &upgrade_list);
+    let (upgrade_panel, upgrade_container) =
+        spawn_upgrade_panel(&mut commands, config, &upgrade_list);
     commands.entity(upgrade_panel).set_parent(hbox);
 
-    commands.insert_resource(EditorScreenUI { vbox, code_panel });
+    commands.insert_resource(EditorScreenUI {
+        vbox,
+        code_panel,
+        upgrade_container,
+    });
 }
 
 fn exit_editor_screen(

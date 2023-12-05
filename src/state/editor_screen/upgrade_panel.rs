@@ -2,6 +2,7 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
+use super::EditorScreenUI;
 use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenConfig;
@@ -33,7 +34,7 @@ impl Plugin for UpgradePanelPlugin {
     }
 }
 
-const FIRST_UPGRADE: UpgradeKind = UpgradeKind::TouchOfLife;
+const FIRST_UPGRADE: UpgradeKind = UpgradeKind::DarkMode;
 
 #[derive(Component, Reflect)]
 pub struct IsUpgradeContainer;
@@ -45,7 +46,7 @@ pub fn spawn_upgrade_panel(
     commands: &mut Commands,
     config: &EditorScreenConfig,
     upgrade_list: &UpgradeList,
-) -> Entity {
+) -> (Entity, Entity) {
     let upgrade_panel = commands
         .spawn((
             Name::new("UpgradePanel"),
@@ -123,7 +124,7 @@ pub fn spawn_upgrade_panel(
     let submit_button = spawn_submit_button(commands, config);
     commands.entity(submit_button).set_parent(submit_container);
 
-    upgrade_panel
+    (upgrade_panel, upgrade_container)
 }
 
 // TODO: On EnableUpgradeEvent:
@@ -275,16 +276,28 @@ fn update_upgrade_button_disabled(
 
 fn replace_available_upgrades(
     mut commands: Commands,
+    mut events: EventReader<UpgradeEvent>,
     config: Res<Config>,
-    container_query: Query<Entity, With<IsUpgradeContainer>>,
+    upgrade_list: Res<UpgradeList>,
+    editor_screen_ui: Res<EditorScreenUI>,
 ) {
-    let _config = &config.editor_screen;
-    for container in &container_query {
-        commands.entity(container).despawn_descendants();
+    let config = &config.editor_screen;
+    for event in events.read() {
+        commands
+            .entity(editor_screen_ui.upgrade_container)
+            .despawn_descendants();
 
-        // TODO: Spawn the next set of upgrades
-        // - # of upgrade slots
-        // - Initial fixed sequence of upgrades
-        // - Randomly chosen upgrades (weighted)
+        if let Some(upgrade_kind) = upgrade_list.get(event.0).next_upgrade {
+            // This upgrade belongs to the initial state of upgrades.
+            // Spawn the next upgrade:
+            let upgrade_button =
+                spawn_upgrade_button(&mut commands, config, &upgrade_list, upgrade_kind);
+            commands
+                .entity(upgrade_button)
+                .set_parent(editor_screen_ui.upgrade_container);
+        } else {
+            // TODO: Spawn randomly chosen upgrades (weighted)
+            todo!();
+        }
     }
 }

@@ -33,6 +33,10 @@ pub struct Upgrade {
     pub enable: Option<SystemId>,
     // A one-shot system that runs every frame for each active copy of this upgrade
     pub update: Option<SystemId>,
+
+    /// Only present in the initial sequence of upgrades.
+    /// Determines the next unlocked upgrade.
+    pub next_upgrade: Option<UpgradeKind>,
 }
 
 #[derive(Resource, Default)]
@@ -75,6 +79,7 @@ impl UpgradeList {
 
 #[derive(Reflect, Clone, Copy)]
 pub enum UpgradeKind {
+    DarkMode,
     TouchOfLife,
 }
 
@@ -82,17 +87,36 @@ fn load_upgrade_list(world: &mut World) {
     let dark_mode_enable = world.register_system(dark_mode_enable);
     let mut upgrade_types: Mut<UpgradeList> = world.get_resource_mut().unwrap();
 
-    upgrade_types.0.extend([Upgrade {
-        name: "Dark Mode".to_string(),
-        description: "Rite of passage for all developers. Required to write code.".to_string(),
+    upgrade_types.0.extend([
+        Upgrade {
+            name: "Dark Mode".to_string(),
+            description: "Rite of passage for all developers. Required to write code.".to_string(),
 
-        base_cost: 0.0,
-        weight: 1.0,
-        remaining: 1,
+            base_cost: 0.0,
+            weight: 1.0,
+            remaining: 1,
 
-        enable: Some(dark_mode_enable),
-        update: None,
-    }]);
+            enable: Some(dark_mode_enable),
+            update: None,
+
+            next_upgrade: Some(UpgradeKind::TouchOfLife),
+        },
+        Upgrade {
+            name: "Touch of Life".to_string(),
+            description: "Spawns 1 entity wherever you click in the scene view.".to_string(),
+
+            base_cost: 10.0,
+            weight: 1.0,
+            remaining: 1,
+
+            // TODO: This is stil no-op
+            enable: None,
+            update: None,
+
+            // TODO: This is a placegolder.
+            next_upgrade: Some(UpgradeKind::TouchOfLife),
+        },
+    ]);
 }
 
 fn dark_mode_enable(
