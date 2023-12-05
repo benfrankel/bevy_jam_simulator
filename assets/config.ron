@@ -51,7 +51,7 @@
             info_bar_text_color: Rgba(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.000),
             info_bar_font_size: Px(32.0),
 
-            outline_panel_width: Px(250.0),
+            outline_panel_width: Px(280.0),
             outline_panel_background_color: Rgba(red: 0.8, green: 0.8, blue: 0.8, alpha: 1.000),
             outline_panel_highlight_color: Rgba(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.000),
             outline_panel_text_color: Rgba(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.000),
@@ -64,7 +64,7 @@
             code_panel_font_size: Px(16.0),
             code_panel_lines_max: 10,
 
-            upgrade_panel_width: Px(250.0),
+            upgrade_panel_width: Px(280.0),
             upgrade_panel_background_color: Rgba(red: 0.8, green: 0.8, blue: 0.8, alpha: 1.000),
             upgrade_panel_text_color: Rgba(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.000),
             upgrade_panel_header_font_size: Px(24.0),
@@ -91,7 +91,7 @@
             info_bar_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
             info_bar_font_size: Px(32.0),
 
-            outline_panel_width: Px(250.0),
+            outline_panel_width: Px(280.0),
             outline_panel_background_color: Rgba(red: 0.184, green: 0.188, blue: 0.239, alpha: 1.000),
             outline_panel_highlight_color: Rgba(red: 0.263, green: 0.275, blue: 0.318, alpha: 1.000),
             outline_panel_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
@@ -104,7 +104,7 @@
             code_panel_font_size: Px(16.0),
             code_panel_lines_max: 10,
 
-            upgrade_panel_width: Px(250.0),
+            upgrade_panel_width: Px(280.0),
             upgrade_panel_background_color: Rgba(red: 0.184, green: 0.188, blue: 0.239, alpha: 1.000),
             upgrade_panel_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
             upgrade_panel_header_font_size: Px(24.0),

@@ -3,7 +3,6 @@ use bevy::prelude::*;
 
 use crate::state::editor_screen::ClickSpawnEvent;
 use crate::upgrade::UpgradeEvent;
-use crate::upgrade::UpgradeList;
 use crate::AppRoot;
 
 pub struct SimulationPlugin;
@@ -26,18 +25,8 @@ pub struct Simulation {
     pub spawns_per_click: usize,
 }
 
-fn count_upgrades(
-    mut events: EventReader<UpgradeEvent>,
-    mut simulation: ResMut<Simulation>,
-    upgrade_list: Res<UpgradeList>,
-) {
-    simulation.upgrades += events
-        .read()
-        .filter(|event| {
-            // Ignore upgrades that can repeat indefinitely.
-            upgrade_list.get(event.0).remaining != usize::MAX
-        })
-        .count();
+fn count_upgrades(mut events: EventReader<UpgradeEvent>, mut simulation: ResMut<Simulation>) {
+    simulation.upgrades += events.read().count();
 }
 
 #[derive(Event, Reflect)]

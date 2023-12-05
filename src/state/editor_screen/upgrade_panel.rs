@@ -114,7 +114,7 @@ pub fn spawn_upgrade_panel(
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: Val::Px(120.0),
+                    height: Val::Px(130.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     ..default()
@@ -131,9 +131,6 @@ pub fn spawn_upgrade_panel(
     (upgrade_panel, upgrade_container)
 }
 
-// TODO: On EnableUpgradeEvent:
-// -> add an entry to outline panel
-// -> replace all entries in upgrade panel
 fn spawn_upgrade_button(
     commands: &mut Commands,
     theme: &EditorScreenTheme,

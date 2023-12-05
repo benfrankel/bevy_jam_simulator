@@ -80,7 +80,7 @@ impl UpgradeList {
     }
 }
 
-#[derive(Reflect, Clone, Copy)]
+#[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum UpgradeKind {
     DarkMode,
     TouchOfLifePlugin,

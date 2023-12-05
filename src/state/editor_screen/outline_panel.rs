@@ -1,5 +1,6 @@
 use bevy::math::vec2;
 use bevy::prelude::*;
+use bevy::utils::HashMap;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
@@ -10,8 +11,8 @@ use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
-use crate::upgrade::Upgrade;
 use crate::upgrade::UpgradeEvent;
+use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
 
 pub struct OutlinePanelPlugin;
@@ -19,15 +20,23 @@ pub struct OutlinePanelPlugin;
 impl Plugin for OutlinePanelPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<IsOutlineContainer>()
-            .add_systems(Update, (add_upgrades_to_outline, update_outline_header));
+            .register_type::<IsOutlineHeader>()
+            .register_type::<UpgradeOutline>()
+            .init_resource::<UpgradeOutline>()
+            .add_systems(
+                Update,
+                (
+                    update_outline_container,
+                    update_outline_header,
+                    update_outline_entry_text.run_if(resource_changed::<UpgradeOutline>()),
+                ),
+            );
     }
 }
 
-#[derive(Component, Reflect)]
-struct IsOutlineContainer;
-
-#[derive(Component, Reflect)]
-struct IsOutlineHeader;
+#[derive(Resource, Default, Reflect)]
+#[reflect(Resource)]
+struct UpgradeOutline(HashMap<UpgradeKind, usize>);
 
 // TODO: Add scrollbar
 pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
@@ -80,8 +89,11 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
 fn spawn_outline_entry(
     commands: &mut Commands,
     theme: &EditorScreenTheme,
-    upgrade: &Upgrade,
+    upgrade_list: &UpgradeList,
+    upgrade_kind: UpgradeKind,
 ) -> Entity {
+    let upgrade = upgrade_list.get(upgrade_kind);
+
     let outline_entry = commands
         .spawn((
             Name::new("OutlineEntry"),
@@ -121,38 +133,45 @@ fn spawn_outline_entry(
                 },
             ),
             FontSize::new(theme.outline_panel_font_size),
+            OutlineEntryText(upgrade_kind),
         ))
         .set_parent(outline_entry);
 
     outline_entry
 }
 
-fn add_upgrades_to_outline(
+#[derive(Component, Reflect)]
+struct IsOutlineContainer;
+
+fn update_outline_container(
     mut commands: Commands,
     mut events: EventReader<UpgradeEvent>,
-    theme: Res<Config>,
+    config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
+    mut outline: ResMut<UpgradeOutline>,
     container_query: Query<Entity, With<IsOutlineContainer>>,
 ) {
-    let theme = &theme.editor_screen.dark_theme;
+    let theme = &config.editor_screen.dark_theme;
     for event in events.read() {
-        let upgrade = upgrade_list.get(event.0);
+        let upgrade_kind = event.0;
+        let count = outline.0.entry(upgrade_kind).or_insert(0);
+        *count += 1;
 
-        // Don't add the upgrade if it's repeating.
-        if upgrade.remaining == usize::MAX {
+        // Don't spawn a new outline entry if it's a duplicate
+        if *count >= 2 {
             continue;
         }
 
-        // TODO: Denote levels of the upgrades instead of adding them repeatedly.
-        // Example: Adding "X" two times should create a single "X (2)" entry instead of
-        // two "X" lines.
-
         for container in &container_query {
-            let outline_entry = spawn_outline_entry(&mut commands, theme, upgrade);
+            let outline_entry =
+                spawn_outline_entry(&mut commands, theme, &upgrade_list, upgrade_kind);
             commands.entity(outline_entry).set_parent(container);
         }
     }
 }
+
+#[derive(Component, Reflect)]
+struct IsOutlineHeader;
 
 fn update_outline_header(
     simulation: Res<Simulation>,
@@ -162,5 +181,27 @@ fn update_outline_header(
 
     for mut text in &mut info_bar_query {
         text.sections[0].value = info.clone();
+    }
+}
+
+#[derive(Component, Reflect)]
+struct OutlineEntryText(UpgradeKind);
+
+fn update_outline_entry_text(
+    outline: Res<UpgradeOutline>,
+    mut entry_query: Query<(&mut Text, &OutlineEntryText)>,
+) {
+    for (mut text, entry) in &mut entry_query {
+        let count = outline.0[&entry.0];
+        if count <= 1 {
+            continue;
+        }
+        let text = &mut text.sections[0].value;
+
+        // Replace the previous count if it exists
+        if let Some(idx) = text.find(" (") {
+            text.truncate(idx);
+        }
+        text.push_str(&format!(" ({count})"));
     }
 }
