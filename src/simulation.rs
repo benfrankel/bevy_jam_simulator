@@ -1,24 +1,23 @@
-use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
+
+use crate::upgrade::EnableUpgradeEvent;
 
 pub struct SimulationPlugin;
 
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<Simulation>()
-            .add_systems(Update, update_simulation);
+            .add_systems(Update, count_plugins);
     }
 }
 
 #[derive(Resource, Default)]
 pub struct Simulation {
-    pub plugins: Vec<SystemId>,
+    pub plugins: usize,
     pub lines: f64,
     pub entities: f64,
 }
 
-fn update_simulation(mut commands: Commands, simulation: Res<Simulation>) {
-    for &plugin in &simulation.plugins {
-        commands.run_system(plugin);
-    }
+fn count_plugins(mut events: EventReader<EnableUpgradeEvent>, mut simulation: ResMut<Simulation>) {
+    simulation.plugins += events.read().count();
 }

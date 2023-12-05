@@ -1,3 +1,6 @@
+mod info_bar;
+mod upgrade_button;
+
 use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
@@ -6,7 +9,8 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
-use crate::simulation::Simulation;
+use crate::state::editor_screen::info_bar::spawn_info_bar;
+use crate::state::editor_screen::upgrade_button::spawn_upgrade_button;
 use crate::state::AppState::*;
 use crate::ui::CodeTyper;
 use crate::ui::FontSize;
@@ -27,7 +31,7 @@ impl Plugin for EditorScreenStatePlugin {
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
             .add_systems(OnExit(EditorScreen), exit_editor_screen)
-            .add_systems(Update, update_info_bar_text);
+            .add_plugins(info_bar::InfoBarPlugin);
     }
 }
 
@@ -104,39 +108,8 @@ fn enter_editor_screen(
         .set_parent(root.ui)
         .id();
 
-    let info_bar = commands
-        .spawn((
-            Name::new("InfoBar"),
-            NodeBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    min_height: config.info_bar_height,
-                    padding: UiRect::horizontal(Val::Px(16.0)),
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                background_color: config.info_bar_background_color.into(),
-                ..default()
-            },
-        ))
-        .set_parent(editor_screen)
-        .id();
-
-    commands
-        .spawn((
-            Name::new("InfoBarText"),
-            TextBundle::from_section(
-                "",
-                TextStyle {
-                    font: BOLD_FONT_HANDLE,
-                    color: config.info_bar_text_color,
-                    ..default()
-                },
-            ),
-            FontSize::new(config.info_bar_font_size),
-            InfoBarText,
-        ))
-        .set_parent(info_bar);
+    let info_bar = spawn_info_bar(&mut commands, config);
+    commands.entity(info_bar).set_parent(editor_screen);
 
     let hbox = commands
         .spawn((
@@ -363,10 +336,13 @@ fn enter_editor_screen(
         .id();
 
     // TODO: Replace these dummy upgrades
-    for upgrade_kind in [UpgradeKind::ClickToSpawn] {
-        let button = spawn_upgrade_button(&mut commands, &config, &upgrade_list, upgrade_kind);
-        commands.entity(button).set_parent(upgrade_container);
-    }
+    let button = spawn_upgrade_button(
+        &mut commands,
+        config,
+        &upgrade_list,
+        UpgradeKind::TouchOfLife,
+    );
+    commands.entity(button).set_parent(upgrade_container);
 
     let submit_container = commands
         .spawn((
@@ -426,84 +402,6 @@ fn enter_editor_screen(
         .set_parent(submit_button);
 }
 
-// TODO: Implement behavior on this
-#[derive(Component, Reflect)]
-struct UpgradeButton(UpgradeKind);
-
-fn spawn_upgrade_button(
-    commands: &mut Commands,
-    config: &EditorScreenConfig,
-    upgrade_list: &UpgradeList,
-    upgrade_kind: UpgradeKind,
-) -> Entity {
-    let upgrade = upgrade_list.get(upgrade_kind);
-
-    let upgrade_button = commands
-        .spawn((
-            Name::new("UpgradeButton"),
-            ButtonBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: config.upgrade_button_height,
-                    align_items: AlignItems::Center,
-                    justify_content: JustifyContent::Center,
-                    margin: UiRect::bottom(Val::Px(10.0)),
-                    padding: UiRect::vertical(Val::Px(4.0)),
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(4.0),
-                    ..default()
-                },
-                background_color: config.upgrade_button_normal_color.into(),
-                ..default()
-            },
-            InteractionColor {
-                normal: config.upgrade_button_normal_color,
-                hovered: config.upgrade_button_hovered_color,
-                pressed: config.upgrade_button_pressed_color,
-            },
-            Tooltip {
-                text: upgrade.description.clone(),
-                side: TooltipSide::Left,
-                offset: vec2(-12.0, 0.0),
-            },
-            UpgradeButton(upgrade_kind),
-        ))
-        .id();
-
-    commands
-        .spawn((
-            Name::new("UpgradeName"),
-            TextBundle::from_section(
-                upgrade.name.clone(),
-                TextStyle {
-                    font: FONT_HANDLE,
-                    color: config.upgrade_button_text_color,
-                    ..default()
-                },
-            ),
-            FontSize::new(config.upgrade_button_font_size),
-        ))
-        .set_parent(upgrade_button);
-
-    commands
-        .spawn((
-            Name::new("UpgradeCost"),
-            TextBundle::from_section(
-                // TODO: Scale base cost, and format for big numbers
-                format!("{} lines", upgrade.base_cost),
-                TextStyle {
-                    font: FONT_HANDLE,
-                    color: config.upgrade_button_text_color,
-                    ..default()
-                },
-            ),
-            FontSize::new(config.upgrade_button_font_size),
-        ))
-        .set_parent(upgrade_button);
-
-    upgrade_button
-}
-
 fn exit_editor_screen(
     mut commands: Commands,
     root: Res<AppRoot>,
@@ -516,24 +414,4 @@ fn exit_editor_screen(
         return;
     };
     transform.translation = Vec2::ZERO.extend(transform.translation.z);
-}
-
-#[derive(Component, Reflect)]
-pub struct InfoBarText;
-
-fn update_info_bar_text(
-    simulation: Res<Simulation>,
-    mut info_bar_query: Query<&mut Text, With<InfoBarText>>,
-) {
-    // TODO: E.g. Format large numbers like 2,346,834 and then 8.435e22
-    let plugins = simulation.plugins.len();
-    let lines = simulation.lines;
-    let entities = simulation.entities;
-
-    // TODO: Remove "s" if number is equal to 1
-    let info = format!("{plugins} plugins, {lines} lines, {entities} entities");
-
-    for mut text in &mut info_bar_query {
-        text.sections[0].value = info.clone();
-    }
 }
