@@ -13,6 +13,9 @@ mod upgrade;
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
+use bevy::transform::TransformSystem;
+use bevy::ui::UiSystem;
+use bevy_rapier2d::plugin::PhysicsSet;
 
 pub struct AppPlugin;
 
@@ -21,6 +24,31 @@ impl Plugin for AppPlugin {
         app.register_type::<AppRoot>()
             .init_resource::<AppRoot>()
             .add_systems(Startup, spawn_logical_entities);
+
+        // System ordering
+        app.configure_sets(
+            Update,
+            (
+                AppSet::ResetSync,
+                AppSet::Update,
+                AppSet::Commands,
+                AppSet::CommandsFlush,
+                AppSet::Despawn,
+            )
+                .chain(),
+        )
+        .configure_sets(
+            PostUpdate,
+            (
+                UiSystem::Layout,
+                PhysicsSet::Writeback,
+                AppSet::AnimateSync,
+                AppSet::Animate,
+                TransformSystem::TransformPropagate,
+            )
+                .chain(),
+        )
+        .add_systems(Update, apply_deferred.in_set(AppSet::CommandsFlush));
 
         // Order-dependent plugins
         app.add_plugins((
@@ -52,6 +80,26 @@ impl Plugin for AppPlugin {
             ..default()
         });
     }
+}
+
+#[derive(SystemSet, Clone, Eq, PartialEq, Hash, Debug)]
+pub enum AppSet {
+    /// Initialize start-of-frame values
+    ResetSync,
+    /// Tick timers
+    Tick,
+    /// Update things
+    Update,
+    /// Queue commands (e.g. spawning entities)
+    Commands,
+    /// Apply commands
+    CommandsFlush,
+    /// Queue despawn commands
+    Despawn,
+    /// Initialize start-of-frame animation values
+    AnimateSync,
+    /// Update animations
+    Animate,
 }
 
 // Global entities

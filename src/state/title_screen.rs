@@ -43,6 +43,7 @@ pub struct TitleScreenConfig {
     title_background_color: Color,
     title_font_size: Val,
 
+    button_width: Val,
     button_border_color: Color,
     button_border_width: Val,
     button_normal_color: Color,
@@ -194,8 +195,9 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             Name::new("JoinButton"),
             ButtonBundle {
                 style: Style {
-                    margin: UiRect::top(vh(12.0)),
-                    padding: UiRect::axes(vw(16.0), vh(4.0)),
+                    width: config.button_width,
+                    margin: UiRect::top(vh(11.0)),
+                    padding: UiRect::all(vmin(6.0)),
                     border: UiRect::all(config.button_border_width),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
