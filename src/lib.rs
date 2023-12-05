@@ -9,6 +9,7 @@ mod physics;
 mod simulation;
 mod state;
 mod ui;
+mod upgrade;
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
@@ -40,6 +41,7 @@ impl Plugin for AppPlugin {
             physics::PhysicsPlugin,
             simulation::SimulationPlugin,
             ui::UiPlugin,
+            upgrade::UpgradePlugin,
         ));
 
         #[cfg(feature = "dev")]

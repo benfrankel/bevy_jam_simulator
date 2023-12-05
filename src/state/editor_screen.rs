@@ -15,6 +15,8 @@ use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
+use crate::upgrade::UpgradeKind;
+use crate::upgrade::UpgradeList;
 use crate::AppRoot;
 
 pub struct EditorScreenStatePlugin;
@@ -77,7 +79,12 @@ pub struct EditorScreenAssets {
     // TODO: Music / SFX, sprites
 }
 
-fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
+fn enter_editor_screen(
+    mut commands: Commands,
+    root: Res<AppRoot>,
+    config: Res<Config>,
+    upgrade_list: Res<UpgradeList>,
+) {
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
 
@@ -356,68 +363,9 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         .id();
 
     // TODO: Replace these dummy upgrades
-    for upgrade_name in ["FooPlugin", "BarPlugin", "QuuxPlugin"] {
-        let upgrade = commands
-            .spawn((
-                Name::new("Upgrade"),
-                ButtonBundle {
-                    style: Style {
-                        width: Val::Percent(100.0),
-                        height: config.upgrade_button_height,
-                        align_items: AlignItems::Center,
-                        justify_content: JustifyContent::Center,
-                        margin: UiRect::bottom(Val::Px(10.0)),
-                        padding: UiRect::vertical(Val::Px(4.0)),
-                        flex_direction: FlexDirection::Column,
-                        row_gap: Val::Px(4.0),
-                        ..default()
-                    },
-                    background_color: config.upgrade_button_normal_color.into(),
-                    ..default()
-                },
-                InteractionColor {
-                    normal: config.upgrade_button_normal_color,
-                    hovered: config.upgrade_button_hovered_color,
-                    pressed: config.upgrade_button_pressed_color,
-                },
-                Tooltip {
-                    text: format!("This is the description for {upgrade_name}."),
-                    side: TooltipSide::Left,
-                    offset: vec2(-12.0, 0.0),
-                },
-            ))
-            .set_parent(upgrade_container)
-            .id();
-
-        commands
-            .spawn((
-                Name::new("UpgradeName"),
-                TextBundle::from_section(
-                    upgrade_name,
-                    TextStyle {
-                        font: FONT_HANDLE,
-                        color: config.upgrade_button_text_color,
-                        ..default()
-                    },
-                ),
-                FontSize::new(config.upgrade_button_font_size),
-            ))
-            .set_parent(upgrade);
-
-        commands
-            .spawn((
-                Name::new("UpgradePrice"),
-                TextBundle::from_section(
-                    "16 lines",
-                    TextStyle {
-                        font: FONT_HANDLE,
-                        color: config.upgrade_button_text_color,
-                        ..default()
-                    },
-                ),
-                FontSize::new(config.upgrade_button_font_size),
-            ))
-            .set_parent(upgrade);
+    for upgrade_kind in [UpgradeKind::ClickToSpawn] {
+        let button = spawn_upgrade_button(&mut commands, &config, &upgrade_list, upgrade_kind);
+        commands.entity(button).set_parent(upgrade_container);
     }
 
     let submit_container = commands
@@ -478,6 +426,84 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         .set_parent(submit_button);
 }
 
+// TODO: Implement behavior on this
+#[derive(Component, Reflect)]
+struct UpgradeButton(UpgradeKind);
+
+fn spawn_upgrade_button(
+    commands: &mut Commands,
+    config: &EditorScreenConfig,
+    upgrade_list: &UpgradeList,
+    upgrade_kind: UpgradeKind,
+) -> Entity {
+    let upgrade = upgrade_list.get(upgrade_kind);
+
+    let upgrade_button = commands
+        .spawn((
+            Name::new("UpgradeButton"),
+            ButtonBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: config.upgrade_button_height,
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::Center,
+                    margin: UiRect::bottom(Val::Px(10.0)),
+                    padding: UiRect::vertical(Val::Px(4.0)),
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(4.0),
+                    ..default()
+                },
+                background_color: config.upgrade_button_normal_color.into(),
+                ..default()
+            },
+            InteractionColor {
+                normal: config.upgrade_button_normal_color,
+                hovered: config.upgrade_button_hovered_color,
+                pressed: config.upgrade_button_pressed_color,
+            },
+            Tooltip {
+                text: upgrade.description.clone(),
+                side: TooltipSide::Left,
+                offset: vec2(-12.0, 0.0),
+            },
+            UpgradeButton(upgrade_kind),
+        ))
+        .id();
+
+    commands
+        .spawn((
+            Name::new("UpgradeName"),
+            TextBundle::from_section(
+                upgrade.name.clone(),
+                TextStyle {
+                    font: FONT_HANDLE,
+                    color: config.upgrade_button_text_color,
+                    ..default()
+                },
+            ),
+            FontSize::new(config.upgrade_button_font_size),
+        ))
+        .set_parent(upgrade_button);
+
+    commands
+        .spawn((
+            Name::new("UpgradeCost"),
+            TextBundle::from_section(
+                // TODO: Scale base cost, and format for big numbers
+                format!("{} lines", upgrade.base_cost),
+                TextStyle {
+                    font: FONT_HANDLE,
+                    color: config.upgrade_button_text_color,
+                    ..default()
+                },
+            ),
+            FontSize::new(config.upgrade_button_font_size),
+        ))
+        .set_parent(upgrade_button);
+
+    upgrade_button
+}
+
 fn exit_editor_screen(
     mut commands: Commands,
     root: Res<AppRoot>,
@@ -500,7 +526,7 @@ fn update_info_bar_text(
     mut info_bar_query: Query<&mut Text, With<InfoBarText>>,
 ) {
     // TODO: E.g. Format large numbers like 2,346,834 and then 8.435e22
-    let plugins = simulation.plugins;
+    let plugins = simulation.plugins.len();
     let lines = simulation.lines;
     let entities = simulation.entities;
 

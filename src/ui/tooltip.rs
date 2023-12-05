@@ -99,7 +99,7 @@ fn show_tooltip_on_hover(
     };
 
     for (interaction, tooltip, gt, node) in &interaction_query {
-        if !matches!(interaction, Interaction::Hovered) {
+        if matches!(interaction, Interaction::None) {
             *tooltip_visibility = Visibility::Hidden;
             continue;
         }
