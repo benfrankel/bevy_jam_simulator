@@ -26,7 +26,7 @@ pub fn spawn_scene_view(commands: &mut Commands) -> Entity {
                 },
                 ..default()
             },
-            On::<Pointer<Click>>::run(click_spawn),
+            On::<Pointer<Down>>::run(click_spawn),
         ))
         .id();
 
