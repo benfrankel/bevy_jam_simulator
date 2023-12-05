@@ -18,11 +18,16 @@ pub struct Upgrade {
     pub name: String,
     pub description: String,
 
+    // How many lines of code this upgrade costs at 1x cost scaling
     pub base_cost: f64,
+    // The relative odds of this upgrade being offered
     pub weight: f32,
+    // How many more copies of this upgrade can be enabled
     pub remaining: usize,
 
+    // A one-shot system that runs whenever a copy of this upgrade is enabled
     pub enable: Option<SystemId>,
+    // A one-shot system that runs every frame for each active copy of this upgrade
     pub update: Option<SystemId>,
 }
 
@@ -70,18 +75,15 @@ pub enum UpgradeKind {
 }
 
 fn load_upgrade_list(mut upgrade_types: ResMut<UpgradeList>) {
-    upgrade_types.0.extend([
-        // ClickToSpawn
-        Upgrade {
-            name: "TouchOfLifePlugin".to_string(),
-            description: "Spawns 1 entity wherever you click in the scene view.".to_string(),
+    upgrade_types.0.extend([Upgrade {
+        name: "TouchOfLifePlugin".to_string(),
+        description: "Spawns 1 entity wherever you click in the scene view.".to_string(),
 
-            base_cost: 10.0,
-            weight: 1.0,
-            remaining: 1,
+        base_cost: 10.0,
+        weight: 1.0,
+        remaining: 1,
 
-            enable: None,
-            update: None,
-        },
-    ]);
+        enable: None,
+        update: None,
+    }]);
 }
