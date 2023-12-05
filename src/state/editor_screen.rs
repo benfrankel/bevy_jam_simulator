@@ -36,22 +36,25 @@ pub struct EditorScreenConfig {
     info_bar_text_color: Color,
     info_bar_font_size: Val,
 
-    plugin_view_width: Val,
-    plugin_view_background_color: Color,
-    plugin_view_highlight_color: Color,
-    plugin_view_text_color: Color,
-    plugin_view_font_size: Val,
+    outline_panel_width: Val,
+    outline_panel_background_color: Color,
+    outline_panel_highlight_color: Color,
+    outline_panel_text_color: Color,
+    outline_panel_font_size: Val,
+    outline_panel_header_font_size: Val,
 
     scene_view_background_color: Color,
 
-    code_view_height: Val,
-    code_view_background_color: Color,
-    code_view_text_color: Color,
-    code_view_font_size: Val,
-    code_view_lines_max: usize,
+    code_panel_height: Val,
+    code_panel_background_color: Color,
+    code_panel_text_color: Color,
+    code_panel_font_size: Val,
+    code_panel_lines_max: usize,
 
-    upgrade_view_width: Val,
-    upgrade_view_background_color: Color,
+    upgrade_panel_width: Val,
+    upgrade_panel_background_color: Color,
+    upgrade_panel_text_color: Color,
+    upgrade_panel_header_font_size: Val,
 
     upgrade_button_height: Val,
     upgrade_button_normal_color: Color,
@@ -143,23 +146,47 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         .set_parent(editor_screen)
         .id();
 
-    let plugin_view = commands
+    let outline_panel = commands
         .spawn((
-            Name::new("PluginView"),
+            Name::new("OutlinePanel"),
             NodeBundle {
                 style: Style {
-                    min_width: config.plugin_view_width,
+                    min_width: config.outline_panel_width,
                     height: Val::Percent(100.0),
-                    padding: UiRect::new(Val::Px(12.0), Val::Px(12.0), Val::Px(8.0), Val::Px(12.0)),
+                    padding: UiRect::all(Val::Px(12.0)),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: config.plugin_view_background_color.into(),
+                background_color: config.outline_panel_background_color.into(),
                 ..default()
             },
         ))
         .set_parent(hbox)
         .id();
+
+    commands
+        .spawn((
+            Name::new("OutlineHeader"),
+            TextBundle {
+                text: Text::from_section(
+                    "Outline",
+                    TextStyle {
+                        font: BOLD_FONT_HANDLE,
+                        color: config.outline_panel_text_color,
+                        ..default()
+                    },
+                ),
+                style: Style {
+                    // Hiding this because it looks bad :(
+                    display: Display::None,
+                    margin: UiRect::bottom(Val::Px(10.0)),
+                    ..default()
+                },
+                ..default()
+            },
+            FontSize::new(config.outline_panel_header_font_size),
+        ))
+        .set_parent(outline_panel);
 
     // TODO: Replace these dummy plugins
     for plugin_name in ["FooPlugin", "BarPlugin", "QuuxPlugin"] {
@@ -168,8 +195,9 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                 Name::new("Plugin"),
                 NodeBundle {
                     style: Style {
+                        width: Val::Percent(100.0),
                         margin: UiRect::bottom(Val::Px(1.0)),
-                        padding: UiRect::vertical(Val::Px(4.0)),
+                        padding: UiRect::all(Val::Px(4.0)),
                         ..default()
                     },
                     ..default()
@@ -177,8 +205,8 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                 Interaction::default(),
                 InteractionColor {
                     normal: Color::NONE,
-                    hovered: config.plugin_view_highlight_color,
-                    pressed: config.plugin_view_highlight_color,
+                    hovered: config.outline_panel_highlight_color,
+                    pressed: config.outline_panel_highlight_color,
                 },
                 Tooltip {
                     text: format!("This is the description for {plugin_name}."),
@@ -186,7 +214,7 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                     offset: vec2(12.0, 0.0),
                 },
             ))
-            .set_parent(plugin_view)
+            .set_parent(outline_panel)
             .id();
 
         commands
@@ -196,16 +224,16 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                     plugin_name,
                     TextStyle {
                         font: FONT_HANDLE,
-                        color: config.plugin_view_text_color,
+                        color: config.outline_panel_text_color,
                         ..default()
                     },
                 ),
-                FontSize::new(config.plugin_view_font_size),
+                FontSize::new(config.outline_panel_font_size),
             ))
             .set_parent(plugin);
     }
 
-    // TODO: Add scrollbar to plugin view
+    // TODO: Add scrollbar to outline view
 
     let vbox = commands
         .spawn((
@@ -236,17 +264,17 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         ))
         .set_parent(vbox);
 
-    let code_view = commands
+    let code_panel = commands
         .spawn((
-            Name::new("CodeView"),
+            Name::new("CodePanel"),
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    min_height: config.code_view_height,
+                    min_height: config.code_panel_height,
                     padding: UiRect::all(Val::VMin(2.0)),
                     ..default()
                 },
-                background_color: config.code_view_background_color.into(),
+                background_color: config.code_panel_background_color.into(),
                 ..default()
             },
         ))
@@ -255,41 +283,61 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
 
     commands
         .spawn((
-            Name::new("CodeViewText"),
+            Name::new("CodePanelText"),
             TextBundle::from_section(
                 "// Start typing to generate lines of code!\n\n",
                 TextStyle {
                     font: FONT_HANDLE,
-                    color: config.code_view_text_color,
+                    color: config.code_panel_text_color,
                     ..default()
                 },
             ),
-            FontSize::new(config.code_view_font_size),
+            FontSize::new(config.code_panel_font_size),
             CodeTyper {
                 lines_count: 3,
-                lines_max: config.code_view_lines_max,
+                lines_max: config.code_panel_lines_max,
                 ..default()
             },
         ))
-        .set_parent(code_view);
+        .set_parent(code_panel);
 
-    let upgrade_view = commands
+    let upgrade_panel = commands
         .spawn((
-            Name::new("UpgradeView"),
+            Name::new("UpgradePanel"),
             NodeBundle {
                 style: Style {
-                    min_width: config.upgrade_view_width,
+                    min_width: config.upgrade_panel_width,
                     height: Val::Percent(100.0),
+                    align_items: AlignItems::Center,
                     padding: UiRect::all(Val::Px(12.0)),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: config.upgrade_view_background_color.into(),
+                background_color: config.upgrade_panel_background_color.into(),
                 ..default()
             },
         ))
         .set_parent(hbox)
         .id();
+
+    commands
+        .spawn((
+            Name::new("UpgradeHeader"),
+            TextBundle::from_section(
+                "Upgrades",
+                TextStyle {
+                    font: BOLD_FONT_HANDLE,
+                    color: config.upgrade_panel_text_color,
+                    ..default()
+                },
+            )
+            .with_style(Style {
+                margin: UiRect::bottom(Val::Px(15.0)),
+                ..default()
+            }),
+            FontSize::new(config.upgrade_panel_header_font_size),
+        ))
+        .set_parent(upgrade_panel);
 
     let upgrade_container = commands
         .spawn((
@@ -304,7 +352,7 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                 ..default()
             },
         ))
-        .set_parent(upgrade_view)
+        .set_parent(upgrade_panel)
         .id();
 
     // TODO: Replace these dummy upgrades
@@ -384,7 +432,7 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
                 ..default()
             },
         ))
-        .set_parent(upgrade_view)
+        .set_parent(upgrade_panel)
         .id();
 
     let submit_button = commands

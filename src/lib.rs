@@ -46,7 +46,7 @@ impl Plugin for AppPlugin {
         app.add_plugins(debug::DebugPlugin {
             ambiguity_detection: false,
             //editor: false,
-            //start: state::AppState::EditorScreen,
+            start: state::AppState::EditorScreen,
             ..default()
         });
     }
