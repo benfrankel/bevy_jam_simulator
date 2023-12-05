@@ -26,7 +26,7 @@
         title_font_size: Vw(4.5),
 
         button_border_color: Rgba(red: 0.118, green: 0.306, blue: 0.820, alpha: 1.000),
-        button_border_width: VMin(0.5),
+        button_border_width: Px(2.0),
         button_normal_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
         button_hovered_color: Rgba(red: 0.039, green: 0.227, blue: 0.741, alpha: 1.000),
         button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),

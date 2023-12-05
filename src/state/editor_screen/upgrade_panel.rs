@@ -114,6 +114,8 @@ pub fn spawn_upgrade_panel(
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
+                    height: Val::Px(120.0),
+                    align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     ..default()
                 },
@@ -234,7 +236,7 @@ fn spawn_submit_button(commands: &mut Commands, theme: &EditorScreenTheme) -> En
             Name::new("SubmitButton"),
             ButtonBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
+                    width: Val::Percent(80.0),
                     height: theme.submit_button_height,
                     padding: UiRect::all(Val::Px(10.0)),
                     justify_content: JustifyContent::Center,
