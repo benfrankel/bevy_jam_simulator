@@ -14,6 +14,7 @@ use crate::state::results_screen::ResultsScreenConfig;
 use crate::state::splash_screen::SplashScreenConfig;
 use crate::state::title_screen::TitleScreenConfig;
 use crate::ui::TooltipConfig;
+use crate::AppRoot;
 
 pub struct ConfigPlugin;
 
@@ -45,6 +46,7 @@ impl Plugin for ConfigPlugin {
                 ..default()
             })
             .insert_resource(config)
+            .add_systems(Startup, save_window_to_root)
             .add_systems(Update, apply_config.run_if(resource_changed::<Config>()));
     }
 }
@@ -82,4 +84,11 @@ fn apply_config(config: Res<Config>, mut window_query: Query<&mut Window, With<P
     }
 
     // TODO: Implement the rest (not important for game jam)
+}
+
+fn save_window_to_root(
+    mut root: ResMut<AppRoot>,
+    window_query: Query<Entity, With<PrimaryWindow>>,
+) {
+    root.window = window_query.single();
 }

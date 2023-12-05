@@ -57,6 +57,7 @@ impl Plugin for AppPlugin {
 // Global entities
 #[derive(Resource, Reflect)]
 pub struct AppRoot {
+    window: Entity,
     camera: Entity,
     tooltip: Entity,
     tooltip_text: Entity,
@@ -69,6 +70,7 @@ pub struct AppRoot {
 impl Default for AppRoot {
     fn default() -> Self {
         Self {
+            window: Entity::PLACEHOLDER,
             camera: Entity::PLACEHOLDER,
             tooltip: Entity::PLACEHOLDER,
             tooltip_text: Entity::PLACEHOLDER,

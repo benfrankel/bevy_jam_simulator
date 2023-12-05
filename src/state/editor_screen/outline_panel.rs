@@ -54,7 +54,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig)
             Name::new("OutlineHeader"),
             TextBundle {
                 text: Text::from_section(
-                    "Outline",
+                    "",
                     TextStyle {
                         font: BOLD_FONT_HANDLE,
                         color: config.outline_panel_text_color,
@@ -65,7 +65,6 @@ pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig)
                     // Hiding this because it looks bad :(
                     // display: Display::None,
                     margin: UiRect::bottom(Val::Px(10.0)),
-                    align_self: AlignSelf::Center,
                     ..default()
                 },
                 ..default()
@@ -159,7 +158,7 @@ fn update_outline_header(
     simulation: Res<Simulation>,
     mut info_bar_query: Query<&mut Text, With<IsOutlineHeader>>,
 ) {
-    let info = format!("Installed ({})", simulation.plugins);
+    let info = format!("Installed ({})", simulation.upgrades);
 
     for mut text in &mut info_bar_query {
         text.sections[0].value = info.clone();

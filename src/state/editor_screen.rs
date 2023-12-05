@@ -16,6 +16,7 @@ use crate::state::editor_screen::code_panel::spawn_light_code_panel;
 use crate::state::editor_screen::info_bar::spawn_info_bar;
 use crate::state::editor_screen::outline_panel::spawn_outline_panel;
 use crate::state::editor_screen::scene_view::spawn_scene_view;
+pub use crate::state::editor_screen::scene_view::ClickSpawnEvent;
 use crate::state::editor_screen::upgrade_panel::spawn_upgrade_panel;
 use crate::state::AppState::*;
 use crate::upgrade::UpgradeList;
@@ -33,6 +34,7 @@ impl Plugin for EditorScreenStatePlugin {
             .add_plugins((
                 info_bar::InfoBarPlugin,
                 outline_panel::OutlinePanelPlugin,
+                scene_view::SceneViewPlugin,
                 upgrade_panel::UpgradePanelPlugin,
             ));
     }
@@ -181,8 +183,9 @@ fn exit_editor_screen(
     root: Res<AppRoot>,
     mut transform_query: Query<&mut Transform>,
 ) {
-    commands.entity(root.ui).despawn_descendants();
     commands.remove_resource::<EditorScreenUi>();
+    commands.entity(root.ui).despawn_descendants();
+    commands.entity(root.world).despawn_descendants();
 
     // Reset camera
     let Ok(mut transform) = transform_query.get_mut(root.camera) else {

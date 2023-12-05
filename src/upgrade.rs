@@ -83,8 +83,9 @@ impl UpgradeList {
 #[derive(Reflect, Clone, Copy)]
 pub enum UpgradeKind {
     DarkMode,
-    TouchOfLife,
-    BurstOfLife,
+    TouchOfLifePlugin,
+    BurstOfLifePlugin,
+    ImportLibrary,
 }
 
 fn load_upgrade_list(world: &mut World) {
@@ -100,24 +101,25 @@ fn load_upgrade_list(world: &mut World) {
             enable: Some(world.register_system(dark_mode_enable)),
             update: None,
 
-            next_upgrade: Some(UpgradeKind::TouchOfLife),
+            next_upgrade: Some(UpgradeKind::TouchOfLifePlugin),
         },
         Upgrade {
-            name: "Touch of Life".to_string(),
+            name: "TouchOfLifePlugin".to_string(),
             description: "Spawns 1 entity wherever you click in the scene view.".to_string(),
 
             base_cost: 1.0,
             weight: 0.0,
             remaining: 1,
 
-            // TODO: This is stil no-op
-            enable: None,
+            enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+                simulation.spawns_per_click += 1
+            })),
             update: None,
 
             next_upgrade: None,
         },
         Upgrade {
-            name: "Burst of Life".to_string(),
+            name: "BurstOfLifePlugin".to_string(),
             description: "Spawns 10 entities immediately.".to_string(),
 
             base_cost: 1.0,
