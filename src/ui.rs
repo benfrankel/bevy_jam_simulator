@@ -1,6 +1,6 @@
 mod code_typer;
 mod font;
-mod interaction_color;
+mod interaction_palette;
 mod tooltip;
 
 use bevy::prelude::*;
@@ -12,7 +12,7 @@ pub use crate::ui::code_typer::CodeTyper;
 pub use crate::ui::font::FontSize;
 pub use crate::ui::font::BOLD_FONT_HANDLE;
 pub use crate::ui::font::FONT_HANDLE;
-pub use crate::ui::interaction_color::InteractionColor;
+pub use crate::ui::interaction_palette::InteractionPalette;
 pub use crate::ui::tooltip::Tooltip;
 pub use crate::ui::tooltip::TooltipConfig;
 pub use crate::ui::tooltip::TooltipSide;
@@ -21,15 +21,18 @@ pub struct UiPlugin;
 
 impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
+        app.register_type::<Disabled>().add_plugins((
             DefaultPickingPlugins,
-            interaction_color::InteractionColorPlugin,
+            interaction_palette::InteractionPalettePlugin,
             code_typer::CodeTyperPlugin,
             font::FontPlugin,
             tooltip::TooltipPlugin,
         ));
     }
 }
+
+#[derive(Component, Reflect)]
+pub struct Disabled(pub bool);
 
 pub fn vw(units: f32) -> Val {
     Val::Vw(100.0 / CAMERA_WIDTH * units)

@@ -12,7 +12,7 @@ use crate::ui::vh;
 use crate::ui::vmin;
 use crate::ui::vw;
 use crate::ui::FontSize;
-use crate::ui::InteractionColor;
+use crate::ui::InteractionPalette;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
 use crate::AppRoot;
@@ -205,10 +205,11 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                 border_color: config.button_border_color.into(),
                 ..default()
             },
-            InteractionColor {
+            InteractionPalette {
                 normal: config.button_normal_color,
                 hovered: config.button_hovered_color,
                 pressed: config.button_pressed_color,
+                disabled: Color::NONE,
             },
             On::<Pointer<Click>>::run(
                 |mut next_state: ResMut<NextState<_>>, progress: Res<ProgressCounter>| {

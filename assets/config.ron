@@ -72,6 +72,7 @@
         upgrade_button_normal_color: Rgba(red: 0.353, green: 0.373, blue: 0.416, alpha: 1.000),
         upgrade_button_hovered_color: Rgba(red: 0.471, green: 0.506, blue: 0.529, alpha: 1.000),
         upgrade_button_pressed_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
+        upgrade_button_disabled_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
         upgrade_button_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
         upgrade_button_font_size: Px(16.0),
 

@@ -6,8 +6,9 @@ use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenConfig;
 use crate::state::AppState;
+use crate::ui::Disabled;
 use crate::ui::FontSize;
-use crate::ui::InteractionColor;
+use crate::ui::InteractionPalette;
 use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
@@ -20,10 +21,15 @@ pub struct UpgradePanelPlugin;
 
 impl Plugin for UpgradePanelPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<IsUpgradeContainer>().add_systems(
-            Update,
-            replace_available_upgrades.run_if(on_event::<UpgradeEvent>()),
-        );
+        app.register_type::<IsUpgradeContainer>()
+            .register_type::<UpgradeButton>()
+            .add_systems(
+                Update,
+                (
+                    update_upgrade_button_disabled,
+                    replace_available_upgrades.run_if(on_event::<UpgradeEvent>()),
+                ),
+            );
     }
 }
 
@@ -31,6 +37,9 @@ const FIRST_UPGRADE: UpgradeKind = UpgradeKind::TouchOfLife;
 
 #[derive(Component, Reflect)]
 pub struct IsUpgradeContainer;
+
+#[derive(Component, Reflect)]
+struct UpgradeButton(UpgradeKind);
 
 pub fn spawn_upgrade_panel(
     commands: &mut Commands,
@@ -148,10 +157,12 @@ fn spawn_upgrade_button(
                 background_color: config.upgrade_button_normal_color.into(),
                 ..default()
             },
-            InteractionColor {
+            Disabled(false),
+            InteractionPalette {
                 normal: config.upgrade_button_normal_color,
                 hovered: config.upgrade_button_hovered_color,
                 pressed: config.upgrade_button_pressed_color,
+                disabled: config.upgrade_button_disabled_color,
             },
             Tooltip {
                 text: upgrade.description.clone(),
@@ -166,6 +177,7 @@ fn spawn_upgrade_button(
                     }
                 },
             ),
+            UpgradeButton(upgrade_kind),
         ))
         .id();
 
@@ -219,10 +231,11 @@ fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> 
                 background_color: config.submit_button_normal_color.into(),
                 ..default()
             },
-            InteractionColor {
+            InteractionPalette {
                 normal: config.submit_button_normal_color,
                 hovered: config.submit_button_hovered_color,
                 pressed: config.submit_button_pressed_color,
+                disabled: Color::NONE,
             },
             On::<Pointer<Click>>::run(|mut next_state: ResMut<NextState<_>>| {
                 next_state.set(AppState::ResultsScreen);
@@ -246,6 +259,18 @@ fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> 
         .set_parent(submit_button);
 
     submit_button
+}
+
+fn update_upgrade_button_disabled(
+    simulation: Res<Simulation>,
+    upgrade_list: Res<UpgradeList>,
+    mut button_query: Query<(&UpgradeButton, &mut Disabled)>,
+) {
+    for (button, mut disabled) in &mut button_query {
+        let upgrade = upgrade_list.get(button.0);
+        // TODO: Cost scaling
+        disabled.0 = simulation.lines < upgrade.base_cost;
+    }
 }
 
 fn replace_available_upgrades(

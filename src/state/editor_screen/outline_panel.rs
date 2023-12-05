@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use crate::config::Config;
 use crate::state::editor_screen::EditorScreenConfig;
 use crate::ui::FontSize;
-use crate::ui::InteractionColor;
+use crate::ui::InteractionPalette;
 use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
@@ -90,10 +90,11 @@ fn spawn_outline_entry(
                 ..default()
             },
             Interaction::default(),
-            InteractionColor {
+            InteractionPalette {
                 normal: Color::NONE,
                 hovered: config.outline_panel_highlight_color,
                 pressed: config.outline_panel_highlight_color,
+                disabled: Color::NONE,
             },
             Tooltip {
                 text: upgrade.description.clone(),

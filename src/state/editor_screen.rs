@@ -66,6 +66,7 @@ pub struct EditorScreenConfig {
     upgrade_button_normal_color: Color,
     upgrade_button_hovered_color: Color,
     upgrade_button_pressed_color: Color,
+    upgrade_button_disabled_color: Color,
     upgrade_button_text_color: Color,
     upgrade_button_font_size: Val,
 
