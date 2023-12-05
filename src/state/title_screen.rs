@@ -7,7 +7,6 @@ use serde::Serialize;
 
 use crate::config::Config;
 use crate::state::editor_screen::EditorScreenAssets;
-use crate::state::AppState;
 use crate::state::AppState::*;
 use crate::ui::vh;
 use crate::ui::vmin;
@@ -35,22 +34,22 @@ impl Plugin for TitleScreenStatePlugin {
 
 #[derive(Default, Reflect, Serialize, Deserialize)]
 pub struct TitleScreenConfig {
-    text_color: Color,
     border_color: Color,
     border_width: Val,
     background_color: Color,
+    text_color: Color,
 
     title_background_color: Color,
     title_font_size: Val,
 
     body_font_size: Val,
 
-    button_text_color: Color,
-    button_font_size: Val,
     button_border_color: Color,
     button_normal_color: Color,
     button_hovered_color: Color,
     button_pressed_color: Color,
+    button_text_color: Color,
+    button_font_size: Val,
 }
 
 const TITLE_TEXT: &str = "Bevy Jam #4: The Game";
@@ -212,7 +211,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                 pressed: config.button_pressed_color,
             },
             On::<Pointer<Click>>::run(
-                |mut next_state: ResMut<NextState<AppState>>, progress: Res<ProgressCounter>| {
+                |mut next_state: ResMut<NextState<_>>, progress: Res<ProgressCounter>| {
                     let Progress { done, total } = progress.progress_complete();
                     next_state.set(if done >= total {
                         EditorScreen

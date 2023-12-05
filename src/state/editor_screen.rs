@@ -1,10 +1,7 @@
-//mod code_view;
-//mod entity_view;
-//mod system_view;
-
 use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use bevy_mod_picking::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -56,12 +53,14 @@ pub struct EditorScreenConfig {
     upgrade_view_width: Val,
     upgrade_view_background_color: Color,
 
+    upgrade_button_height: Val,
     upgrade_button_normal_color: Color,
     upgrade_button_hovered_color: Color,
     upgrade_button_pressed_color: Color,
     upgrade_button_text_color: Color,
     upgrade_button_font_size: Val,
 
+    submit_button_height: Val,
     submit_button_normal_color: Color,
     submit_button_hovered_color: Color,
     submit_button_pressed_color: Color,
@@ -101,7 +100,7 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: config.info_bar_height,
+                    min_height: config.info_bar_height,
                     padding: UiRect::horizontal(Val::Px(16.0)),
                     align_items: AlignItems::Center,
                     ..default()
@@ -149,7 +148,7 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
             Name::new("PluginView"),
             NodeBundle {
                 style: Style {
-                    width: config.plugin_view_width,
+                    min_width: config.plugin_view_width,
                     height: Val::Percent(100.0),
                     padding: UiRect::new(Val::Px(12.0), Val::Px(12.0), Val::Px(8.0), Val::Px(12.0)),
                     flex_direction: FlexDirection::Column,
@@ -162,7 +161,7 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         .set_parent(hbox)
         .id();
 
-    // TODO: Remove these dummy plugins
+    // TODO: Replace these dummy plugins
     for plugin_name in ["FooPlugin", "BarPlugin", "QuuxPlugin"] {
         let plugin = commands
             .spawn((
@@ -206,11 +205,14 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
             .set_parent(plugin);
     }
 
+    // TODO: Add scrollbar to plugin view
+
     let vbox = commands
         .spawn((
             Name::new("VBox"),
             NodeBundle {
                 style: Style {
+                    min_width: Val::ZERO,
                     flex_direction: FlexDirection::Column,
                     flex_grow: 1.0,
                     ..default()
@@ -240,7 +242,7 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
             NodeBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: config.code_view_height,
+                    min_height: config.code_view_height,
                     padding: UiRect::all(Val::VMin(2.0)),
                     ..default()
                 },
@@ -271,13 +273,15 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         ))
         .set_parent(code_view);
 
-    let _upgrade_view = commands
+    let upgrade_view = commands
         .spawn((
             Name::new("UpgradeView"),
             NodeBundle {
                 style: Style {
-                    width: config.upgrade_view_width,
+                    min_width: config.upgrade_view_width,
                     height: Val::Percent(100.0),
+                    padding: UiRect::all(Val::Px(12.0)),
+                    flex_direction: FlexDirection::Column,
                     ..default()
                 },
                 background_color: config.upgrade_view_background_color.into(),
@@ -287,7 +291,143 @@ fn enter_editor_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<C
         .set_parent(hbox)
         .id();
 
-    // TODO: Upgrade view's children
+    let upgrade_container = commands
+        .spawn((
+            Name::new("UpgradeContainer"),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    flex_grow: 1.0,
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(upgrade_view)
+        .id();
+
+    // TODO: Replace these dummy upgrades
+    for upgrade_name in ["FooPlugin", "BarPlugin", "QuuxPlugin"] {
+        let upgrade = commands
+            .spawn((
+                Name::new("Upgrade"),
+                ButtonBundle {
+                    style: Style {
+                        width: Val::Percent(100.0),
+                        height: config.upgrade_button_height,
+                        align_items: AlignItems::Center,
+                        justify_content: JustifyContent::Center,
+                        margin: UiRect::bottom(Val::Px(10.0)),
+                        padding: UiRect::vertical(Val::Px(4.0)),
+                        flex_direction: FlexDirection::Column,
+                        row_gap: Val::Px(4.0),
+                        ..default()
+                    },
+                    background_color: config.upgrade_button_normal_color.into(),
+                    ..default()
+                },
+                InteractionColor {
+                    normal: config.upgrade_button_normal_color,
+                    hovered: config.upgrade_button_hovered_color,
+                    pressed: config.upgrade_button_pressed_color,
+                },
+                Tooltip {
+                    text: format!("This is the description for {upgrade_name}."),
+                    side: TooltipSide::Left,
+                    offset: vec2(-12.0, 0.0),
+                },
+            ))
+            .set_parent(upgrade_container)
+            .id();
+
+        commands
+            .spawn((
+                Name::new("UpgradeName"),
+                TextBundle::from_section(
+                    upgrade_name,
+                    TextStyle {
+                        font: FONT_HANDLE,
+                        color: config.upgrade_button_text_color,
+                        ..default()
+                    },
+                ),
+                FontSize::new(config.upgrade_button_font_size),
+            ))
+            .set_parent(upgrade);
+
+        commands
+            .spawn((
+                Name::new("UpgradePrice"),
+                TextBundle::from_section(
+                    "16 lines",
+                    TextStyle {
+                        font: FONT_HANDLE,
+                        color: config.upgrade_button_text_color,
+                        ..default()
+                    },
+                ),
+                FontSize::new(config.upgrade_button_font_size),
+            ))
+            .set_parent(upgrade);
+    }
+
+    let submit_container = commands
+        .spawn((
+            Name::new("SubmitContainer"),
+            NodeBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    justify_content: JustifyContent::Center,
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(upgrade_view)
+        .id();
+
+    let submit_button = commands
+        .spawn((
+            Name::new("SubmitButton"),
+            ButtonBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: config.submit_button_height,
+                    padding: UiRect::all(Val::Px(10.0)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                background_color: config.submit_button_normal_color.into(),
+                ..default()
+            },
+            InteractionColor {
+                normal: config.submit_button_normal_color,
+                hovered: config.submit_button_hovered_color,
+                pressed: config.submit_button_pressed_color,
+            },
+            On::<Pointer<Click>>::run(|mut next_state: ResMut<NextState<_>>| {
+                next_state.set(ResultsScreen);
+            }),
+        ))
+        .set_parent(submit_container)
+        .id();
+
+    commands
+        .spawn((
+            Name::new("SubmitButtonText"),
+            TextBundle::from_section(
+                "Submit",
+                TextStyle {
+                    font: BOLD_FONT_HANDLE,
+                    color: config.submit_button_text_color,
+                    ..default()
+                },
+            ),
+            FontSize::new(config.submit_button_font_size),
+        ))
+        .set_parent(submit_button);
 }
 
 fn exit_editor_screen(

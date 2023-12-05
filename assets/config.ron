@@ -16,22 +16,22 @@
     ),
 
     title_screen: TitleScreenConfig(
-        text_color: Rgba(red: 0.149, green: 0.149, blue: 0.149, alpha: 1.000),
         background_color: Rgba(red: 0.580, green: 0.682, blue: 0.839, alpha: 1.000),
         border_color: Rgba(red: 0.510, green: 0.612, blue: 0.769, alpha: 1.000),
         border_width: VMin(1.0),
+        text_color: Rgba(red: 0.149, green: 0.149, blue: 0.149, alpha: 1.000),
 
         title_background_color: Rgba(red: 0.549, green: 0.647, blue: 0.796, alpha: 1.000),
         title_font_size: Vw(4.5),
 
         body_font_size: Vw(2.2),
 
-        button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
-        button_font_size: Vw(4.5),
         button_border_color: Rgba(red: 0.118, green: 0.306, blue: 0.820, alpha: 1.000),
         button_normal_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
         button_hovered_color: Rgba(red: 0.039, green: 0.227, blue: 0.741, alpha: 1.000),
         button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
+        button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
+        button_font_size: Vw(4.5),
     ),
     
     loading_screen: LoadingScreenConfig(
@@ -65,18 +65,19 @@
         upgrade_view_width: Px(250.0),
         upgrade_view_background_color: Rgba(red: 0.184, green: 0.188, blue: 0.239, alpha: 1.000),
 
-        upgrade_button_normal_color: Rgba(red: 0.165, green: 0.180, blue: 0.184, alpha: 1.000),
-        upgrade_button_hovered_color: Rgba(red: 0.265, green: 0.280, blue: 0.284, alpha: 1.000),
-        upgrade_button_pressed_color: Rgba(red: 0.065, green: 0.080, blue: 0.084, alpha: 1.000),
+        upgrade_button_height: Px(56.0),
+        upgrade_button_normal_color: Rgba(red: 0.353, green: 0.373, blue: 0.416, alpha: 1.000),
+        upgrade_button_hovered_color: Rgba(red: 0.471, green: 0.506, blue: 0.529, alpha: 1.000),
+        upgrade_button_pressed_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
         upgrade_button_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
         upgrade_button_font_size: Px(16.0),
 
-        submit_button_normal_color: Rgba(red: 0.165, green: 0.180, blue: 0.184, alpha: 1.000),
-        submit_button_hovered_color: Rgba(red: 0.265, green: 0.280, blue: 0.284, alpha: 1.000),
-        submit_button_pressed_color: Rgba(red: 0.065, green: 0.080, blue: 0.084, alpha: 1.000),
+        submit_button_height: Px(76.0),
+        submit_button_normal_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
+        submit_button_hovered_color: Rgba(red: 0.039, green: 0.227, blue: 0.741, alpha: 1.000),
+        submit_button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
         submit_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
         submit_button_font_size: Px(32.0),
-
     ),
     
     results_screen: ResultsScreenConfig(
