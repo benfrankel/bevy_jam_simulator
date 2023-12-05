@@ -2,7 +2,7 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-use super::EditorScreenUI;
+use super::EditorScreenUi;
 use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenConfig;
@@ -279,7 +279,7 @@ fn replace_available_upgrades(
     mut events: EventReader<UpgradeEvent>,
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
-    editor_screen_ui: Res<EditorScreenUI>,
+    editor_screen_ui: Res<EditorScreenUi>,
 ) {
     let config = &config.editor_screen;
     for event in events.read() {

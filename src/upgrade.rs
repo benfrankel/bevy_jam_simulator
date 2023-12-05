@@ -4,7 +4,7 @@ use bevy::prelude::*;
 use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::spawn_code_panel;
-use crate::state::editor_screen::EditorScreenUI;
+use crate::state::editor_screen::EditorScreenUi;
 
 pub struct UpgradePlugin;
 
@@ -155,7 +155,7 @@ fn load_upgrade_list(world: &mut World) {
 fn dark_mode_enable(
     mut commands: Commands,
     config: Res<Config>,
-    mut editor_screen_ui: ResMut<EditorScreenUI>,
+    mut editor_screen_ui: ResMut<EditorScreenUi>,
 ) {
     commands
         .entity(editor_screen_ui.code_panel)

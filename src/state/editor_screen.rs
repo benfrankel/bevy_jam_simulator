@@ -25,7 +25,8 @@ pub struct EditorScreenStatePlugin;
 
 impl Plugin for EditorScreenStatePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<EditorScreenAssets>()
+        app.register_type::<EditorScreenUi>()
+            .register_type::<EditorScreenAssets>()
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
             .add_systems(OnExit(EditorScreen), exit_editor_screen)
@@ -83,8 +84,8 @@ pub struct EditorScreenConfig {
     submit_button_font_size: Val,
 }
 
-#[derive(Resource)]
-pub struct EditorScreenUI {
+#[derive(Resource, Reflect)]
+pub struct EditorScreenUi {
     pub vbox: Entity,
     pub code_panel: Entity,
     pub upgrade_container: Entity,
@@ -168,7 +169,7 @@ fn enter_editor_screen(
         spawn_upgrade_panel(&mut commands, config, &upgrade_list);
     commands.entity(upgrade_panel).set_parent(hbox);
 
-    commands.insert_resource(EditorScreenUI {
+    commands.insert_resource(EditorScreenUi {
         vbox,
         code_panel,
         upgrade_container,
@@ -181,6 +182,7 @@ fn exit_editor_screen(
     mut transform_query: Query<&mut Transform>,
 ) {
     commands.entity(root.ui).despawn_descendants();
+    commands.remove_resource::<EditorScreenUi>();
 
     // Reset camera
     let Ok(mut transform) = transform_query.get_mut(root.camera) else {
