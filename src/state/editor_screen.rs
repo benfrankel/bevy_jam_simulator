@@ -4,13 +4,15 @@ mod outline_panel;
 mod scene_view;
 mod upgrade_panel;
 
+// Expose this for the upgrades.
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+pub use code_panel::spawn_code_panel;
 use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
-use crate::state::editor_screen::code_panel::spawn_code_panel;
+use crate::state::editor_screen::code_panel::spawn_light_code_panel;
 use crate::state::editor_screen::info_bar::spawn_info_bar;
 use crate::state::editor_screen::outline_panel::spawn_outline_panel;
 use crate::state::editor_screen::scene_view::spawn_scene_view;
@@ -51,6 +53,9 @@ pub struct EditorScreenConfig {
 
     scene_view_background_color: Color,
 
+    light_theme_background_color: Color,
+    light_theme_text_color: Color,
+
     code_panel_height: Val,
     code_panel_background_color: Color,
     code_panel_text_color: Color,
@@ -76,6 +81,12 @@ pub struct EditorScreenConfig {
     submit_button_pressed_color: Color,
     submit_button_text_color: Color,
     submit_button_font_size: Val,
+}
+
+#[derive(Resource)]
+pub struct EditorScreenUI {
+    pub vbox: Entity,
+    pub code_panel: Entity,
 }
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
@@ -149,11 +160,13 @@ fn enter_editor_screen(
     let scene_view = spawn_scene_view(&mut commands, config);
     commands.entity(scene_view).set_parent(vbox);
 
-    let code_panel = spawn_code_panel(&mut commands, config);
+    let code_panel = spawn_light_code_panel(&mut commands, config);
     commands.entity(code_panel).set_parent(vbox);
 
     let upgrade_panel = spawn_upgrade_panel(&mut commands, config, &upgrade_list);
     commands.entity(upgrade_panel).set_parent(hbox);
+
+    commands.insert_resource(EditorScreenUI { vbox, code_panel });
 }
 
 fn exit_editor_screen(

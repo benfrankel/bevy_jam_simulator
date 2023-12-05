@@ -1,6 +1,10 @@
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
 
+use crate::config::Config;
+use crate::state::editor_screen::spawn_code_panel;
+use crate::state::editor_screen::EditorScreenUI;
+
 pub struct UpgradePlugin;
 
 impl Plugin for UpgradePlugin {
@@ -74,16 +78,33 @@ pub enum UpgradeKind {
     TouchOfLife,
 }
 
-fn load_upgrade_list(mut upgrade_types: ResMut<UpgradeList>) {
-    upgrade_types.0.extend([Upgrade {
-        name: "TouchOfLifePlugin".to_string(),
-        description: "Spawns 1 entity wherever you click in the scene view.".to_string(),
+fn load_upgrade_list(world: &mut World) {
+    let dark_mode_enable = world.register_system(dark_mode_enable);
+    let mut upgrade_types: Mut<UpgradeList> = world.get_resource_mut().unwrap();
 
-        base_cost: 10.0,
+    upgrade_types.0.extend([Upgrade {
+        name: "Dark Mode".to_string(),
+        description: "Rite of passage for all developers. Required to write code.".to_string(),
+
+        base_cost: 0.0,
         weight: 1.0,
         remaining: 1,
 
-        enable: None,
+        enable: Some(dark_mode_enable),
         update: None,
     }]);
+}
+
+fn dark_mode_enable(
+    mut commands: Commands,
+    config: Res<Config>,
+    mut editor_screen_ui: ResMut<EditorScreenUI>,
+) {
+    commands
+        .entity(editor_screen_ui.code_panel)
+        .despawn_recursive();
+    editor_screen_ui.code_panel = spawn_code_panel(&mut commands, &config.editor_screen);
+    commands
+        .entity(editor_screen_ui.code_panel)
+        .set_parent(editor_screen_ui.vbox);
 }

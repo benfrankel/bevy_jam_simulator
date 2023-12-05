@@ -57,6 +57,9 @@
 
         scene_view_background_color: Rgba(red: 0.671, green: 0.710, blue: 0.722, alpha: 1.000),
 
+        light_theme_background_color: Rgba(red: 0.95, green: 0.95, blue: 0.95, alpha: 1.000),
+        light_theme_text_color: Rgba(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.000),
+
         code_panel_height: Px(200.0),
         code_panel_background_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
         code_panel_text_color: Rgba(red: 0.300, green: 0.900, blue: 0.000, alpha: 1.000),
