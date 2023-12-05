@@ -133,6 +133,15 @@ fn add_upgrades_to_outline(
     for event in events.read() {
         let upgrade = upgrade_list.get(event.0);
 
+        // Don't add the upgrade if it's repeating.
+        if upgrade.remaining == usize::MAX {
+            continue;
+        }
+
+        // TODO: Denote levels of the upgrades instead of adding them repeatedly.
+        // Example: Adding "X" two times should create a single "X (2)" entry instead of
+        // two "X" lines.
+
         for container in &container_query {
             let outline_entry = spawn_outline_entry(&mut commands, config, upgrade);
             commands.entity(outline_entry).set_parent(container);

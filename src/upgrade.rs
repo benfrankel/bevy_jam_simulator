@@ -2,6 +2,7 @@ use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
 
 use crate::config::Config;
+use crate::simulation::Simulation;
 use crate::state::editor_screen::spawn_code_panel;
 use crate::state::editor_screen::EditorScreenUI;
 
@@ -69,11 +70,13 @@ fn enable_upgrades(
 }
 
 #[derive(Resource, Default)]
-pub struct UpgradeList(Vec<Upgrade>);
+pub struct UpgradeList {
+    pub list: Vec<Upgrade>,
+}
 
 impl UpgradeList {
     pub fn get(&self, kind: UpgradeKind) -> &Upgrade {
-        &self.0[kind as usize]
+        &self.list[kind as usize]
     }
 }
 
@@ -81,22 +84,20 @@ impl UpgradeList {
 pub enum UpgradeKind {
     DarkMode,
     TouchOfLife,
+    BurstOfLife,
 }
 
 fn load_upgrade_list(world: &mut World) {
-    let dark_mode_enable = world.register_system(dark_mode_enable);
-    let mut upgrade_types: Mut<UpgradeList> = world.get_resource_mut().unwrap();
-
-    upgrade_types.0.extend([
+    let upgrades = vec![
         Upgrade {
             name: "Dark Mode".to_string(),
             description: "Rite of passage for all developers. Required to write code.".to_string(),
 
             base_cost: 0.0,
-            weight: 1.0,
+            weight: 0.0,
             remaining: 1,
 
-            enable: Some(dark_mode_enable),
+            enable: Some(world.register_system(dark_mode_enable)),
             update: None,
 
             next_upgrade: Some(UpgradeKind::TouchOfLife),
@@ -105,18 +106,50 @@ fn load_upgrade_list(world: &mut World) {
             name: "Touch of Life".to_string(),
             description: "Spawns 1 entity wherever you click in the scene view.".to_string(),
 
-            base_cost: 10.0,
-            weight: 1.0,
+            base_cost: 1.0,
+            weight: 0.0,
             remaining: 1,
 
             // TODO: This is stil no-op
             enable: None,
             update: None,
 
-            // TODO: This is a placegolder.
-            next_upgrade: Some(UpgradeKind::TouchOfLife),
+            next_upgrade: None,
         },
-    ]);
+        Upgrade {
+            name: "Burst of Life".to_string(),
+            description: "Spawns 10 entities immediately.".to_string(),
+
+            base_cost: 1.0,
+            weight: 1.0,
+            remaining: usize::MAX,
+
+            enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+                simulation.entities += 10.0;
+            })),
+            update: None,
+
+            next_upgrade: None,
+        },
+        Upgrade {
+            name: "Import Library".to_string(),
+            description: "Spawns 10 lines immediately.".to_string(),
+
+            base_cost: 1.0,
+            weight: 1.0,
+            remaining: usize::MAX,
+
+            enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+                simulation.lines += 10.0;
+            })),
+            update: None,
+
+            next_upgrade: None,
+        },
+    ];
+
+    let mut upgrade_types: Mut<UpgradeList> = world.get_resource_mut().unwrap();
+    upgrade_types.list = upgrades;
 }
 
 fn dark_mode_enable(

@@ -296,8 +296,18 @@ fn replace_available_upgrades(
                 .entity(upgrade_button)
                 .set_parent(editor_screen_ui.upgrade_container);
         } else {
-            // TODO: Spawn randomly chosen upgrades (weighted)
-            todo!();
+            // TODO: Randomly choose upgrades (weighted)
+            // This one adds all upgrades with non-zero weight.
+            for (i, upgrade) in upgrade_list.list.iter().enumerate() {
+                if upgrade.weight > 0.0 {
+                    let upgrade_kind: UpgradeKind = unsafe { std::mem::transmute(i as u8) };
+                    let upgrade_button =
+                        spawn_upgrade_button(&mut commands, config, &upgrade_list, upgrade_kind);
+                    commands
+                        .entity(upgrade_button)
+                        .set_parent(editor_screen_ui.upgrade_container);
+                }
+            }
         }
     }
 }
