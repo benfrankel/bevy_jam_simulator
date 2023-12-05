@@ -9,8 +9,8 @@ use serde::Serialize;
 use tap::TapFallible;
 
 use crate::state::editor_screen::EditorScreenConfig;
-use crate::state::results_screen::ResultsScreenConfig;
 use crate::state::loading_screen::LoadingScreenConfig;
+use crate::state::results_screen::ResultsScreenConfig;
 use crate::state::splash_screen::SplashScreenConfig;
 use crate::state::title_screen::TitleScreenConfig;
 use crate::ui::TooltipConfig;

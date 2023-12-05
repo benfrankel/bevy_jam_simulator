@@ -1,6 +1,6 @@
 pub mod editor_screen;
-pub mod results_screen;
 pub mod loading_screen;
+pub mod results_screen;
 pub mod splash_screen;
 pub mod title_screen;
 
