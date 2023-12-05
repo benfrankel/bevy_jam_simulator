@@ -11,7 +11,7 @@ use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
-use crate::upgrade::EnableUpgradeEvent;
+use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
 
@@ -73,9 +73,12 @@ pub fn spawn_upgrade_panel(
         .set_parent(upgrade_panel)
         .id();
 
-    // TODO: Replace these dummy upgrades
-    let button = spawn_upgrade_button(commands, config, upgrade_list, UpgradeKind::TouchOfLife);
-    commands.entity(button).set_parent(upgrade_container);
+    // TODO: Replace this dummy upgrade
+    let upgrade_button =
+        spawn_upgrade_button(commands, config, upgrade_list, UpgradeKind::TouchOfLife);
+    commands
+        .entity(upgrade_button)
+        .set_parent(upgrade_container);
 
     let submit_container = commands
         .spawn((
@@ -92,47 +95,8 @@ pub fn spawn_upgrade_panel(
         .set_parent(upgrade_panel)
         .id();
 
-    let submit_button = commands
-        .spawn((
-            Name::new("SubmitButton"),
-            ButtonBundle {
-                style: Style {
-                    width: Val::Percent(100.0),
-                    height: config.submit_button_height,
-                    padding: UiRect::all(Val::Px(10.0)),
-                    justify_content: JustifyContent::Center,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                background_color: config.submit_button_normal_color.into(),
-                ..default()
-            },
-            InteractionColor {
-                normal: config.submit_button_normal_color,
-                hovered: config.submit_button_hovered_color,
-                pressed: config.submit_button_pressed_color,
-            },
-            On::<Pointer<Click>>::run(|mut next_state: ResMut<NextState<_>>| {
-                next_state.set(AppState::ResultsScreen);
-            }),
-        ))
-        .set_parent(submit_container)
-        .id();
-
-    commands
-        .spawn((
-            Name::new("SubmitButtonText"),
-            TextBundle::from_section(
-                "Submit",
-                TextStyle {
-                    font: BOLD_FONT_HANDLE,
-                    color: config.submit_button_text_color,
-                    ..default()
-                },
-            ),
-            FontSize::new(config.submit_button_font_size),
-        ))
-        .set_parent(submit_button);
+    let submit_button = spawn_submit_button(commands, config);
+    commands.entity(submit_button).set_parent(submit_container);
 
     upgrade_panel
 }
@@ -182,7 +146,7 @@ fn spawn_upgrade_button(
                 move |mut events: EventWriter<_>, mut simulation: ResMut<Simulation>| {
                     if simulation.lines >= upgrade_cost {
                         simulation.lines -= upgrade_cost;
-                        events.send(EnableUpgradeEvent(upgrade_kind));
+                        events.send(UpgradeEvent(upgrade_kind));
                     }
                 },
             ),
@@ -221,4 +185,49 @@ fn spawn_upgrade_button(
         .set_parent(upgrade_button);
 
     upgrade_button
+}
+
+fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
+    let submit_button = commands
+        .spawn((
+            Name::new("SubmitButton"),
+            ButtonBundle {
+                style: Style {
+                    width: Val::Percent(100.0),
+                    height: config.submit_button_height,
+                    padding: UiRect::all(Val::Px(10.0)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                background_color: config.submit_button_normal_color.into(),
+                ..default()
+            },
+            InteractionColor {
+                normal: config.submit_button_normal_color,
+                hovered: config.submit_button_hovered_color,
+                pressed: config.submit_button_pressed_color,
+            },
+            On::<Pointer<Click>>::run(|mut next_state: ResMut<NextState<_>>| {
+                next_state.set(AppState::ResultsScreen);
+            }),
+        ))
+        .id();
+
+    commands
+        .spawn((
+            Name::new("SubmitButtonText"),
+            TextBundle::from_section(
+                "Submit",
+                TextStyle {
+                    font: BOLD_FONT_HANDLE,
+                    color: config.submit_button_text_color,
+                    ..default()
+                },
+            ),
+            FontSize::new(config.submit_button_font_size),
+        ))
+        .set_parent(submit_button);
+
+    submit_button
 }

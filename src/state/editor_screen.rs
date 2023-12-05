@@ -27,7 +27,7 @@ impl Plugin for EditorScreenStatePlugin {
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
             .add_systems(OnExit(EditorScreen), exit_editor_screen)
-            .add_plugins(info_bar::InfoBarPlugin);
+            .add_plugins((info_bar::InfoBarPlugin, outline_panel::OutlinePanelPlugin));
     }
 }
 

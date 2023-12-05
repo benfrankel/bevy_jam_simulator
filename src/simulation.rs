@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::upgrade::EnableUpgradeEvent;
+use crate::upgrade::UpgradeEvent;
 
 pub struct SimulationPlugin;
 
@@ -18,6 +18,6 @@ pub struct Simulation {
     pub entities: f64,
 }
 
-fn count_plugins(mut events: EventReader<EnableUpgradeEvent>, mut simulation: ResMut<Simulation>) {
+fn count_plugins(mut events: EventReader<UpgradeEvent>, mut simulation: ResMut<Simulation>) {
     simulation.plugins += events.read().count();
 }

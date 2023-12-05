@@ -5,8 +5,8 @@ pub struct UpgradePlugin;
 
 impl Plugin for UpgradePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<EnableUpgradeEvent>()
-            .add_event::<EnableUpgradeEvent>()
+        app.register_type::<UpgradeEvent>()
+            .add_event::<UpgradeEvent>()
             .init_resource::<UpgradeList>()
             .init_resource::<ActiveUpgrades>()
             .add_systems(Startup, load_upgrade_list)
@@ -36,11 +36,11 @@ fn run_active_upgrades(mut commands: Commands, active_upgrades: Res<ActiveUpgrad
 }
 
 #[derive(Event, Reflect)]
-pub struct EnableUpgradeEvent(pub UpgradeKind);
+pub struct UpgradeEvent(pub UpgradeKind);
 
 fn enable_upgrades(
     mut commands: Commands,
-    mut events: EventReader<EnableUpgradeEvent>,
+    mut events: EventReader<UpgradeEvent>,
     upgrade_list: Res<UpgradeList>,
     mut active_upgrades: ResMut<ActiveUpgrades>,
 ) {
