@@ -121,9 +121,6 @@ fn enter_editor_screen(
         .set_parent(root.ui)
         .id();
 
-    let info_bar = spawn_info_bar(&mut commands, config);
-    commands.entity(info_bar).set_parent(editor_screen);
-
     let hbox = commands
         .spawn((
             Name::new("HBox"),
@@ -157,6 +154,9 @@ fn enter_editor_screen(
         ))
         .set_parent(hbox)
         .id();
+
+    let info_bar = spawn_info_bar(&mut commands, config);
+    commands.entity(info_bar).set_parent(vbox);
 
     let scene_view = spawn_scene_view(&mut commands, config);
     commands.entity(scene_view).set_parent(vbox);

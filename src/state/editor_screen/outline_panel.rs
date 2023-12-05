@@ -2,6 +2,7 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 
 use crate::config::Config;
+use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenConfig;
 use crate::ui::FontSize;
 use crate::ui::InteractionPalette;
@@ -18,12 +19,15 @@ pub struct OutlinePanelPlugin;
 impl Plugin for OutlinePanelPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<IsOutlineContainer>()
-            .add_systems(Update, add_upgrades_to_outline);
+            .add_systems(Update, (add_upgrades_to_outline, update_outline_header));
     }
 }
 
 #[derive(Component, Reflect)]
 struct IsOutlineContainer;
+
+#[derive(Component, Reflect)]
+struct IsOutlineHeader;
 
 // TODO: Add scrollbar
 pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
@@ -59,13 +63,15 @@ pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig)
                 ),
                 style: Style {
                     // Hiding this because it looks bad :(
-                    display: Display::None,
+                    // display: Display::None,
                     margin: UiRect::bottom(Val::Px(10.0)),
+                    align_self: AlignSelf::Center,
                     ..default()
                 },
                 ..default()
             },
             FontSize::new(config.outline_panel_header_font_size),
+            IsOutlineHeader,
         ))
         .set_parent(outline_panel);
 
@@ -146,5 +152,16 @@ fn add_upgrades_to_outline(
             let outline_entry = spawn_outline_entry(&mut commands, config, upgrade);
             commands.entity(outline_entry).set_parent(container);
         }
+    }
+}
+
+fn update_outline_header(
+    simulation: Res<Simulation>,
+    mut info_bar_query: Query<&mut Text, With<IsOutlineHeader>>,
+) {
+    let info = format!("Installed ({})", simulation.plugins);
+
+    for mut text in &mut info_bar_query {
+        text.sections[0].value = info.clone();
     }
 }
