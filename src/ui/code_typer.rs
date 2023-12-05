@@ -1,3 +1,4 @@
+use std::iter::Chain;
 use std::iter::Cycle;
 use std::str::Chars;
 
@@ -14,14 +15,15 @@ impl Plugin for CodeTyperPlugin {
     }
 }
 
+const TUTORIAL_CODE: &str = "// You can spend lines to add_plugins from the upgrade panel\n\n";
 const FILLER_CODE: &str = include_str!("code_typer.rs");
 
 // Newtype so that CodeTyper can derive Reflect
-pub struct CodeGenerator(Cycle<Chars<'static>>);
+pub struct CodeGenerator(Chain<Chars<'static>, Cycle<Chars<'static>>>);
 
 impl Default for CodeGenerator {
     fn default() -> Self {
-        Self(FILLER_CODE.chars().cycle())
+        Self(TUTORIAL_CODE.chars().chain(FILLER_CODE.chars().cycle()))
     }
 }
 

@@ -26,7 +26,7 @@ pub fn spawn_code_panel(commands: &mut Commands, config: &EditorScreenConfig) ->
         .spawn((
             Name::new("CodePanelText"),
             TextBundle::from_section(
-                "// Start typing to generate lines of code!\n\n",
+                "// Start typing to generate lines of code!\n",
                 TextStyle {
                     font: FONT_HANDLE,
                     color: config.code_panel_text_color,
@@ -35,7 +35,7 @@ pub fn spawn_code_panel(commands: &mut Commands, config: &EditorScreenConfig) ->
             ),
             FontSize::new(config.code_panel_font_size),
             CodeTyper {
-                lines_count: 3,
+                lines_count: 2,
                 lines_max: config.code_panel_lines_max,
                 ..default()
             },
