@@ -17,13 +17,13 @@ pub struct OutlinePanelPlugin;
 
 impl Plugin for OutlinePanelPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<IsOutlinePanel>()
+        app.register_type::<IsOutlineContainer>()
             .add_systems(Update, add_upgrades_to_outline);
     }
 }
 
 #[derive(Component, Reflect)]
-struct IsOutlinePanel;
+struct IsOutlineContainer;
 
 // TODO: Add scrollbar
 pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
@@ -41,7 +41,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig)
                 background_color: config.outline_panel_background_color.into(),
                 ..default()
             },
-            IsOutlinePanel,
+            IsOutlineContainer,
         ))
         .id();
 
@@ -126,17 +126,15 @@ fn add_upgrades_to_outline(
     mut events: EventReader<UpgradeEvent>,
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
-    outline_panel_query: Query<Entity, With<IsOutlinePanel>>,
+    container_query: Query<Entity, With<IsOutlineContainer>>,
 ) {
     let config = &config.editor_screen;
     for event in events.read() {
-        println!("A");
         let upgrade = upgrade_list.get(event.0);
 
-        for outline_panel in &outline_panel_query {
-            println!("B");
-            let outline_entry = spawn_outline_entry(&mut commands, &config, upgrade);
-            commands.entity(outline_entry).set_parent(outline_panel);
+        for container in &container_query {
+            let outline_entry = spawn_outline_entry(&mut commands, config, upgrade);
+            commands.entity(outline_entry).set_parent(container);
         }
     }
 }

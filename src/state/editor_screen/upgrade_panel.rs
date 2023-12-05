@@ -2,6 +2,7 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
+use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenConfig;
 use crate::state::AppState;
@@ -14,6 +15,22 @@ use crate::ui::FONT_HANDLE;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
+
+pub struct UpgradePanelPlugin;
+
+impl Plugin for UpgradePanelPlugin {
+    fn build(&self, app: &mut App) {
+        app.register_type::<IsUpgradeContainer>().add_systems(
+            Update,
+            replace_available_upgrades.run_if(on_event::<UpgradeEvent>()),
+        );
+    }
+}
+
+const FIRST_UPGRADE: UpgradeKind = UpgradeKind::TouchOfLife;
+
+#[derive(Component, Reflect)]
+pub struct IsUpgradeContainer;
 
 pub fn spawn_upgrade_panel(
     commands: &mut Commands,
@@ -69,13 +86,12 @@ pub fn spawn_upgrade_panel(
                 },
                 ..default()
             },
+            IsUpgradeContainer,
         ))
         .set_parent(upgrade_panel)
         .id();
 
-    // TODO: Replace this dummy upgrade
-    let upgrade_button =
-        spawn_upgrade_button(commands, config, upgrade_list, UpgradeKind::TouchOfLife);
+    let upgrade_button = spawn_upgrade_button(commands, config, upgrade_list, FIRST_UPGRADE);
     commands
         .entity(upgrade_button)
         .set_parent(upgrade_container);
@@ -230,4 +246,20 @@ fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> 
         .set_parent(submit_button);
 
     submit_button
+}
+
+fn replace_available_upgrades(
+    mut commands: Commands,
+    config: Res<Config>,
+    container_query: Query<Entity, With<IsUpgradeContainer>>,
+) {
+    let _config = &config.editor_screen;
+    for container in &container_query {
+        commands.entity(container).despawn_descendants();
+
+        // TODO: Spawn the next set of upgrades
+        // - # of upgrade slots
+        // - Initial fixed sequence of upgrades
+        // - Randomly chosen upgrades (weighted)
+    }
 }
