@@ -38,13 +38,13 @@ pub struct TitleScreenConfig {
     border_width: Val,
     background_color: Color,
     text_color: Color,
+    font_size: Val,
 
     title_background_color: Color,
     title_font_size: Val,
 
-    body_font_size: Val,
-
     button_border_color: Color,
+    button_border_width: Val,
     button_normal_color: Color,
     button_hovered_color: Color,
     button_pressed_color: Color,
@@ -184,7 +184,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             .spawn((
                 Name::new(format!("BodyTextLine{i}")),
                 TextBundle::from_sections(sections),
-                FontSize::new(config.body_font_size),
+                FontSize::new(config.font_size),
             ))
             .set_parent(body_container);
     }
@@ -195,8 +195,8 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             ButtonBundle {
                 style: Style {
                     margin: UiRect::top(vh(12.0)),
-                    padding: UiRect::axes(vw(10.0), vh(6.0)),
-                    border: UiRect::all(config.border_width),
+                    padding: UiRect::axes(vw(16.0), vh(4.0)),
+                    border: UiRect::all(config.button_border_width),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
