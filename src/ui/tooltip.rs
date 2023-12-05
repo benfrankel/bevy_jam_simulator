@@ -3,9 +3,9 @@ use bevy::window::PrimaryWindow;
 use serde::Deserialize;
 use serde::Serialize;
 
-use super::FontSize;
-use super::FONT_HANDLE;
 use crate::config::Config;
+use crate::ui::FontSize;
+use crate::ui::FONT_HANDLE;
 use crate::AppRoot;
 
 pub struct TooltipPlugin;
