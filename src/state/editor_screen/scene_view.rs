@@ -1,7 +1,6 @@
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-use crate::state::editor_screen::EditorScreenConfig;
 use crate::AppRoot;
 
 pub struct SceneViewPlugin;
@@ -16,7 +15,7 @@ impl Plugin for SceneViewPlugin {
 #[derive(Event, Reflect)]
 pub struct ClickSpawnEvent(pub Vec2);
 
-pub fn spawn_scene_view(commands: &mut Commands, _config: &EditorScreenConfig) -> Entity {
+pub fn spawn_scene_view(commands: &mut Commands) -> Entity {
     let scene_view = commands
         .spawn((
             Name::new("SceneView"),

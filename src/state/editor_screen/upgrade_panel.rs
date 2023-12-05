@@ -5,7 +5,7 @@ use bevy_mod_picking::prelude::*;
 use super::EditorScreenUi;
 use crate::config::Config;
 use crate::simulation::Simulation;
-use crate::state::editor_screen::EditorScreenConfig;
+use crate::state::editor_screen::EditorScreenTheme;
 use crate::state::AppState;
 use crate::ui::Disabled;
 use crate::ui::FontSize;
@@ -14,6 +14,8 @@ use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
+use crate::upgrade::enable_upgrade;
+use crate::upgrade::ActiveUpgrades;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
@@ -44,7 +46,7 @@ struct UpgradeButton(UpgradeKind);
 
 pub fn spawn_upgrade_panel(
     commands: &mut Commands,
-    config: &EditorScreenConfig,
+    theme: &EditorScreenTheme,
     upgrade_list: &UpgradeList,
 ) -> (Entity, Entity) {
     let upgrade_panel = commands
@@ -52,14 +54,14 @@ pub fn spawn_upgrade_panel(
             Name::new("UpgradePanel"),
             NodeBundle {
                 style: Style {
-                    min_width: config.upgrade_panel_width,
+                    min_width: theme.upgrade_panel_width,
                     height: Val::Percent(100.0),
                     align_items: AlignItems::Center,
                     padding: UiRect::all(Val::Px(12.0)),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: config.upgrade_panel_background_color.into(),
+                background_color: theme.upgrade_panel_background_color.into(),
                 ..default()
             },
         ))
@@ -72,7 +74,7 @@ pub fn spawn_upgrade_panel(
                 "Upgrades",
                 TextStyle {
                     font: BOLD_FONT_HANDLE,
-                    color: config.upgrade_panel_text_color,
+                    color: theme.upgrade_panel_text_color,
                     ..default()
                 },
             )
@@ -80,7 +82,7 @@ pub fn spawn_upgrade_panel(
                 margin: UiRect::bottom(Val::Px(15.0)),
                 ..default()
             }),
-            FontSize::new(config.upgrade_panel_header_font_size),
+            FontSize::new(theme.upgrade_panel_header_font_size),
         ))
         .set_parent(upgrade_panel);
 
@@ -101,7 +103,7 @@ pub fn spawn_upgrade_panel(
         .set_parent(upgrade_panel)
         .id();
 
-    let upgrade_button = spawn_upgrade_button(commands, config, upgrade_list, FIRST_UPGRADE);
+    let upgrade_button = spawn_upgrade_button(commands, theme, upgrade_list, FIRST_UPGRADE);
     commands
         .entity(upgrade_button)
         .set_parent(upgrade_container);
@@ -121,7 +123,7 @@ pub fn spawn_upgrade_panel(
         .set_parent(upgrade_panel)
         .id();
 
-    let submit_button = spawn_submit_button(commands, config);
+    let submit_button = spawn_submit_button(commands, theme);
     commands.entity(submit_button).set_parent(submit_container);
 
     (upgrade_panel, upgrade_container)
@@ -132,7 +134,7 @@ pub fn spawn_upgrade_panel(
 // -> replace all entries in upgrade panel
 fn spawn_upgrade_button(
     commands: &mut Commands,
-    config: &EditorScreenConfig,
+    theme: &EditorScreenTheme,
     upgrade_list: &UpgradeList,
     upgrade_kind: UpgradeKind,
 ) -> Entity {
@@ -146,7 +148,7 @@ fn spawn_upgrade_button(
             ButtonBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: config.upgrade_button_height,
+                    height: theme.upgrade_button_height,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     margin: UiRect::bottom(Val::Px(10.0)),
@@ -155,15 +157,15 @@ fn spawn_upgrade_button(
                     row_gap: Val::Px(4.0),
                     ..default()
                 },
-                background_color: config.upgrade_button_normal_color.into(),
+                background_color: theme.upgrade_button_normal_color.into(),
                 ..default()
             },
             Disabled(false),
             InteractionPalette {
-                normal: config.upgrade_button_normal_color,
-                hovered: config.upgrade_button_hovered_color,
-                pressed: config.upgrade_button_pressed_color,
-                disabled: config.upgrade_button_disabled_color,
+                normal: theme.upgrade_button_normal_color,
+                hovered: theme.upgrade_button_hovered_color,
+                pressed: theme.upgrade_button_pressed_color,
+                disabled: theme.upgrade_button_disabled_color,
             },
             Tooltip {
                 text: upgrade.description.clone(),
@@ -171,9 +173,19 @@ fn spawn_upgrade_button(
                 offset: vec2(-12.0, 0.0),
             },
             On::<Pointer<Click>>::run(
-                move |mut events: EventWriter<_>, mut simulation: ResMut<Simulation>| {
+                move |mut events: EventWriter<_>,
+                      mut simulation: ResMut<Simulation>,
+                      mut commands: Commands,
+                      upgrade_list: Res<UpgradeList>,
+                      mut active_upgrades: ResMut<ActiveUpgrades>| {
                     if simulation.lines >= upgrade_cost {
                         simulation.lines -= upgrade_cost;
+                        enable_upgrade(
+                            upgrade_kind,
+                            &mut commands,
+                            &upgrade_list,
+                            &mut active_upgrades,
+                        );
                         events.send(UpgradeEvent(upgrade_kind));
                     }
                 },
@@ -189,11 +201,11 @@ fn spawn_upgrade_button(
                 upgrade.name.clone(),
                 TextStyle {
                     font: FONT_HANDLE,
-                    color: config.upgrade_button_text_color,
+                    color: theme.upgrade_button_text_color,
                     ..default()
                 },
             ),
-            FontSize::new(config.upgrade_button_font_size),
+            FontSize::new(theme.upgrade_button_font_size),
         ))
         .set_parent(upgrade_button);
 
@@ -205,37 +217,37 @@ fn spawn_upgrade_button(
                 format!("{} lines", upgrade_cost),
                 TextStyle {
                     font: FONT_HANDLE,
-                    color: config.upgrade_button_text_color,
+                    color: theme.upgrade_button_text_color,
                     ..default()
                 },
             ),
-            FontSize::new(config.upgrade_button_font_size),
+            FontSize::new(theme.upgrade_button_font_size),
         ))
         .set_parent(upgrade_button);
 
     upgrade_button
 }
 
-fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
+fn spawn_submit_button(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
     let submit_button = commands
         .spawn((
             Name::new("SubmitButton"),
             ButtonBundle {
                 style: Style {
                     width: Val::Percent(100.0),
-                    height: config.submit_button_height,
+                    height: theme.submit_button_height,
                     padding: UiRect::all(Val::Px(10.0)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
                 },
-                background_color: config.submit_button_normal_color.into(),
+                background_color: theme.submit_button_normal_color.into(),
                 ..default()
             },
             InteractionPalette {
-                normal: config.submit_button_normal_color,
-                hovered: config.submit_button_hovered_color,
-                pressed: config.submit_button_pressed_color,
+                normal: theme.submit_button_normal_color,
+                hovered: theme.submit_button_hovered_color,
+                pressed: theme.submit_button_pressed_color,
                 disabled: Color::NONE,
             },
             On::<Pointer<Click>>::run(|mut next_state: ResMut<NextState<_>>| {
@@ -251,11 +263,11 @@ fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> 
                 "Submit",
                 TextStyle {
                     font: BOLD_FONT_HANDLE,
-                    color: config.submit_button_text_color,
+                    color: theme.submit_button_text_color,
                     ..default()
                 },
             ),
-            FontSize::new(config.submit_button_font_size),
+            FontSize::new(theme.submit_button_font_size),
         ))
         .set_parent(submit_button);
 
@@ -281,7 +293,7 @@ fn replace_available_upgrades(
     upgrade_list: Res<UpgradeList>,
     editor_screen_ui: Res<EditorScreenUi>,
 ) {
-    let config = &config.editor_screen;
+    let theme = &config.editor_screen.dark_theme;
     for event in events.read() {
         commands
             .entity(editor_screen_ui.upgrade_container)
@@ -291,7 +303,7 @@ fn replace_available_upgrades(
             // This upgrade belongs to the initial state of upgrades.
             // Spawn the next upgrade:
             let upgrade_button =
-                spawn_upgrade_button(&mut commands, config, &upgrade_list, upgrade_kind);
+                spawn_upgrade_button(&mut commands, theme, &upgrade_list, upgrade_kind);
             commands
                 .entity(upgrade_button)
                 .set_parent(editor_screen_ui.upgrade_container);
@@ -302,7 +314,7 @@ fn replace_available_upgrades(
                 if upgrade.weight > 0.0 {
                     let upgrade_kind: UpgradeKind = unsafe { std::mem::transmute(i as u8) };
                     let upgrade_button =
-                        spawn_upgrade_button(&mut commands, config, &upgrade_list, upgrade_kind);
+                        spawn_upgrade_button(&mut commands, theme, &upgrade_list, upgrade_kind);
                     commands
                         .entity(upgrade_button)
                         .set_parent(editor_screen_ui.upgrade_container);

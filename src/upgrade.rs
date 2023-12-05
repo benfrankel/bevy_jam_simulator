@@ -3,8 +3,9 @@ use bevy::prelude::*;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
-use crate::state::editor_screen::spawn_code_panel;
+use crate::state::editor_screen::create_editor_ui;
 use crate::state::editor_screen::EditorScreenUi;
+use crate::AppRoot;
 
 pub struct UpgradePlugin;
 
@@ -15,7 +16,7 @@ impl Plugin for UpgradePlugin {
             .init_resource::<UpgradeList>()
             .init_resource::<ActiveUpgrades>()
             .add_systems(Startup, load_upgrade_list)
-            .add_systems(Update, (enable_upgrades, run_active_upgrades));
+            .add_systems(Update, run_active_upgrades);
     }
 }
 
@@ -52,20 +53,19 @@ fn run_active_upgrades(mut commands: Commands, active_upgrades: Res<ActiveUpgrad
 #[derive(Event, Reflect)]
 pub struct UpgradeEvent(pub UpgradeKind);
 
-fn enable_upgrades(
-    mut commands: Commands,
-    mut events: EventReader<UpgradeEvent>,
-    upgrade_list: Res<UpgradeList>,
-    mut active_upgrades: ResMut<ActiveUpgrades>,
+/// Applies the given upgrade kind immediately.
+pub fn enable_upgrade(
+    upgrade_kind: UpgradeKind,
+    commands: &mut Commands,
+    upgrade_list: &Res<UpgradeList>,
+    active_upgrades: &mut ResMut<ActiveUpgrades>,
 ) {
-    for event in events.read() {
-        let upgrade = upgrade_list.get(event.0);
-        if let Some(enable) = upgrade.enable {
-            commands.run_system(enable);
-        }
-        if let Some(update) = upgrade.update {
-            active_upgrades.0.push(update);
-        }
+    let upgrade = upgrade_list.get(upgrade_kind);
+    if let Some(enable) = upgrade.enable {
+        commands.run_system(enable);
+    }
+    if let Some(update) = upgrade.update {
+        active_upgrades.0.push(update);
     }
 }
 
@@ -156,14 +156,19 @@ fn load_upgrade_list(world: &mut World) {
 
 fn dark_mode_enable(
     mut commands: Commands,
+    root: Res<AppRoot>,
     config: Res<Config>,
+    upgrade_list: Res<UpgradeList>,
     mut editor_screen_ui: ResMut<EditorScreenUi>,
 ) {
     commands
-        .entity(editor_screen_ui.code_panel)
+        .entity(editor_screen_ui.editor_screen)
         .despawn_recursive();
-    editor_screen_ui.code_panel = spawn_code_panel(&mut commands, &config.editor_screen);
-    commands
-        .entity(editor_screen_ui.code_panel)
-        .set_parent(editor_screen_ui.vbox);
+    *editor_screen_ui = create_editor_ui(
+        false,
+        &mut commands,
+        &root,
+        &config.editor_screen,
+        &upgrade_list,
+    );
 }

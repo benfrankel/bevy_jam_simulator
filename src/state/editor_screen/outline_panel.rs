@@ -3,7 +3,7 @@ use bevy::prelude::*;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
-use crate::state::editor_screen::EditorScreenConfig;
+use crate::state::editor_screen::EditorScreenTheme;
 use crate::ui::FontSize;
 use crate::ui::InteractionPalette;
 use crate::ui::Tooltip;
@@ -30,19 +30,19 @@ struct IsOutlineContainer;
 struct IsOutlineHeader;
 
 // TODO: Add scrollbar
-pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
+pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
     let outline_panel = commands
         .spawn((
             Name::new("OutlinePanel"),
             NodeBundle {
                 style: Style {
-                    min_width: config.outline_panel_width,
+                    min_width: theme.outline_panel_width,
                     height: Val::Percent(100.0),
                     padding: UiRect::all(Val::Px(12.0)),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
-                background_color: config.outline_panel_background_color.into(),
+                background_color: theme.outline_panel_background_color.into(),
                 ..default()
             },
             IsOutlineContainer,
@@ -57,7 +57,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig)
                     "",
                     TextStyle {
                         font: BOLD_FONT_HANDLE,
-                        color: config.outline_panel_text_color,
+                        color: theme.outline_panel_text_color,
                         ..default()
                     },
                 ),
@@ -69,7 +69,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig)
                 },
                 ..default()
             },
-            FontSize::new(config.outline_panel_header_font_size),
+            FontSize::new(theme.outline_panel_header_font_size),
             IsOutlineHeader,
         ))
         .set_parent(outline_panel);
@@ -79,7 +79,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, config: &EditorScreenConfig)
 
 fn spawn_outline_entry(
     commands: &mut Commands,
-    config: &EditorScreenConfig,
+    theme: &EditorScreenTheme,
     upgrade: &Upgrade,
 ) -> Entity {
     let outline_entry = commands
@@ -97,8 +97,8 @@ fn spawn_outline_entry(
             Interaction::default(),
             InteractionPalette {
                 normal: Color::NONE,
-                hovered: config.outline_panel_highlight_color,
-                pressed: config.outline_panel_highlight_color,
+                hovered: theme.outline_panel_highlight_color,
+                pressed: theme.outline_panel_highlight_color,
                 disabled: Color::NONE,
             },
             Tooltip {
@@ -116,11 +116,11 @@ fn spawn_outline_entry(
                 upgrade.name.clone(),
                 TextStyle {
                     font: FONT_HANDLE,
-                    color: config.outline_panel_text_color,
+                    color: theme.outline_panel_text_color,
                     ..default()
                 },
             ),
-            FontSize::new(config.outline_panel_font_size),
+            FontSize::new(theme.outline_panel_font_size),
         ))
         .set_parent(outline_entry);
 
@@ -130,11 +130,11 @@ fn spawn_outline_entry(
 fn add_upgrades_to_outline(
     mut commands: Commands,
     mut events: EventReader<UpgradeEvent>,
-    config: Res<Config>,
+    theme: Res<Config>,
     upgrade_list: Res<UpgradeList>,
     container_query: Query<Entity, With<IsOutlineContainer>>,
 ) {
-    let config = &config.editor_screen;
+    let theme = &theme.editor_screen.dark_theme;
     for event in events.read() {
         let upgrade = upgrade_list.get(event.0);
 
@@ -148,7 +148,7 @@ fn add_upgrades_to_outline(
         // two "X" lines.
 
         for container in &container_query {
-            let outline_entry = spawn_outline_entry(&mut commands, config, upgrade);
+            let outline_entry = spawn_outline_entry(&mut commands, theme, upgrade);
             commands.entity(outline_entry).set_parent(container);
         }
     }

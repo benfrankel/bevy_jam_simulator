@@ -41,7 +41,7 @@ impl Plugin for EditorScreenStatePlugin {
 }
 
 #[derive(Default, Reflect, Serialize, Deserialize)]
-pub struct EditorScreenConfig {
+pub struct EditorScreenTheme {
     info_bar_height: Val,
     info_bar_background_color: Color,
     info_bar_text_color: Color,
@@ -53,11 +53,6 @@ pub struct EditorScreenConfig {
     outline_panel_text_color: Color,
     outline_panel_font_size: Val,
     outline_panel_header_font_size: Val,
-
-    scene_view_background_color: Color,
-
-    light_theme_background_color: Color,
-    light_theme_text_color: Color,
 
     code_panel_height: Val,
     code_panel_background_color: Color,
@@ -86,10 +81,17 @@ pub struct EditorScreenConfig {
     submit_button_font_size: Val,
 }
 
+#[derive(Default, Reflect, Serialize, Deserialize)]
+pub struct EditorScreenConfig {
+    scene_view_background_color: Color,
+
+    light_theme: EditorScreenTheme,
+    dark_theme: EditorScreenTheme,
+}
+
 #[derive(Resource, Reflect)]
 pub struct EditorScreenUi {
-    pub vbox: Entity,
-    pub code_panel: Entity,
+    pub editor_screen: Entity,
     pub upgrade_container: Entity,
 }
 
@@ -108,6 +110,22 @@ fn enter_editor_screen(
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
 
+    let editor_screen_ui = create_editor_ui(true, &mut commands, &root, config, &upgrade_list);
+    commands.insert_resource(editor_screen_ui);
+}
+
+pub fn create_editor_ui(
+    light_theme: bool,
+    commands: &mut Commands,
+    root: &Res<AppRoot>,
+    config: &EditorScreenConfig,
+    upgrade_list: &Res<UpgradeList>,
+) -> EditorScreenUi {
+    let theme = if light_theme {
+        &config.light_theme
+    } else {
+        &config.dark_theme
+    };
     let editor_screen = commands
         .spawn((
             Name::new("EditorScreen"),
@@ -124,7 +142,7 @@ fn enter_editor_screen(
         .set_parent(root.ui)
         .id();
 
-    let info_bar = spawn_info_bar(&mut commands, config);
+    let info_bar = spawn_info_bar(commands, theme);
     commands.entity(info_bar).set_parent(editor_screen);
 
     let hbox = commands
@@ -142,7 +160,7 @@ fn enter_editor_screen(
         .set_parent(editor_screen)
         .id();
 
-    let outline_panel = spawn_outline_panel(&mut commands, config);
+    let outline_panel = spawn_outline_panel(commands, theme);
     commands.entity(outline_panel).set_parent(hbox);
 
     let vbox = commands
@@ -161,21 +179,23 @@ fn enter_editor_screen(
         .set_parent(hbox)
         .id();
 
-    let scene_view = spawn_scene_view(&mut commands, config);
+    let scene_view = spawn_scene_view(commands);
     commands.entity(scene_view).set_parent(vbox);
 
-    let code_panel = spawn_light_code_panel(&mut commands, config);
+    let code_panel = if light_theme {
+        spawn_light_code_panel(commands, theme)
+    } else {
+        spawn_code_panel(commands, theme)
+    };
     commands.entity(code_panel).set_parent(vbox);
 
-    let (upgrade_panel, upgrade_container) =
-        spawn_upgrade_panel(&mut commands, config, &upgrade_list);
+    let (upgrade_panel, upgrade_container) = spawn_upgrade_panel(commands, theme, upgrade_list);
     commands.entity(upgrade_panel).set_parent(hbox);
 
-    commands.insert_resource(EditorScreenUi {
-        vbox,
-        code_panel,
+    EditorScreenUi {
+        editor_screen,
         upgrade_container,
-    });
+    }
 }
 
 fn exit_editor_screen(
