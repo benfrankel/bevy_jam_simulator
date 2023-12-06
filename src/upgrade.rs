@@ -100,98 +100,107 @@ pub const INITIAL_UPGRADES: [UpgradeKind; 5] = [
     UpgradeKind::ImportLibrary,
 ];
 
-#[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
-pub enum UpgradeKind {
-    DarkMode,
-    TouchOfLifePlugin,
-    Brainstorm,
-    BurstOfLifePlugin,
-    ImportLibrary,
+/// A macro that generates UpgradeKind enum and load_upgrade_list system from the given
+/// UpgradeKind: Upgrade pairs.
+macro_rules! generate_upgrade_list {
+    (|$world:ident| $($enumname:ident: $upgrade:expr),+ $(,)?) => {
+        /// Enum containing all upgrade types.
+        #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
+        pub enum UpgradeKind {
+            $($enumname),+
+        }
+
+        /// A system that initializes and inserts the UpgradeList resource.
+        fn load_upgrade_list($world: &mut World) {
+            let upgrade_list = UpgradeList(vec![
+                $($upgrade),+
+            ]);
+
+            $world.insert_resource(upgrade_list);
+        }
+    };
 }
 
-fn load_upgrade_list(world: &mut World) {
-    let upgrade_list = UpgradeList(vec![
-        Upgrade {
-            name: "Dark Mode".to_string(),
-            description: "Rite of passage for all developers. Required to write code.".to_string(),
+generate_upgrade_list!(
+    |world|
+    DarkMode: Upgrade {
+        name: "Dark Mode".to_string(),
+        description: "Rite of passage for all developers. Required to write code.".to_string(),
 
-            cost: 0.0,
-            weight: 0.0,
-            remaining: 1,
+        cost: 0.0,
+        weight: 0.0,
+        remaining: 1,
 
-            enable: Some(world.register_system(enable_dark_mode)),
-            update: None,
-        },
-        Upgrade {
-            name: "TouchOfLifePlugin".to_string(),
-            description: "Spawns 1 entity any time you click inside the scene view.".to_string(),
+        enable: Some(world.register_system(enable_dark_mode)),
+        update: None,
+    },
+    TouchOfLifePlugin: Upgrade {
+        name: "TouchOfLifePlugin".to_string(),
+        description: "Spawns 1 entity any time you click inside the scene view.".to_string(),
 
-            cost: 2.0,
-            weight: 0.0,
-            remaining: 1,
+        cost: 2.0,
+        weight: 0.0,
+        remaining: 1,
 
-            enable: Some(
-                world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
-                    for mut scene_view in &mut scene_view_query {
-                        scene_view.spawns_per_click += 1;
-                    }
-                }),
-            ),
-            update: None,
-        },
-        Upgrade {
-            name: "Brainstorm".to_string(),
-            description: "Adds 1 extra upgrade slot.".to_string(),
+        enable: Some(
+            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+                for mut scene_view in &mut scene_view_query {
+                    scene_view.spawns_per_click += 1;
+                }
+            }),
+        ),
+        update: None,
+    },
+    Brainstorm: Upgrade {
+        name: "Brainstorm".to_string(),
+        description: "Adds 1 extra upgrade slot.".to_string(),
 
-            cost: 2.0,
-            weight: 0.0,
-            remaining: 1,
+        cost: 2.0,
+        weight: 0.0,
+        remaining: 1,
 
-            enable: Some(
-                world.register_system(|mut query: Query<&mut UpgradeContainer>| {
-                    for mut container in &mut query {
-                        container.slots += 1;
-                    }
-                }),
-            ),
-            update: None,
-        },
-        Upgrade {
-            name: "BurstOfLifePlugin".to_string(),
-            description: "Spawns 10 entities immediately.".to_string(),
+        enable: Some(
+            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
+                for mut container in &mut query {
+                    container.slots += 1;
+                }
+            }),
+        ),
+        update: None,
+    },
+    BurstOfLifePlugin: Upgrade {
+        name: "BurstOfLifePlugin".to_string(),
+        description: "Spawns 10 entities immediately.".to_string(),
 
-            cost: 2.0,
-            weight: 1.0,
-            remaining: usize::MAX,
+        cost: 2.0,
+        weight: 1.0,
+        remaining: usize::MAX,
 
-            enable: Some(
-                world.register_system(|mut events: EventWriter<SpawnEvent>| {
-                    let mut rng = thread_rng();
-                    for _ in 0..10 {
-                        let pos = vec2(rng.gen_range(-50.0..=50.0), rng.gen_range(-20.0..=40.0));
-                        events.send(SpawnEvent(pos));
-                    }
-                }),
-            ),
-            update: None,
-        },
-        Upgrade {
-            name: "Import Library".to_string(),
-            description: "Writes 10 lines of code immediately.".to_string(),
+        enable: Some(
+            world.register_system(|mut events: EventWriter<SpawnEvent>| {
+                let mut rng = thread_rng();
+                for _ in 0..10 {
+                    let pos = vec2(rng.gen_range(-50.0..=50.0), rng.gen_range(-20.0..=40.0));
+                    events.send(SpawnEvent(pos));
+                }
+            }),
+        ),
+        update: None,
+    },
+    ImportLibrary: Upgrade {
+        name: "Import Library".to_string(),
+        description: "Writes 10 lines of code immediately.".to_string(),
 
-            cost: 1.0,
-            weight: 1.0,
-            remaining: usize::MAX,
+        cost: 1.0,
+        weight: 1.0,
+        remaining: usize::MAX,
 
-            enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-                simulation.lines += 10.0;
-            })),
-            update: None,
-        },
-    ]);
-
-    world.insert_resource(upgrade_list);
-}
+        enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+            simulation.lines += 10.0;
+        })),
+        update: None,
+    },
+);
 
 fn enable_dark_mode(
     mut commands: Commands,
