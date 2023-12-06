@@ -4,6 +4,7 @@ use bevy::window::PrimaryWindow;
 use rand::Rng;
 
 use crate::camera::CAMERA_SCALING;
+use crate::state::editor_screen::EditorLayoutBounds;
 use crate::upgrade::UpgradeEvent;
 use crate::AppRoot;
 use crate::AppSet;
@@ -86,16 +87,14 @@ fn entity_movement(
     time: Res<Time>,
     mut query: Query<(&mut Transform, &Velocity, &Sprite)>,
     window_query: Query<&Window, With<PrimaryWindow>>,
+    layout_bounds: Res<EditorLayoutBounds>,
 ) {
     let window = window_query.single();
-    // TODO: Replace these hardcoded numbers
-    const CODE_HEIGHT: f32 = 200.0;
-    const TOP_BAR_HEIGHT: f32 = 60.0;
     // Subtract the total panel width
-    let width = (window.resolution.width() - 280.0 - 280.0) / CAMERA_SCALING;
-    // The bounds on the y axis won't be symmetric because of the UI layout.
-    let y_max = (window.resolution.height() / 2.0 - TOP_BAR_HEIGHT) / CAMERA_SCALING;
-    let y_min = -(window.resolution.height() / 2.0 - CODE_HEIGHT) / CAMERA_SCALING;
+    let x_max = (window.resolution.width() / 2.0 - layout_bounds.right) / CAMERA_SCALING;
+    let x_min = -(window.resolution.width() / 2.0 - layout_bounds.left) / CAMERA_SCALING;
+    let y_max = (window.resolution.height() / 2.0 - layout_bounds.top) / CAMERA_SCALING;
+    let y_min = -(window.resolution.height() / 2.0 - layout_bounds.bottom) / CAMERA_SCALING;
 
     let dt = time.delta_seconds();
     for (mut transform, velocity, sprite) in &mut query {
@@ -103,11 +102,12 @@ fn entity_movement(
         transform.translation.y += velocity.0.y * dt;
 
         if let Some(size) = sprite.custom_size {
-            let x_limit = (width + size.x) / 2.0;
-            if transform.translation.x >= x_limit {
-                transform.translation.x = -x_limit;
-            } else if transform.translation.x <= -x_limit {
-                transform.translation.x = x_limit;
+            let x_max = x_max + (size.x / 2.0);
+            let x_min = x_min - (size.x / 2.0);
+            if transform.translation.x >= x_max {
+                transform.translation.x = x_min;
+            } else if transform.translation.x <= x_min {
+                transform.translation.x = x_max;
             }
 
             let y_max = y_max + (size.y / 2.0);

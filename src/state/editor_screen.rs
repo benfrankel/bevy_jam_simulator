@@ -28,6 +28,7 @@ pub struct EditorScreenStatePlugin;
 impl Plugin for EditorScreenStatePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<EditorScreenAssets>()
+            .register_type::<EditorLayoutBounds>()
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
             .add_systems(OnExit(EditorScreen), exit_editor_screen)
@@ -93,6 +94,15 @@ pub struct EditorScreenConfig {
 #[reflect(Resource)]
 pub struct EditorScreenAssets {
     // TODO: Music / SFX, sprites
+}
+
+/// Contains the boundary information for the editor.
+#[derive(Resource, Reflect)]
+pub struct EditorLayoutBounds {
+    pub top: f32,
+    pub bottom: f32,
+    pub left: f32,
+    pub right: f32,
 }
 
 fn enter_editor_screen(
@@ -184,6 +194,26 @@ pub fn spawn_editor_screen(
     let upgrade_panel = spawn_upgrade_panel(commands, theme, upgrade_list);
     commands.entity(upgrade_panel).set_parent(hbox);
 
+    // Note that insert_resource overwrites if the resource already exists.
+    commands.insert_resource(EditorLayoutBounds {
+        top: match theme.info_bar_height {
+            Val::Px(px) => px,
+            _ => panic!("info_bar_height must be defined in Px"),
+        },
+        bottom: match theme.code_panel_height {
+            Val::Px(px) => px,
+            _ => panic!("code_panel_height must be defined in Px"),
+        },
+        left: match theme.outline_panel_width {
+            Val::Px(px) => px,
+            _ => panic!("outline_panel_width must be defined in Px"),
+        },
+        right: match theme.upgrade_panel_width {
+            Val::Px(px) => px,
+            _ => panic!("upgrade_panel_width must be defined in Px"),
+        },
+    });
+
     editor_screen
 }
 
@@ -192,6 +222,7 @@ fn exit_editor_screen(
     root: Res<AppRoot>,
     mut transform_query: Query<&mut Transform>,
 ) {
+    commands.remove_resource::<EditorLayoutBounds>();
     commands.entity(root.ui).despawn_descendants();
     commands.entity(root.world).despawn_descendants();
 
