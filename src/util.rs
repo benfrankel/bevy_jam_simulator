@@ -3,6 +3,7 @@ mod despawn;
 use bevy::prelude::*;
 
 pub use crate::util::despawn::DespawnSet;
+pub use crate::util::despawn::OverflowDespawnQueue;
 
 pub struct UtilPlugin;
 

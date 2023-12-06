@@ -7,6 +7,7 @@ use rand::Rng;
 use crate::physics::Velocity;
 use crate::state::editor_screen::WrapWithinSceneView;
 use crate::upgrade::UpgradeEvent;
+use crate::util::OverflowDespawnQueue;
 use crate::AppRoot;
 use crate::AppSet;
 
@@ -15,8 +16,10 @@ pub struct SimulationPlugin;
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SpawnEvent>()
+            .register_type::<IsEntityCap>()
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
+            .add_systems(Startup, spawn_entity_caps)
             .add_systems(
                 Update,
                 (
@@ -45,6 +48,7 @@ fn spawn_entities(
     mut commands: Commands,
     mut events: EventReader<SpawnEvent>,
     root: Res<AppRoot>,
+    mut entity_cap_query: Query<&mut OverflowDespawnQueue, With<IsEntityCap>>,
     mut simulation: ResMut<Simulation>,
 ) {
     let mut rng = rand::thread_rng();
@@ -55,7 +59,7 @@ fn spawn_entities(
         let angle = rng.gen_range(0.0..=TAU);
         let velocity = (speed * Vec2::from_angle(angle)).extend(-0.01);
 
-        commands
+        let entity = commands
             .spawn((
                 Name::new("Entity"),
                 SpriteBundle {
@@ -75,6 +79,24 @@ fn spawn_entities(
                 Velocity(velocity),
                 WrapWithinSceneView,
             ))
-            .set_parent(root.world);
+            .set_parent(root.world)
+            .id();
+
+        for mut despawn_queue in &mut entity_cap_query {
+            despawn_queue.push(entity);
+        }
     }
+}
+
+#[derive(Component, Reflect)]
+struct IsEntityCap;
+
+const HARD_CAP: usize = 1000;
+
+fn spawn_entity_caps(mut commands: Commands) {
+    commands.spawn((
+        Name::new("HardEntityCap"),
+        OverflowDespawnQueue::new(HARD_CAP),
+        IsEntityCap,
+    ));
 }
