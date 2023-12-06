@@ -41,11 +41,11 @@ fn wrap_within_scene_view(
     bounds: Res<EditorLayoutBounds>,
 ) {
     let window = window_query.single();
-    // Subtract the total panel width
-    let x_max = (window.resolution.width() / 2.0 - bounds.0.max.x) / CAMERA_SCALING;
-    let x_min = -(window.resolution.width() / 2.0 - bounds.0.min.x) / CAMERA_SCALING;
-    let y_max = (window.resolution.height() / 2.0 - bounds.0.max.y) / CAMERA_SCALING;
-    let y_min = -(window.resolution.height() / 2.0 - bounds.0.min.y) / CAMERA_SCALING;
+    // Subtract the total panel width & height
+    let x_max = (window.resolution.width() / 2.0 - bounds.right) / CAMERA_SCALING;
+    let x_min = -(window.resolution.width() / 2.0 - bounds.left) / CAMERA_SCALING;
+    let y_max = (window.resolution.height() / 2.0 - bounds.top) / CAMERA_SCALING;
+    let y_min = -(window.resolution.height() / 2.0 - bounds.bottom) / CAMERA_SCALING;
 
     for (mut transform, sprite) in &mut query {
         if let Some(size) = sprite.custom_size {

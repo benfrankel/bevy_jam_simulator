@@ -4,7 +4,6 @@ mod outline_panel;
 mod scene_view;
 mod upgrade_panel;
 
-use bevy::math::vec2;
 // Expose this for the upgrades.
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
@@ -12,8 +11,6 @@ pub use code_panel::spawn_code_panel;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::camera::CAMERA_HEIGHT;
-use crate::camera::CAMERA_WIDTH;
 use crate::config::Config;
 use crate::state::editor_screen::code_panel::spawn_light_code_panel;
 use crate::state::editor_screen::info_bar::spawn_info_bar;
@@ -101,17 +98,16 @@ pub struct EditorScreenAssets {
 }
 
 /// Contains the boundary information for the editor.
-#[derive(Resource, Reflect)]
-#[reflect(Resource)]
-pub struct EditorLayoutBounds(pub Rect);
-
-impl Default for EditorLayoutBounds {
-    fn default() -> Self {
-        Self(Rect::from_corners(
-            Vec2::ZERO,
-            vec2(CAMERA_WIDTH, CAMERA_HEIGHT),
-        ))
-    }
+#[derive(Resource, Reflect, Default)]
+pub struct EditorLayoutBounds {
+    /// Padding from the top edge.
+    pub top: f32,
+    /// Padding from the bottom edge.
+    pub bottom: f32,
+    /// Padding from the left edge.
+    pub left: f32,
+    /// Padding from the right edge.
+    pub right: f32,
 }
 
 fn enter_editor_screen(
@@ -205,24 +201,24 @@ pub fn spawn_editor_screen(
 
     // Note that insert_resource overwrites if the resource already exists.
     // This could probably use Val::resolve instead of requiring Px, but that's ok.
-    commands.insert_resource(EditorLayoutBounds(Rect::new(
-        match theme.outline_panel_width {
-            Val::Px(px) => px,
-            _ => panic!("outline_panel_width must be defined in Px"),
-        },
-        match theme.info_bar_height {
+    commands.insert_resource(EditorLayoutBounds {
+        top: match theme.info_bar_height {
             Val::Px(px) => px,
             _ => panic!("info_bar_height must be defined in Px"),
         },
-        match theme.upgrade_panel_width {
-            Val::Px(px) => px,
-            _ => panic!("upgrade_panel_width must be defined in Px"),
-        },
-        match theme.code_panel_height {
+        bottom: match theme.code_panel_height {
             Val::Px(px) => px,
             _ => panic!("code_panel_height must be defined in Px"),
         },
-    )));
+        left: match theme.outline_panel_width {
+            Val::Px(px) => px,
+            _ => panic!("outline_panel_width must be defined in Px"),
+        },
+        right: match theme.upgrade_panel_width {
+            Val::Px(px) => px,
+            _ => panic!("upgrade_panel_width must be defined in Px"),
+        },
+    });
 
     editor_screen
 }
