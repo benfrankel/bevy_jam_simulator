@@ -23,8 +23,10 @@ pub struct UpgradePanelPlugin;
 
 impl Plugin for UpgradePanelPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<IsUpgradeContainer>()
+        app.register_type::<UpgradeContainer>()
             .register_type::<UpgradeButton>()
+            .register_type::<UpgradeSequence>()
+            .init_resource::<UpgradeSequence>()
             .add_systems(
                 Update,
                 replace_available_upgrades
@@ -91,7 +93,7 @@ pub fn spawn_upgrade_panel(
                 },
                 ..default()
             },
-            IsUpgradeContainer,
+            UpgradeContainer { slots: 1 },
         ))
         .set_parent(upgrade_panel)
         .id();
@@ -273,28 +275,75 @@ fn update_upgrade_button_disabled(
 }
 
 #[derive(Component, Reflect)]
-pub struct IsUpgradeContainer;
+pub struct UpgradeContainer {
+    slots: usize,
+}
+
+#[derive(Resource, Reflect)]
+#[reflect(Resource)]
+struct UpgradeSequence {
+    sequence: Vec<UpgradeKind>,
+    next_idx: usize,
+}
+
+impl Default for UpgradeSequence {
+    fn default() -> Self {
+        Self {
+            sequence: vec![
+                // FIRST_UPGRADE = UpgradeKind::DarkMode,
+                UpgradeKind::TouchOfLifePlugin,
+                UpgradeKind::ImportLibrary,
+                UpgradeKind::BurstOfLifePlugin,
+            ],
+            next_idx: 0,
+        }
+    }
+}
+
+impl UpgradeSequence {
+    fn next(&mut self, upgrade_list: &UpgradeList) -> Option<UpgradeKind> {
+        while self.next_idx < self.sequence.len() {
+            self.next_idx += 1;
+            let upgrade_kind = self.sequence[self.next_idx - 1];
+            if upgrade_list.get(upgrade_kind).remaining > 0 {
+                return Some(upgrade_kind);
+            }
+        }
+        None
+    }
+}
+
+fn random_upgrade(_upgrade_list: &UpgradeList) -> Option<UpgradeKind> {
+    Some(UpgradeKind::BurstOfLifePlugin)
+}
 
 fn replace_available_upgrades(
     mut commands: Commands,
     mut despawn: ResMut<DespawnSet>,
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
-    container_query: Query<(Entity, &Children), With<IsUpgradeContainer>>,
+    mut upgrade_sequence: ResMut<UpgradeSequence>,
+    container_query: Query<(Entity, &Children, &UpgradeContainer)>,
 ) {
     let theme = &config.editor_screen.dark_theme;
-    for (container, buttons) in &container_query {
+    for (entity, buttons, container) in &container_query {
         for &button in buttons {
             despawn.recursive(button);
         }
 
-        // TODO: Initial sequence of upgrades, and then randomly chosen upgrades (weighted)
-        let next_upgrades = vec![UpgradeKind::ImportLibrary];
+        for _ in 0..container.slots {
+            // Initial sequence of upgrades, and then randomly chosen upgrades (weighted)
+            let Some(upgrade_kind) = upgrade_sequence
+                .next(&upgrade_list)
+                .or_else(|| random_upgrade(&upgrade_list))
+            else {
+                error!("Could not choose an upgrade to make available.");
+                break;
+            };
 
-        for upgrade_kind in next_upgrades {
             let upgrade_button =
                 spawn_upgrade_button(&mut commands, theme, &upgrade_list, upgrade_kind);
-            commands.entity(upgrade_button).set_parent(container);
+            commands.entity(upgrade_button).set_parent(entity);
         }
     }
 }

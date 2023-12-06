@@ -17,7 +17,7 @@ impl Plugin for CodeTyperPlugin {
 }
 
 const TUTORIAL_CODE: &str =
-    " to generate lines of code!\n// Buy the TouchOfLifePlugin to start spawning entities\n\n";
+    " to generate lines of code!\n// Install the next plugin to start spawning entities.\n\n";
 const FILLER_CODE: &str = include_str!("code_typer.rs");
 
 // Newtype so that CodeTyper can derive Reflect

@@ -41,10 +41,6 @@ pub struct Upgrade {
     pub enable: Option<SystemId>,
     // A one-shot system that runs every frame for each active copy of this upgrade
     pub update: Option<SystemId>,
-
-    /// Only present in the initial sequence of upgrades.
-    /// Determines the next unlocked upgrade.
-    pub next_upgrade: Option<UpgradeKind>,
 }
 
 #[derive(Event, Reflect, Clone, Copy)]
@@ -107,12 +103,10 @@ fn load_upgrade_list(world: &mut World) {
 
             enable: Some(world.register_system(enable_dark_mode)),
             update: None,
-
-            next_upgrade: Some(UpgradeKind::TouchOfLifePlugin),
         },
         Upgrade {
             name: "TouchOfLifePlugin".to_string(),
-            description: "Spawns 1 entity any time you click in the scene view.".to_string(),
+            description: "Spawns 1 entity any time you click inside the scene view.".to_string(),
 
             base_cost: 1.0,
             weight: 0.0,
@@ -122,8 +116,6 @@ fn load_upgrade_list(world: &mut World) {
                 simulation.spawns_per_click += 1
             })),
             update: None,
-
-            next_upgrade: None,
         },
         Upgrade {
             name: "BurstOfLifePlugin".to_string(),
@@ -137,8 +129,6 @@ fn load_upgrade_list(world: &mut World) {
                 simulation.entities += 10.0;
             })),
             update: None,
-
-            next_upgrade: None,
         },
         Upgrade {
             name: "Import Library".to_string(),
@@ -152,8 +142,6 @@ fn load_upgrade_list(world: &mut World) {
                 simulation.lines += 10.0;
             })),
             update: None,
-
-            next_upgrade: None,
         },
     ];
 
