@@ -18,6 +18,7 @@ impl Plugin for SimulationPlugin {
                 (
                     count_upgrades.in_set(AppSet::Simulate),
                     spawn_entities.in_set(AppSet::Simulate),
+                    entity_movement.in_set(AppSet::Simulate),
                 ),
             );
     }
@@ -47,6 +48,9 @@ fn spawn_entities(
     for event in events.read() {
         simulation.entities += 1.0;
 
+        // Represents the maximum velocity for a single dimension.
+        const MAX_VELOCITY: f32 = 6.0;
+
         commands
             .spawn((
                 Name::new("Entity"),
@@ -64,7 +68,22 @@ fn spawn_entities(
                     transform: Transform::from_translation(event.0.extend(0.0)),
                     ..default()
                 },
+                Velocity(Vec2 {
+                    x: rng.gen_range(-MAX_VELOCITY..MAX_VELOCITY),
+                    y: rng.gen_range(-MAX_VELOCITY..MAX_VELOCITY),
+                }),
             ))
             .set_parent(root.world);
+    }
+}
+
+#[derive(Component)]
+struct Velocity(pub Vec2);
+
+fn entity_movement(time: Res<Time>, mut query: Query<(&mut Transform, &Velocity)>) {
+    let dt = time.delta_seconds();
+    for (mut transform, velocity) in &mut query {
+        transform.translation.x += velocity.0.x * dt;
+        transform.translation.y += velocity.0.y * dt;
     }
 }
