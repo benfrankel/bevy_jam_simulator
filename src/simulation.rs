@@ -1,5 +1,6 @@
 use bevy::math::vec2;
 use bevy::prelude::*;
+use rand::Rng;
 
 use crate::upgrade::UpgradeEvent;
 use crate::AppRoot;
@@ -42,6 +43,7 @@ fn spawn_entities(
     root: Res<AppRoot>,
     mut simulation: ResMut<Simulation>,
 ) {
+    let mut rng = rand::thread_rng();
     for event in events.read() {
         simulation.entities += 1.0;
 
@@ -50,7 +52,12 @@ fn spawn_entities(
                 Name::new("Entity"),
                 SpriteBundle {
                     sprite: Sprite {
-                        color: Color::RED,
+                        color: Color::Rgba {
+                            red: rng.gen_range(0.0..1.0),
+                            green: rng.gen_range(0.0..1.0),
+                            blue: rng.gen_range(0.0..1.0),
+                            alpha: 1.0,
+                        },
                         custom_size: Some(vec2(8.0, 8.0)),
                         ..default()
                     },
