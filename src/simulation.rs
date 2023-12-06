@@ -1,7 +1,9 @@
 use bevy::math::vec2;
 use bevy::prelude::*;
+use bevy::window::PrimaryWindow;
 use rand::Rng;
 
+use crate::camera::CAMERA_SCALING;
 use crate::upgrade::UpgradeEvent;
 use crate::AppRoot;
 use crate::AppSet;
@@ -49,7 +51,7 @@ fn spawn_entities(
         simulation.entities += 1.0;
 
         // Represents the maximum velocity for a single dimension.
-        const MAX_VELOCITY: f32 = 6.0;
+        const MAX_VELOCITY: f32 = 60.0;
 
         commands
             .spawn((
@@ -80,10 +82,41 @@ fn spawn_entities(
 #[derive(Component)]
 struct Velocity(pub Vec2);
 
-fn entity_movement(time: Res<Time>, mut query: Query<(&mut Transform, &Velocity)>) {
+fn entity_movement(
+    time: Res<Time>,
+    mut query: Query<(&mut Transform, &Velocity, &Sprite)>,
+    window_query: Query<&Window, With<PrimaryWindow>>,
+) {
+    let window = window_query.single();
+    // TODO: Replace these hardcoded numbers
+    const CODE_HEIGHT: f32 = 200.0;
+    const TOP_BAR_HEIGHT: f32 = 60.0;
+    // Subtract the total panel width
+    let width = (window.resolution.width() - 280.0 - 280.0) / CAMERA_SCALING;
+    // The bounds on the y axis won't be symmetric because of the UI layout.
+    let y_max = (window.resolution.height() / 2.0 - TOP_BAR_HEIGHT) / CAMERA_SCALING;
+    let y_min = -(window.resolution.height() / 2.0 - CODE_HEIGHT) / CAMERA_SCALING;
+
     let dt = time.delta_seconds();
-    for (mut transform, velocity) in &mut query {
+    for (mut transform, velocity, sprite) in &mut query {
         transform.translation.x += velocity.0.x * dt;
         transform.translation.y += velocity.0.y * dt;
+
+        if let Some(size) = sprite.custom_size {
+            let x_limit = (width + size.x) / 2.0;
+            if transform.translation.x >= x_limit {
+                transform.translation.x = -x_limit;
+            } else if transform.translation.x <= -x_limit {
+                transform.translation.x = x_limit;
+            }
+
+            let y_max = y_max + (size.y / 2.0);
+            let y_min = y_min - (size.y / 2.0);
+            if transform.translation.y >= y_max {
+                transform.translation.y = y_min;
+            } else if transform.translation.y <= y_min {
+                transform.translation.y = y_max;
+            }
+        }
     }
 }
