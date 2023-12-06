@@ -4,6 +4,7 @@ mod outline_panel;
 mod scene_view;
 mod upgrade_panel;
 
+use bevy::math::vec2;
 // Expose this for the upgrades.
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
@@ -11,6 +12,8 @@ pub use code_panel::spawn_code_panel;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::camera::CAMERA_HEIGHT;
+use crate::camera::CAMERA_WIDTH;
 use crate::config::Config;
 use crate::state::editor_screen::code_panel::spawn_light_code_panel;
 use crate::state::editor_screen::info_bar::spawn_info_bar;
@@ -29,6 +32,7 @@ impl Plugin for EditorScreenStatePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<EditorScreenAssets>()
             .register_type::<EditorLayoutBounds>()
+            .init_resource::<EditorLayoutBounds>()
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
             .add_systems(OnExit(EditorScreen), exit_editor_screen)
@@ -98,11 +102,16 @@ pub struct EditorScreenAssets {
 
 /// Contains the boundary information for the editor.
 #[derive(Resource, Reflect)]
-pub struct EditorLayoutBounds {
-    pub top: f32,
-    pub bottom: f32,
-    pub left: f32,
-    pub right: f32,
+#[reflect(Resource)]
+pub struct EditorLayoutBounds(pub Rect);
+
+impl Default for EditorLayoutBounds {
+    fn default() -> Self {
+        Self(Rect::from_corners(
+            Vec2::ZERO,
+            vec2(CAMERA_WIDTH, CAMERA_HEIGHT),
+        ))
+    }
 }
 
 fn enter_editor_screen(
@@ -195,24 +204,25 @@ pub fn spawn_editor_screen(
     commands.entity(upgrade_panel).set_parent(hbox);
 
     // Note that insert_resource overwrites if the resource already exists.
-    commands.insert_resource(EditorLayoutBounds {
-        top: match theme.info_bar_height {
-            Val::Px(px) => px,
-            _ => panic!("info_bar_height must be defined in Px"),
-        },
-        bottom: match theme.code_panel_height {
-            Val::Px(px) => px,
-            _ => panic!("code_panel_height must be defined in Px"),
-        },
-        left: match theme.outline_panel_width {
+    // This could probably use Val::resolve instead of requiring Px, but that's ok.
+    commands.insert_resource(EditorLayoutBounds(Rect::new(
+        match theme.outline_panel_width {
             Val::Px(px) => px,
             _ => panic!("outline_panel_width must be defined in Px"),
         },
-        right: match theme.upgrade_panel_width {
+        match theme.info_bar_height {
+            Val::Px(px) => px,
+            _ => panic!("info_bar_height must be defined in Px"),
+        },
+        match theme.upgrade_panel_width {
             Val::Px(px) => px,
             _ => panic!("upgrade_panel_width must be defined in Px"),
         },
-    });
+        match theme.code_panel_height {
+            Val::Px(px) => px,
+            _ => panic!("code_panel_height must be defined in Px"),
+        },
+    )));
 
     editor_screen
 }
@@ -222,7 +232,7 @@ fn exit_editor_screen(
     root: Res<AppRoot>,
     mut transform_query: Query<&mut Transform>,
 ) {
-    commands.remove_resource::<EditorLayoutBounds>();
+    commands.insert_resource(EditorLayoutBounds::default());
     commands.entity(root.ui).despawn_descendants();
     commands.entity(root.world).despawn_descendants();
 

@@ -53,7 +53,7 @@ pub struct TitleScreenConfig {
     button_font_size: Val,
 }
 
-const TITLE_TEXT: &str = "Bevy Jam #4: The Game";
+const TITLE_TEXT: &str = "Bevy Jam #4 Simulator";
 const BODY_TEXT: &str = "Welcome to the fourth official Bevy Jam!\n \nIn this 9 day event, your goal is to make a game in Bevy Engine,\nthe free and open-source game engine built in Rust.\n \nThe theme is: That's a LOT of Entities!";
 const THEME: &str = "That's a LOT of Entities!";
 

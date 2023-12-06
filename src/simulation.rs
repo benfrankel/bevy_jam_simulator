@@ -13,7 +13,8 @@ pub struct SimulationPlugin;
 
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<SpawnEvent>()
+        app.register_type::<Velocity>()
+            .register_type::<SpawnEvent>()
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
             .add_systems(
@@ -21,7 +22,7 @@ impl Plugin for SimulationPlugin {
                 (
                     count_upgrades.in_set(AppSet::Simulate),
                     spawn_entities.in_set(AppSet::Simulate),
-                    entity_movement.in_set(AppSet::Simulate),
+                    move_entities.in_set(AppSet::Simulate),
                 ),
             );
     }
@@ -80,21 +81,21 @@ fn spawn_entities(
     }
 }
 
-#[derive(Component)]
+#[derive(Component, Reflect)]
 struct Velocity(pub Vec2);
 
-fn entity_movement(
+fn move_entities(
     time: Res<Time>,
     mut query: Query<(&mut Transform, &Velocity, &Sprite)>,
     window_query: Query<&Window, With<PrimaryWindow>>,
-    layout_bounds: Res<EditorLayoutBounds>,
+    bounds: Res<EditorLayoutBounds>,
 ) {
     let window = window_query.single();
     // Subtract the total panel width
-    let x_max = (window.resolution.width() / 2.0 - layout_bounds.right) / CAMERA_SCALING;
-    let x_min = -(window.resolution.width() / 2.0 - layout_bounds.left) / CAMERA_SCALING;
-    let y_max = (window.resolution.height() / 2.0 - layout_bounds.top) / CAMERA_SCALING;
-    let y_min = -(window.resolution.height() / 2.0 - layout_bounds.bottom) / CAMERA_SCALING;
+    let x_max = (window.resolution.width() / 2.0 - bounds.0.max.x) / CAMERA_SCALING;
+    let x_min = -(window.resolution.width() / 2.0 - bounds.0.min.x) / CAMERA_SCALING;
+    let y_max = (window.resolution.height() / 2.0 - bounds.0.max.y) / CAMERA_SCALING;
+    let y_min = -(window.resolution.height() / 2.0 - bounds.0.min.y) / CAMERA_SCALING;
 
     let dt = time.delta_seconds();
     for (mut transform, velocity, sprite) in &mut query {
