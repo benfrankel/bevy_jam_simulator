@@ -1,5 +1,3 @@
-mod cost_scaling;
-
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
@@ -23,13 +21,17 @@ impl Plugin for UpgradePlugin {
             .add_event::<UpgradeEvent>()
             .init_resource::<UpgradeList>()
             .init_resource::<ActiveUpgrades>()
-            .add_plugins(cost_scaling::CostScalingPlugin)
             .add_systems(Startup, load_upgrade_list)
             .add_systems(
                 Update,
-                (enable_upgrades, run_active_upgrades, apply_deferred)
-                    .chain()
-                    .in_set(AppSet::RunUpgrades),
+                (
+                    (enable_upgrades, run_active_upgrades, apply_deferred)
+                        .chain()
+                        .in_set(AppSet::RunUpgrades),
+                    apply_cost_scaling
+                        .in_set(AppSet::Simulate)
+                        .run_if(on_event::<UpgradeEvent>()),
+                ),
             );
     }
 }
@@ -42,6 +44,8 @@ pub struct Upgrade {
 
     /// How many lines of code this upgrade costs (will increase with cost scaling)
     pub cost: f64,
+    /// The amount by which cost is multiplied whenever an upgrade is enabled.
+    pub cost_multiplier: f64,
     /// The relative odds of this upgrade being offered
     pub weight: f32,
     /// How many more copies of this upgrade can be enabled
@@ -51,6 +55,21 @@ pub struct Upgrade {
     pub enable: Option<SystemId>,
     /// A one-shot system that runs every frame for each active copy of this upgrade
     pub update: Option<SystemId>,
+}
+
+impl Default for Upgrade {
+    fn default() -> Self {
+        Self {
+            name: "Unnamed".to_string(),
+            description: "Undefined.".to_string(),
+            cost: 0.0,
+            cost_multiplier: 1.0,
+            weight: 0.0,
+            remaining: 1,
+            enable: None,
+            update: None,
+        }
+    }
 }
 
 #[derive(Event, Reflect, Clone, Copy)]
@@ -79,6 +98,12 @@ fn run_active_upgrades(world: &mut World) {
     #[allow(clippy::unnecessary_to_owned)]
     for update in world.resource::<ActiveUpgrades>().0.to_vec() {
         world.run_system(update).unwrap();
+    }
+}
+
+fn apply_cost_scaling(mut upgrade_list: ResMut<UpgradeList>) {
+    for upgrade in &mut upgrade_list.0 {
+        upgrade.cost *= upgrade.cost_multiplier;
     }
 }
 
@@ -130,22 +155,22 @@ generate_upgrade_list!(
     DarkMode: Upgrade {
         name: "Dark Mode".to_string(),
         description: "Rite of passage for all developers. Required to write code.".to_string(),
-
-        cost: 0.0,
-        weight: 0.0,
-        remaining: 1,
-
-        enable: Some(world.register_system(enable_dark_mode)),
-        update: None,
+        enable: Some(world.register_system(|
+            mut commands: Commands,
+            root: Res<AppRoot>,
+            config: Res<Config>,
+            upgrade_list: Res<UpgradeList>,
+        | {
+            commands.entity(root.ui).despawn_descendants();
+            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, false);
+            commands.entity(editor_screen).set_parent(root.ui);
+        })),
+        ..default()
     },
     TouchOfLifePlugin: Upgrade {
         name: "TouchOfLifePlugin".to_string(),
-        description: "Spawns 1 entity any time you click inside the scene view.".to_string(),
-
-        cost: 2.0,
-        weight: 0.0,
-        remaining: 1,
-
+        description: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
+        cost: 5.0,
         enable: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
                 for mut scene_view in &mut scene_view_query {
@@ -153,16 +178,11 @@ generate_upgrade_list!(
                 }
             }),
         ),
-        update: None,
+        ..default()
     },
     Brainstorm: Upgrade {
         name: "Brainstorm".to_string(),
         description: "Adds 1 extra upgrade slot.".to_string(),
-
-        cost: 2.0,
-        weight: 0.0,
-        remaining: 1,
-
         enable: Some(
             world.register_system(|mut query: Query<&mut UpgradeContainer>| {
                 for mut container in &mut query {
@@ -170,16 +190,15 @@ generate_upgrade_list!(
                 }
             }),
         ),
-        update: None,
+        ..default()
     },
     SplashOfLifePlugin: Upgrade {
         name: "SplashOfLifePlugin".to_string(),
         description: "Spawns 32 entities immediately.".to_string(),
-
-        cost: 2.0,
+        cost: 1.0,
+        cost_multiplier: 1.2,
         weight: 1.0,
         remaining: usize::MAX,
-
         enable: Some(
             world.register_system(|mut events: EventWriter<SpawnEvent>, bounds: Res<SceneViewBounds>| {
                 for _ in 0..32 {
@@ -187,31 +206,17 @@ generate_upgrade_list!(
                 }
             }),
         ),
-        update: None,
+        ..default()
     },
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
         description: "Writes 10 lines of code immediately.".to_string(),
-
         cost: 1.0,
         weight: 1.0,
         remaining: usize::MAX,
-
         enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
             simulation.lines += 10.0;
         })),
-        update: None,
+        ..default()
     },
 );
-
-fn enable_dark_mode(
-    mut commands: Commands,
-    root: Res<AppRoot>,
-    config: Res<Config>,
-    upgrade_list: Res<UpgradeList>,
-) {
-    commands.entity(root.ui).despawn_descendants();
-    let editor_screen =
-        spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, false);
-    commands.entity(editor_screen).set_parent(root.ui);
-}
