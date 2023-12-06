@@ -83,6 +83,15 @@ impl UpgradeList {
     }
 }
 
+/// The initial sequence of upgrades.
+pub const INITIAL_UPGRADES: [UpgradeKind; 5] = [
+    UpgradeKind::DarkMode,
+    UpgradeKind::TouchOfLifePlugin,
+    UpgradeKind::BurstOfLifePlugin,
+    UpgradeKind::Brainstorm,
+    UpgradeKind::ImportLibrary,
+];
+
 #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
 pub enum UpgradeKind {
     DarkMode,

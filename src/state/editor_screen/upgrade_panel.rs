@@ -19,6 +19,7 @@ use crate::ui::FONT_HANDLE;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
+use crate::upgrade::INITIAL_UPGRADES;
 use crate::util::DespawnSet;
 use crate::AppSet;
 
@@ -39,8 +40,6 @@ impl Plugin for UpgradePanelPlugin {
             .add_systems(Update, update_upgrade_button_disabled.in_set(AppSet::End));
     }
 }
-
-const FIRST_UPGRADE: UpgradeKind = UpgradeKind::DarkMode;
 
 pub fn spawn_upgrade_panel(
     commands: &mut Commands,
@@ -102,7 +101,7 @@ pub fn spawn_upgrade_panel(
         .id();
     dbg!(upgrade_container);
 
-    let upgrade_button = spawn_upgrade_button(commands, theme, upgrade_list, FIRST_UPGRADE);
+    let upgrade_button = spawn_upgrade_button(commands, theme, upgrade_list, INITIAL_UPGRADES[0]);
     commands
         .entity(upgrade_button)
         .set_parent(upgrade_container);
@@ -292,13 +291,7 @@ struct UpgradeSequence {
 impl Default for UpgradeSequence {
     fn default() -> Self {
         Self {
-            sequence: vec![
-                // FIRST_UPGRADE = UpgradeKind::DarkMode,
-                UpgradeKind::TouchOfLifePlugin,
-                UpgradeKind::BurstOfLifePlugin,
-                UpgradeKind::Brainstorm,
-                UpgradeKind::ImportLibrary,
-            ],
+            sequence: INITIAL_UPGRADES[1..].to_vec(),
             next_idx: 0,
         }
     }
