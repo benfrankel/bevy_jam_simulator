@@ -9,8 +9,6 @@ use bevy::input::common_conditions::input_just_pressed;
 use bevy::prelude::*;
 use bevy::window::WindowMode;
 use bevy_editor_pls::EditorPlugin;
-use bevy_rapier2d::render::DebugRenderContext;
-use bevy_rapier2d::render::RapierDebugRenderPlugin;
 use iyes_progress::prelude::*;
 use strum::IntoEnumIterator;
 
@@ -21,7 +19,6 @@ pub struct DebugPlugin {
     pub system_information_diagnostics: bool,
     pub entity_count_diagnostics: bool,
     pub ambiguity_detection: bool,
-    pub debug_render: bool,
     pub debug_picking: bool,
     pub editor: bool,
     pub start: AppState,
@@ -58,16 +55,6 @@ impl Plugin for DebugPlugin {
             .add_systems(OnExit(state), move |frame: Res<FrameCount>| {
                 info!("[Frame {}] Exiting {state:?}", frame.0)
             });
-        }
-
-        // Debug render
-        if self.debug_render {
-            app.add_plugins(RapierDebugRenderPlugin::default());
-            app.world.resource_mut::<DebugRenderContext>().enabled = false;
-            app.add_systems(
-                Update,
-                toggle_debug_render.run_if(input_just_pressed(DEBUG_TOGGLE_KEY)),
-            );
         }
 
         if self.debug_picking {
@@ -124,6 +111,8 @@ impl Plugin for DebugPlugin {
     }
 }
 
+const DEBUG_TOGGLE_KEY: KeyCode = KeyCode::F3;
+
 fn debug_start(world: &mut World) {
     let frame = world.resource::<FrameCount>().0;
     let prefix = format!("[Frame {frame} start] ");
@@ -143,17 +132,10 @@ impl Default for DebugPlugin {
             system_information_diagnostics: true,
             entity_count_diagnostics: true,
             ambiguity_detection: true,
-            debug_render: true,
             debug_picking: true,
             editor: true,
             extend_loading_screen: 0.0,
             start: default(),
         }
     }
-}
-
-const DEBUG_TOGGLE_KEY: KeyCode = KeyCode::F3;
-
-fn toggle_debug_render(mut debug_render_context: ResMut<DebugRenderContext>) {
-    debug_render_context.enabled = !debug_render_context.enabled;
 }

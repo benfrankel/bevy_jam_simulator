@@ -13,7 +13,6 @@ bevy_mod_debugdump = { version = "0.9", optional = true }
 bevy_mod_picking = { version = "0.17", default-features = false, features = [
     "backend_bevy_ui",
 ] }
-bevy_rapier2d = "0.23"
 iyes_progress = "0.10"
 leafwing-input-manager = "0.11"
 #noise = "0.8"
@@ -52,11 +51,10 @@ dev = [
     "dep:bevy_editor_pls",
     "bevy/dynamic_linking",
     "bevy_mod_picking/debug",
-    "bevy_rapier2d/debug-render-2d",
 ]
-native = ["core", "bevy_rapier2d/parallel"]
+native = ["core"]
 native_dev = ["native", "dev", "bevy/file_watcher", "bevy/embedded_watcher"]
-web = ["core", "dep:wasm-bindgen", "bevy_rapier2d/wasm-bindgen"]
+web = ["core", "dep:wasm-bindgen"]
 web_dev = ["web", "dev"]
 trace = ["bevy/trace", "bevy/wgpu_trace", "bevy/trace_tracy"]
 debug_dump = ["dep:bevy_mod_debugdump"]
