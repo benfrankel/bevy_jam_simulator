@@ -2,11 +2,15 @@ mod cost_scaling;
 
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
+use bevy::math::vec2;
 use bevy::prelude::*;
+use rand::thread_rng;
+use rand::Rng;
 use strum::EnumIter;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
+use crate::simulation::SpawnEvent;
 use crate::state::editor_screen::spawn_editor_screen;
 use crate::state::editor_screen::SceneView;
 use crate::state::editor_screen::UpgradeContainer;
@@ -160,9 +164,15 @@ fn load_upgrade_list(world: &mut World) {
             weight: 1.0,
             remaining: usize::MAX,
 
-            enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-                simulation.entities += 10.0;
-            })),
+            enable: Some(
+                world.register_system(|mut events: EventWriter<SpawnEvent>| {
+                    let mut rng = thread_rng();
+                    for _ in 0..10 {
+                        let pos = vec2(rng.gen_range(-50.0..=50.0), rng.gen_range(-20.0..=40.0));
+                        events.send(SpawnEvent(pos));
+                    }
+                }),
+            ),
             update: None,
         },
         Upgrade {
