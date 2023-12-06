@@ -1,6 +1,7 @@
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
+use strum::EnumIter;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
@@ -73,17 +74,15 @@ fn run_active_upgrades(world: &mut World) {
 }
 
 #[derive(Resource, Default)]
-pub struct UpgradeList {
-    pub list: Vec<Upgrade>,
-}
+pub struct UpgradeList(pub Vec<Upgrade>);
 
 impl UpgradeList {
     pub fn get(&self, kind: UpgradeKind) -> &Upgrade {
-        &self.list[kind as usize]
+        &self.0[kind as usize]
     }
 }
 
-#[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
 pub enum UpgradeKind {
     DarkMode,
     TouchOfLifePlugin,
@@ -92,7 +91,7 @@ pub enum UpgradeKind {
 }
 
 fn load_upgrade_list(world: &mut World) {
-    let upgrades = vec![
+    let upgrade_list = UpgradeList(vec![
         Upgrade {
             name: "Dark Mode".to_string(),
             description: "Rite of passage for all developers. Required to write code.".to_string(),
@@ -143,10 +142,9 @@ fn load_upgrade_list(world: &mut World) {
             })),
             update: None,
         },
-    ];
+    ]);
 
-    let mut upgrade_types: Mut<UpgradeList> = world.get_resource_mut().unwrap();
-    upgrade_types.list = upgrades;
+    world.insert_resource(upgrade_list);
 }
 
 fn enable_dark_mode(

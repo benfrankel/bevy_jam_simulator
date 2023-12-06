@@ -822,6 +822,7 @@ dependencies = [
  "bevy_rapier2d",
  "iyes_progress",
  "leafwing-input-manager",
+ "rand",
  "ron",
  "serde",
  "strum",

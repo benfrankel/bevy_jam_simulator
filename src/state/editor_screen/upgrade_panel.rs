@@ -1,6 +1,9 @@
 use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
+use strum::IntoEnumIterator;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
@@ -313,8 +316,19 @@ impl UpgradeSequence {
     }
 }
 
-fn random_upgrade(_upgrade_list: &UpgradeList) -> Option<UpgradeKind> {
-    Some(UpgradeKind::BurstOfLifePlugin)
+fn random_upgrade(upgrade_list: &UpgradeList) -> Option<UpgradeKind> {
+    UpgradeKind::iter()
+        .collect::<Vec<_>>()
+        .choose_weighted(&mut thread_rng(), |&kind| {
+            let upgrade = upgrade_list.get(kind);
+            if upgrade.remaining > 0 {
+                upgrade.weight
+            } else {
+                0.0
+            }
+        })
+        .ok()
+        .copied()
 }
 
 fn replace_available_upgrades(
