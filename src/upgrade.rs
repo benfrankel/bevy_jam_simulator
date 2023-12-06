@@ -2,10 +2,7 @@ mod cost_scaling;
 
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
-use bevy::math::vec2;
 use bevy::prelude::*;
-use rand::thread_rng;
-use rand::Rng;
 use strum::EnumCount;
 
 use crate::config::Config;
@@ -13,6 +10,7 @@ use crate::simulation::Simulation;
 use crate::simulation::SpawnEvent;
 use crate::state::editor_screen::spawn_editor_screen;
 use crate::state::editor_screen::SceneView;
+use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::UpgradeContainer;
 use crate::AppRoot;
 use crate::AppSet;
@@ -97,7 +95,7 @@ impl UpgradeList {
 pub const INITIAL_UPGRADES: [UpgradeKind; 5] = [
     UpgradeKind::DarkMode,
     UpgradeKind::TouchOfLifePlugin,
-    UpgradeKind::BurstOfLifePlugin,
+    UpgradeKind::SplashOfLifePlugin,
     UpgradeKind::Brainstorm,
     UpgradeKind::ImportLibrary,
 ];
@@ -174,20 +172,18 @@ generate_upgrade_list!(
         ),
         update: None,
     },
-    BurstOfLifePlugin: Upgrade {
-        name: "BurstOfLifePlugin".to_string(),
-        description: "Spawns 10 entities immediately.".to_string(),
+    SplashOfLifePlugin: Upgrade {
+        name: "SplashOfLifePlugin".to_string(),
+        description: "Spawns 32 entities immediately.".to_string(),
 
         cost: 2.0,
         weight: 1.0,
         remaining: usize::MAX,
 
         enable: Some(
-            world.register_system(|mut events: EventWriter<SpawnEvent>| {
-                let mut rng = thread_rng();
-                for _ in 0..10 {
-                    let pos = vec2(rng.gen_range(-50.0..=50.0), rng.gen_range(-20.0..=40.0));
-                    events.send(SpawnEvent(pos));
+            world.register_system(|mut events: EventWriter<SpawnEvent>, bounds: Res<SceneViewBounds>| {
+                for _ in 0..32 {
+                    events.send(SpawnEvent((bounds.min.xy() + bounds.max.xy()) / 2.0));
                 }
             }),
         ),

@@ -74,9 +74,9 @@ fn click_spawn(
 
 #[derive(Resource, Reflect, Default)]
 #[reflect(Resource)]
-struct SceneViewBounds {
-    min: Vec3,
-    max: Vec3,
+pub struct SceneViewBounds {
+    pub min: Vec3,
+    pub max: Vec3,
 }
 
 fn update_scene_view_bounds(
