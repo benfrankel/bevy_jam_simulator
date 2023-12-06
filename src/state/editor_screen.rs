@@ -17,6 +17,7 @@ use crate::state::editor_screen::info_bar::spawn_info_bar;
 use crate::state::editor_screen::outline_panel::spawn_outline_panel;
 use crate::state::editor_screen::scene_view::spawn_scene_view;
 pub use crate::state::editor_screen::scene_view::SceneView;
+pub use crate::state::editor_screen::scene_view::WrapWithinSceneView;
 use crate::state::editor_screen::upgrade_panel::spawn_upgrade_panel;
 pub use crate::state::editor_screen::upgrade_panel::UpgradeContainer;
 use crate::state::AppState::*;

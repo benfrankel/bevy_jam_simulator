@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::physics::Velocity;
-use crate::physics::WrapWithinSceneView;
+use crate::state::editor_screen::WrapWithinSceneView;
 use crate::upgrade::UpgradeEvent;
 use crate::AppRoot;
 use crate::AppSet;
