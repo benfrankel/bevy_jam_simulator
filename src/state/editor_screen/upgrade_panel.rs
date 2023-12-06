@@ -279,7 +279,7 @@ fn update_upgrade_button_disabled(
 
 #[derive(Component, Reflect)]
 pub struct UpgradeContainer {
-    slots: usize,
+    pub slots: usize,
 }
 
 #[derive(Resource, Reflect)]
@@ -295,8 +295,9 @@ impl Default for UpgradeSequence {
             sequence: vec![
                 // FIRST_UPGRADE = UpgradeKind::DarkMode,
                 UpgradeKind::TouchOfLifePlugin,
-                UpgradeKind::ImportLibrary,
                 UpgradeKind::BurstOfLifePlugin,
+                UpgradeKind::Brainstorm,
+                UpgradeKind::ImportLibrary,
             ],
             next_idx: 0,
         }

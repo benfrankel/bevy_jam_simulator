@@ -18,6 +18,7 @@ use crate::state::editor_screen::outline_panel::spawn_outline_panel;
 use crate::state::editor_screen::scene_view::spawn_scene_view;
 pub use crate::state::editor_screen::scene_view::ClickSpawnEvent;
 use crate::state::editor_screen::upgrade_panel::spawn_upgrade_panel;
+pub use crate::state::editor_screen::upgrade_panel::UpgradeContainer;
 use crate::state::AppState::*;
 use crate::upgrade::UpgradeList;
 use crate::AppRoot;

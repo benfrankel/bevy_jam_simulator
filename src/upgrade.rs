@@ -6,6 +6,7 @@ use strum::EnumIter;
 use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::spawn_editor_screen;
+use crate::state::editor_screen::UpgradeContainer;
 use crate::AppRoot;
 use crate::AppSet;
 
@@ -86,6 +87,7 @@ impl UpgradeList {
 pub enum UpgradeKind {
     DarkMode,
     TouchOfLifePlugin,
+    Brainstorm,
     BurstOfLifePlugin,
     ImportLibrary,
 }
@@ -114,6 +116,23 @@ fn load_upgrade_list(world: &mut World) {
             enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
                 simulation.spawns_per_click += 1
             })),
+            update: None,
+        },
+        Upgrade {
+            name: "Brainstorm".to_string(),
+            description: "Adds 1 extra upgrade slot.".to_string(),
+
+            base_cost: 1.0,
+            weight: 0.0,
+            remaining: 1,
+
+            enable: Some(
+                world.register_system(|mut query: Query<&mut UpgradeContainer>| {
+                    for mut container in &mut query {
+                        container.slots += 1;
+                    }
+                }),
+            ),
             update: None,
         },
         Upgrade {
