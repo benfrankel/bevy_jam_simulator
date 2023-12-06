@@ -16,19 +16,19 @@ impl Plugin for PhysicsPlugin {
                 (
                     apply_velocity.in_set(AppSet::Simulate),
                     wrap_within_scene_view.in_set(AppSet::Simulate),
-                ),
+                )
+                    .chain(),
             );
     }
 }
 
 #[derive(Component, Reflect)]
-pub struct Velocity(pub Vec2);
+pub struct Velocity(pub Vec3);
 
 fn apply_velocity(time: Res<Time>, mut query: Query<(&mut Transform, &Velocity)>) {
     let dt = time.delta_seconds();
     for (mut transform, velocity) in &mut query {
-        transform.translation.x += velocity.0.x * dt;
-        transform.translation.y += velocity.0.y * dt;
+        transform.translation += velocity.0 * dt;
     }
 }
 

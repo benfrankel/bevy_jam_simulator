@@ -1,3 +1,5 @@
+use std::f32::consts::TAU;
+
 use bevy::math::vec2;
 use bevy::prelude::*;
 use rand::Rng;
@@ -49,8 +51,9 @@ fn spawn_entities(
     for event in events.read() {
         simulation.entities += 1.0;
 
-        // Represents the maximum velocity for a single dimension.
-        const MAX_VELOCITY: f32 = 60.0;
+        let speed = rng.gen_range(10.0..=60.0);
+        let angle = rng.gen_range(0.0..=TAU);
+        let velocity = (speed * Vec2::from_angle(angle)).extend(-0.01);
 
         commands
             .spawn((
@@ -69,10 +72,7 @@ fn spawn_entities(
                     transform: Transform::from_translation(event.0.extend(0.0)),
                     ..default()
                 },
-                Velocity(Vec2 {
-                    x: rng.gen_range(-MAX_VELOCITY..MAX_VELOCITY),
-                    y: rng.gen_range(-MAX_VELOCITY..MAX_VELOCITY),
-                }),
+                Velocity(velocity),
                 WrapWithinSceneView,
             ))
             .set_parent(root.world);
