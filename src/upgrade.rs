@@ -1,3 +1,5 @@
+mod cost_scaling;
+
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
@@ -19,6 +21,7 @@ impl Plugin for UpgradePlugin {
             .add_event::<UpgradeEvent>()
             .init_resource::<UpgradeList>()
             .init_resource::<ActiveUpgrades>()
+            .add_plugins(cost_scaling::CostScalingPlugin)
             .add_systems(Startup, load_upgrade_list)
             .add_systems(
                 Update,
@@ -33,8 +36,8 @@ pub struct Upgrade {
     pub name: String,
     pub description: String,
 
-    // How many lines of code this upgrade costs at 1x cost scaling
-    pub base_cost: f64,
+    // How many lines of code this upgrade costs (will increase with cost scaling)
+    pub cost: f64,
     // The relative odds of this upgrade being offered
     pub weight: f32,
     // How many more copies of this upgrade can be enabled
@@ -108,7 +111,7 @@ fn load_upgrade_list(world: &mut World) {
             name: "Dark Mode".to_string(),
             description: "Rite of passage for all developers. Required to write code.".to_string(),
 
-            base_cost: 0.0,
+            cost: 0.0,
             weight: 0.0,
             remaining: 1,
 
@@ -119,7 +122,7 @@ fn load_upgrade_list(world: &mut World) {
             name: "TouchOfLifePlugin".to_string(),
             description: "Spawns 1 entity any time you click inside the scene view.".to_string(),
 
-            base_cost: 1.0,
+            cost: 2.0,
             weight: 0.0,
             remaining: 1,
 
@@ -136,7 +139,7 @@ fn load_upgrade_list(world: &mut World) {
             name: "Brainstorm".to_string(),
             description: "Adds 1 extra upgrade slot.".to_string(),
 
-            base_cost: 1.0,
+            cost: 2.0,
             weight: 0.0,
             remaining: 1,
 
@@ -153,7 +156,7 @@ fn load_upgrade_list(world: &mut World) {
             name: "BurstOfLifePlugin".to_string(),
             description: "Spawns 10 entities immediately.".to_string(),
 
-            base_cost: 1.0,
+            cost: 2.0,
             weight: 1.0,
             remaining: usize::MAX,
 
@@ -166,7 +169,7 @@ fn load_upgrade_list(world: &mut World) {
             name: "Import Library".to_string(),
             description: "Writes 10 lines of code immediately.".to_string(),
 
-            base_cost: 1.0,
+            cost: 1.0,
             weight: 1.0,
             remaining: usize::MAX,
 

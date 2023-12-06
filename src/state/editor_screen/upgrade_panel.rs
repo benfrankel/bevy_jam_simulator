@@ -99,7 +99,6 @@ pub fn spawn_upgrade_panel(
         ))
         .set_parent(upgrade_panel)
         .id();
-    dbg!(upgrade_container);
 
     let upgrade_button = spawn_upgrade_button(commands, theme, upgrade_list, INITIAL_UPGRADES[0]);
     commands
@@ -136,8 +135,7 @@ fn spawn_upgrade_button(
     upgrade_kind: UpgradeKind,
 ) -> Entity {
     let upgrade = upgrade_list.get(upgrade_kind);
-    // TODO: Cost scaling
-    let upgrade_cost = upgrade.base_cost;
+    let cost = upgrade.cost.floor();
 
     let upgrade_button = commands
         .spawn((
@@ -171,8 +169,8 @@ fn spawn_upgrade_button(
             },
             On::<Pointer<Click>>::run(
                 move |mut events: EventWriter<_>, mut simulation: ResMut<Simulation>| {
-                    if simulation.lines >= upgrade_cost {
-                        simulation.lines -= upgrade_cost;
+                    if simulation.lines >= cost {
+                        simulation.lines -= cost;
                         events.send(UpgradeEvent(upgrade_kind));
                     }
                 },
@@ -201,7 +199,7 @@ fn spawn_upgrade_button(
             Name::new("UpgradeCost"),
             TextBundle::from_section(
                 // TODO: Format for big numbers
-                format!("{} lines", upgrade_cost),
+                format!("{} line{}", cost, if cost == 1.0 { "" } else { "s" }),
                 TextStyle {
                     font: FONT_HANDLE,
                     color: theme.upgrade_button_text_color,
@@ -271,8 +269,7 @@ fn update_upgrade_button_disabled(
 ) {
     for (button, mut disabled) in &mut button_query {
         let upgrade = upgrade_list.get(button.0);
-        // TODO: Cost scaling
-        disabled.0 = simulation.lines < upgrade.base_cost;
+        disabled.0 = simulation.lines < upgrade.cost.floor();
     }
 }
 

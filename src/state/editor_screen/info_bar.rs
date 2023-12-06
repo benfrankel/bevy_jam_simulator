@@ -60,11 +60,14 @@ fn update_info_bar_text(
     mut info_bar_query: Query<&mut Text, With<InfoBarText>>,
 ) {
     // TODO: E.g. Format large numbers like 2,346,834 and then 8.435e22
-    let lines = simulation.lines;
-    let entities = simulation.entities;
+    let lines = simulation.lines.floor();
+    let entities = simulation.entities.floor();
 
-    // TODO: Remove "s" if number is equal to 1
-    let info = format!("{lines} lines, {entities} entities");
+    let info = format!(
+        "{lines} line{}, {entities} entit{}",
+        if lines == 1.0 { "" } else { "s" },
+        if entities == 1.0 { "y" } else { "ies" }
+    );
 
     for mut text in &mut info_bar_query {
         text.sections[0].value = info.clone();
