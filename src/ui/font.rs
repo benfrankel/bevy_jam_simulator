@@ -2,6 +2,8 @@ use bevy::asset::load_internal_binary_asset;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
+use crate::AppSet;
+
 pub struct FontPlugin;
 
 impl Plugin for FontPlugin {
@@ -20,7 +22,7 @@ impl Plugin for FontPlugin {
         );
 
         app.register_type::<FontSize>()
-            .add_systems(Update, scale_font_size);
+            .add_systems(Update, scale_font_size.in_set(AppSet::Update));
     }
 }
 

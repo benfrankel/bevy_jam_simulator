@@ -14,6 +14,7 @@ use crate::ui::FONT_HANDLE;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
+use crate::AppSet;
 
 pub struct OutlinePanelPlugin;
 
@@ -26,9 +27,11 @@ impl Plugin for OutlinePanelPlugin {
             .add_systems(
                 Update,
                 (
-                    update_outline_container,
-                    update_outline_header,
-                    update_outline_entry_text.run_if(resource_changed::<UpgradeOutline>()),
+                    update_outline_container.in_set(AppSet::Update),
+                    update_outline_header.in_set(AppSet::Update),
+                    update_outline_entry_text
+                        .in_set(AppSet::Update)
+                        .run_if(resource_changed::<UpgradeOutline>()),
                 ),
             );
     }

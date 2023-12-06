@@ -10,6 +10,7 @@ mod simulation;
 mod state;
 mod ui;
 mod upgrade;
+mod util;
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
@@ -30,9 +31,12 @@ impl Plugin for AppPlugin {
             Update,
             (
                 AppSet::ResetSync,
+                AppSet::Tick,
+                AppSet::Input,
+                AppSet::RunUpgrades,
+                AppSet::Simulate,
                 AppSet::Update,
-                AppSet::Commands,
-                AppSet::CommandsFlush,
+                AppSet::UpdateFlush,
                 AppSet::Despawn,
             )
                 .chain(),
@@ -48,7 +52,7 @@ impl Plugin for AppPlugin {
             )
                 .chain(),
         )
-        .add_systems(Update, apply_deferred.in_set(AppSet::CommandsFlush));
+        .add_systems(Update, apply_deferred.in_set(AppSet::UpdateFlush));
 
         // Order-dependent plugins
         app.add_plugins((
@@ -70,6 +74,7 @@ impl Plugin for AppPlugin {
             simulation::SimulationPlugin,
             ui::UiPlugin,
             upgrade::UpgradePlugin,
+            util::UtilPlugin,
         ));
 
         #[cfg(feature = "dev")]
@@ -88,12 +93,16 @@ pub enum AppSet {
     ResetSync,
     /// Tick timers
     Tick,
-    /// Update things
+    /// Handle input
+    Input,
+    /// Enable / update upgrades
+    RunUpgrades,
+    /// Step the simulation
+    Simulate,
+    /// Update everything else
     Update,
-    /// Queue commands (e.g. spawning entities)
-    Commands,
     /// Apply commands
-    CommandsFlush,
+    UpdateFlush,
     /// Queue despawn commands
     Despawn,
     /// Initialize start-of-frame animation values

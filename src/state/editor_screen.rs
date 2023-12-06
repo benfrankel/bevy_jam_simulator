@@ -26,8 +26,7 @@ pub struct EditorScreenStatePlugin;
 
 impl Plugin for EditorScreenStatePlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<EditorScreenUi>()
-            .register_type::<EditorScreenAssets>()
+        app.register_type::<EditorScreenAssets>()
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
             .add_systems(OnExit(EditorScreen), exit_editor_screen)
@@ -89,12 +88,6 @@ pub struct EditorScreenConfig {
     dark_theme: EditorScreenTheme,
 }
 
-#[derive(Resource, Reflect)]
-pub struct EditorScreenUi {
-    pub editor_screen: Entity,
-    pub upgrade_container: Entity,
-}
-
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct EditorScreenAssets {
@@ -110,17 +103,16 @@ fn enter_editor_screen(
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
 
-    let editor_screen_ui = create_editor_ui(true, &mut commands, &root, config, &upgrade_list);
-    commands.insert_resource(editor_screen_ui);
+    let editor_screen = spawn_editor_screen(&mut commands, config, &upgrade_list, true);
+    commands.entity(editor_screen).set_parent(root.ui);
 }
 
-pub fn create_editor_ui(
-    light_theme: bool,
+pub fn spawn_editor_screen(
     commands: &mut Commands,
-    root: &Res<AppRoot>,
     config: &EditorScreenConfig,
     upgrade_list: &Res<UpgradeList>,
-) -> EditorScreenUi {
+    light_theme: bool,
+) -> Entity {
     let theme = if light_theme {
         &config.light_theme
     } else {
@@ -139,7 +131,6 @@ pub fn create_editor_ui(
                 ..default()
             },
         ))
-        .set_parent(root.ui)
         .id();
 
     let info_bar = spawn_info_bar(commands, theme);
@@ -189,13 +180,10 @@ pub fn create_editor_ui(
     };
     commands.entity(code_panel).set_parent(vbox);
 
-    let (upgrade_panel, upgrade_container) = spawn_upgrade_panel(commands, theme, upgrade_list);
+    let upgrade_panel = spawn_upgrade_panel(commands, theme, upgrade_list);
     commands.entity(upgrade_panel).set_parent(hbox);
 
-    EditorScreenUi {
-        editor_screen,
-        upgrade_container,
-    }
+    editor_screen
 }
 
 fn exit_editor_screen(
@@ -203,7 +191,6 @@ fn exit_editor_screen(
     root: Res<AppRoot>,
     mut transform_query: Query<&mut Transform>,
 ) {
-    commands.remove_resource::<EditorScreenUi>();
     commands.entity(root.ui).despawn_descendants();
     commands.entity(root.world).despawn_descendants();
 

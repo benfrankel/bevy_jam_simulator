@@ -47,7 +47,7 @@ impl Plugin for ConfigPlugin {
             })
             .insert_resource(config)
             .add_systems(Startup, save_window_to_root)
-            .add_systems(Update, apply_config.run_if(resource_changed::<Config>()));
+            .add_systems(PreUpdate, apply_config.run_if(resource_changed::<Config>()));
     }
 }
 

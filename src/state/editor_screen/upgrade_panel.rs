@@ -2,7 +2,6 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 
-use super::EditorScreenUi;
 use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenTheme;
@@ -14,11 +13,11 @@ use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
-use crate::upgrade::enable_upgrade;
-use crate::upgrade::ActiveUpgrades;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
+use crate::util::DespawnSet;
+use crate::AppSet;
 
 pub struct UpgradePanelPlugin;
 
@@ -28,27 +27,24 @@ impl Plugin for UpgradePanelPlugin {
             .register_type::<UpgradeButton>()
             .add_systems(
                 Update,
-                (
-                    update_upgrade_button_disabled,
-                    replace_available_upgrades.run_if(on_event::<UpgradeEvent>()),
-                ),
+                replace_available_upgrades
+                    .in_set(AppSet::Update)
+                    .run_if(on_event::<UpgradeEvent>()),
+            )
+            .add_systems(
+                PostUpdate,
+                update_upgrade_button_disabled.in_set(AppSet::AnimateSync),
             );
     }
 }
 
 const FIRST_UPGRADE: UpgradeKind = UpgradeKind::DarkMode;
 
-#[derive(Component, Reflect)]
-pub struct IsUpgradeContainer;
-
-#[derive(Component, Reflect)]
-struct UpgradeButton(UpgradeKind);
-
 pub fn spawn_upgrade_panel(
     commands: &mut Commands,
     theme: &EditorScreenTheme,
     upgrade_list: &UpgradeList,
-) -> (Entity, Entity) {
+) -> Entity {
     let upgrade_panel = commands
         .spawn((
             Name::new("UpgradePanel"),
@@ -102,6 +98,7 @@ pub fn spawn_upgrade_panel(
         ))
         .set_parent(upgrade_panel)
         .id();
+    dbg!(upgrade_container);
 
     let upgrade_button = spawn_upgrade_button(commands, theme, upgrade_list, FIRST_UPGRADE);
     commands
@@ -128,7 +125,7 @@ pub fn spawn_upgrade_panel(
     let submit_button = spawn_submit_button(commands, theme);
     commands.entity(submit_button).set_parent(submit_container);
 
-    (upgrade_panel, upgrade_container)
+    upgrade_panel
 }
 
 fn spawn_upgrade_button(
@@ -172,19 +169,9 @@ fn spawn_upgrade_button(
                 offset: vec2(-12.0, 0.0),
             },
             On::<Pointer<Click>>::run(
-                move |mut events: EventWriter<_>,
-                      mut simulation: ResMut<Simulation>,
-                      mut commands: Commands,
-                      upgrade_list: Res<UpgradeList>,
-                      mut active_upgrades: ResMut<ActiveUpgrades>| {
+                move |mut events: EventWriter<_>, mut simulation: ResMut<Simulation>| {
                     if simulation.lines >= upgrade_cost {
                         simulation.lines -= upgrade_cost;
-                        enable_upgrade(
-                            upgrade_kind,
-                            &mut commands,
-                            &upgrade_list,
-                            &mut active_upgrades,
-                        );
                         events.send(UpgradeEvent(upgrade_kind));
                     }
                 },
@@ -273,6 +260,9 @@ fn spawn_submit_button(commands: &mut Commands, theme: &EditorScreenTheme) -> En
     submit_button
 }
 
+#[derive(Component, Reflect)]
+struct UpgradeButton(UpgradeKind);
+
 fn update_upgrade_button_disabled(
     simulation: Res<Simulation>,
     upgrade_list: Res<UpgradeList>,
@@ -285,40 +275,29 @@ fn update_upgrade_button_disabled(
     }
 }
 
+#[derive(Component, Reflect)]
+pub struct IsUpgradeContainer;
+
 fn replace_available_upgrades(
     mut commands: Commands,
-    mut events: EventReader<UpgradeEvent>,
+    mut despawn: ResMut<DespawnSet>,
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
-    editor_screen_ui: Res<EditorScreenUi>,
+    container_query: Query<(Entity, &Children), With<IsUpgradeContainer>>,
 ) {
     let theme = &config.editor_screen.dark_theme;
-    for event in events.read() {
-        commands
-            .entity(editor_screen_ui.upgrade_container)
-            .despawn_descendants();
+    for (container, buttons) in &container_query {
+        for &button in buttons {
+            despawn.recursive(button);
+        }
 
-        if let Some(upgrade_kind) = upgrade_list.get(event.0).next_upgrade {
-            // This upgrade belongs to the initial state of upgrades.
-            // Spawn the next upgrade:
+        // TODO: Initial sequence of upgrades, and then randomly chosen upgrades (weighted)
+        let next_upgrades = vec![UpgradeKind::ImportLibrary];
+
+        for upgrade_kind in next_upgrades {
             let upgrade_button =
                 spawn_upgrade_button(&mut commands, theme, &upgrade_list, upgrade_kind);
-            commands
-                .entity(upgrade_button)
-                .set_parent(editor_screen_ui.upgrade_container);
-        } else {
-            // TODO: Randomly choose upgrades (weighted)
-            // This one adds all upgrades with non-zero weight.
-            for (i, upgrade) in upgrade_list.list.iter().enumerate() {
-                if upgrade.weight > 0.0 {
-                    let upgrade_kind: UpgradeKind = unsafe { std::mem::transmute(i as u8) };
-                    let upgrade_button =
-                        spawn_upgrade_button(&mut commands, theme, &upgrade_list, upgrade_kind);
-                    commands
-                        .entity(upgrade_button)
-                        .set_parent(editor_screen_ui.upgrade_container);
-                }
-            }
+            commands.entity(upgrade_button).set_parent(container);
         }
     }
 }

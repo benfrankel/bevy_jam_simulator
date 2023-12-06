@@ -7,6 +7,7 @@ use crate::config::Config;
 use crate::ui::FontSize;
 use crate::ui::FONT_HANDLE;
 use crate::AppRoot;
+use crate::AppSet;
 
 pub struct TooltipPlugin;
 
@@ -14,7 +15,7 @@ impl Plugin for TooltipPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Tooltip>()
             .add_systems(Startup, spawn_tooltip)
-            .add_systems(Update, show_tooltip_on_hover);
+            .add_systems(Update, show_tooltip_on_hover.in_set(AppSet::Input));
     }
 }
 

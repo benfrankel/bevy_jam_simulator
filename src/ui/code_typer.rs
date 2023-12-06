@@ -5,13 +5,14 @@ use std::str::Chars;
 use bevy::prelude::*;
 
 use crate::simulation::Simulation;
+use crate::AppSet;
 
 pub struct CodeTyperPlugin;
 
 impl Plugin for CodeTyperPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<CodeTyper>()
-            .add_systems(Update, type_code);
+            .add_systems(Update, type_code.in_set(AppSet::Input));
     }
 }
 

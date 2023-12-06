@@ -237,6 +237,5 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
 }
 
 fn exit_title_screen(mut commands: Commands, root: Res<AppRoot>) {
-    // TODO: This and the other despawn_decendants() should probably make use of DespawnSet...
     commands.entity(root.ui).despawn_descendants();
 }

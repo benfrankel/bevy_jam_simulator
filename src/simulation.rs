@@ -4,6 +4,7 @@ use bevy::prelude::*;
 use crate::state::editor_screen::ClickSpawnEvent;
 use crate::upgrade::UpgradeEvent;
 use crate::AppRoot;
+use crate::AppSet;
 
 pub struct SimulationPlugin;
 
@@ -12,7 +13,13 @@ impl Plugin for SimulationPlugin {
         app.register_type::<SpawnEvent>()
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
-            .add_systems(Update, (count_upgrades, spawn_on_click));
+            .add_systems(
+                Update,
+                (
+                    count_upgrades.in_set(AppSet::Simulate),
+                    spawn_from_click.in_set(AppSet::Simulate),
+                ),
+            );
     }
 }
 
@@ -32,7 +39,7 @@ fn count_upgrades(mut events: EventReader<UpgradeEvent>, mut simulation: ResMut<
 #[derive(Event, Reflect)]
 pub struct SpawnEvent(pub Entity);
 
-fn spawn_on_click(
+fn spawn_from_click(
     mut commands: Commands,
     mut click_events: EventReader<ClickSpawnEvent>,
     mut spawn_events: EventWriter<SpawnEvent>,

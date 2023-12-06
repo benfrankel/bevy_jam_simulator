@@ -1,13 +1,14 @@
 use bevy::prelude::*;
 
 use crate::ui::Disabled;
+use crate::AppSet;
 
 pub struct InteractionPalettePlugin;
 
 impl Plugin for InteractionPalettePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<InteractionPalette>()
-            .add_systems(Update, update_button_color);
+            .add_systems(PostUpdate, update_interaction_color.in_set(AppSet::Animate));
     }
 }
 
@@ -20,7 +21,7 @@ pub struct InteractionPalette {
     pub disabled: Color,
 }
 
-fn update_button_color(
+fn update_interaction_color(
     mut interaction_query: Query<
         (
             &Interaction,

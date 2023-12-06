@@ -4,13 +4,14 @@ use super::EditorScreenTheme;
 use crate::simulation::Simulation;
 use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
+use crate::AppSet;
 
 pub struct InfoBarPlugin;
 
 impl Plugin for InfoBarPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<InfoBarText>()
-            .add_systems(Update, update_info_bar_text);
+            .add_systems(Update, update_info_bar_text.in_set(AppSet::Update));
     }
 }
 

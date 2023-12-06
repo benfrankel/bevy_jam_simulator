@@ -1,11 +1,12 @@
+use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
-use crate::state::editor_screen::create_editor_ui;
-use crate::state::editor_screen::EditorScreenUi;
+use crate::state::editor_screen::spawn_editor_screen;
 use crate::AppRoot;
+use crate::AppSet;
 
 pub struct UpgradePlugin;
 
@@ -16,7 +17,12 @@ impl Plugin for UpgradePlugin {
             .init_resource::<UpgradeList>()
             .init_resource::<ActiveUpgrades>()
             .add_systems(Startup, load_upgrade_list)
-            .add_systems(Update, run_active_upgrades);
+            .add_systems(
+                Update,
+                (enable_upgrades, run_active_upgrades, apply_deferred)
+                    .chain()
+                    .in_set(AppSet::RunUpgrades),
+            );
     }
 }
 
@@ -41,31 +47,32 @@ pub struct Upgrade {
     pub next_upgrade: Option<UpgradeKind>,
 }
 
-#[derive(Resource, Default)]
-pub struct ActiveUpgrades(Vec<SystemId>);
+#[derive(Event, Reflect, Clone, Copy)]
+pub struct UpgradeEvent(pub UpgradeKind);
 
-fn run_active_upgrades(mut commands: Commands, active_upgrades: Res<ActiveUpgrades>) {
-    for &update in &active_upgrades.0 {
-        commands.run_system(update);
+fn enable_upgrades(world: &mut World, mut reader: Local<ManualEventReader<UpgradeEvent>>) {
+    for event in reader
+        .read(world.resource::<Events<_>>())
+        .copied()
+        .collect::<Vec<_>>()
+    {
+        let &Upgrade { enable, update, .. } = world.resource::<UpgradeList>().get(event.0);
+        if let Some(enable) = enable {
+            world.run_system(enable).unwrap();
+        }
+        if let Some(update) = update {
+            world.resource_mut::<ActiveUpgrades>().0.push(update);
+        }
     }
 }
 
-#[derive(Event, Reflect)]
-pub struct UpgradeEvent(pub UpgradeKind);
+#[derive(Resource, Default)]
+struct ActiveUpgrades(Vec<SystemId>);
 
-/// Applies the given upgrade kind immediately.
-pub fn enable_upgrade(
-    upgrade_kind: UpgradeKind,
-    commands: &mut Commands,
-    upgrade_list: &Res<UpgradeList>,
-    active_upgrades: &mut ResMut<ActiveUpgrades>,
-) {
-    let upgrade = upgrade_list.get(upgrade_kind);
-    if let Some(enable) = upgrade.enable {
-        commands.run_system(enable);
-    }
-    if let Some(update) = upgrade.update {
-        active_upgrades.0.push(update);
+fn run_active_upgrades(world: &mut World) {
+    #[allow(clippy::unnecessary_to_owned)]
+    for update in world.resource::<ActiveUpgrades>().0.to_vec() {
+        world.run_system(update).unwrap();
     }
 }
 
@@ -98,14 +105,14 @@ fn load_upgrade_list(world: &mut World) {
             weight: 0.0,
             remaining: 1,
 
-            enable: Some(world.register_system(dark_mode_enable)),
+            enable: Some(world.register_system(enable_dark_mode)),
             update: None,
 
             next_upgrade: Some(UpgradeKind::TouchOfLifePlugin),
         },
         Upgrade {
             name: "TouchOfLifePlugin".to_string(),
-            description: "Spawns 1 entity wherever you click in the scene view.".to_string(),
+            description: "Spawns 1 entity any time you click in the scene view.".to_string(),
 
             base_cost: 1.0,
             weight: 0.0,
@@ -135,7 +142,7 @@ fn load_upgrade_list(world: &mut World) {
         },
         Upgrade {
             name: "Import Library".to_string(),
-            description: "Spawns 10 lines immediately.".to_string(),
+            description: "Writes 10 lines of code immediately.".to_string(),
 
             base_cost: 1.0,
             weight: 1.0,
@@ -154,21 +161,14 @@ fn load_upgrade_list(world: &mut World) {
     upgrade_types.list = upgrades;
 }
 
-fn dark_mode_enable(
+fn enable_dark_mode(
     mut commands: Commands,
     root: Res<AppRoot>,
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
-    mut editor_screen_ui: ResMut<EditorScreenUi>,
 ) {
-    commands
-        .entity(editor_screen_ui.editor_screen)
-        .despawn_recursive();
-    *editor_screen_ui = create_editor_ui(
-        false,
-        &mut commands,
-        &root,
-        &config.editor_screen,
-        &upgrade_list,
-    );
+    commands.entity(root.ui).despawn_descendants();
+    let editor_screen =
+        spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, false);
+    commands.entity(editor_screen).set_parent(root.ui);
 }
