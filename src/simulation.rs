@@ -1,10 +1,9 @@
 use bevy::math::vec2;
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 use rand::Rng;
 
-use crate::camera::CAMERA_SCALING;
-use crate::state::editor_screen::EditorLayoutBounds;
+use crate::physics::Velocity;
+use crate::physics::WrapWithinSceneView;
 use crate::upgrade::UpgradeEvent;
 use crate::AppRoot;
 use crate::AppSet;
@@ -13,8 +12,7 @@ pub struct SimulationPlugin;
 
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<Velocity>()
-            .register_type::<SpawnEvent>()
+        app.register_type::<SpawnEvent>()
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
             .add_systems(
@@ -22,7 +20,6 @@ impl Plugin for SimulationPlugin {
                 (
                     count_upgrades.in_set(AppSet::Simulate),
                     spawn_entities.in_set(AppSet::Simulate),
-                    move_entities.in_set(AppSet::Simulate),
                 ),
             );
     }
@@ -76,48 +73,8 @@ fn spawn_entities(
                     x: rng.gen_range(-MAX_VELOCITY..MAX_VELOCITY),
                     y: rng.gen_range(-MAX_VELOCITY..MAX_VELOCITY),
                 }),
+                WrapWithinSceneView,
             ))
             .set_parent(root.world);
-    }
-}
-
-#[derive(Component, Reflect)]
-struct Velocity(pub Vec2);
-
-fn move_entities(
-    time: Res<Time>,
-    mut query: Query<(&mut Transform, &Velocity, &Sprite)>,
-    window_query: Query<&Window, With<PrimaryWindow>>,
-    bounds: Res<EditorLayoutBounds>,
-) {
-    let window = window_query.single();
-    // Subtract the total panel width
-    let x_max = (window.resolution.width() / 2.0 - bounds.0.max.x) / CAMERA_SCALING;
-    let x_min = -(window.resolution.width() / 2.0 - bounds.0.min.x) / CAMERA_SCALING;
-    let y_max = (window.resolution.height() / 2.0 - bounds.0.max.y) / CAMERA_SCALING;
-    let y_min = -(window.resolution.height() / 2.0 - bounds.0.min.y) / CAMERA_SCALING;
-
-    let dt = time.delta_seconds();
-    for (mut transform, velocity, sprite) in &mut query {
-        transform.translation.x += velocity.0.x * dt;
-        transform.translation.y += velocity.0.y * dt;
-
-        if let Some(size) = sprite.custom_size {
-            let x_max = x_max + (size.x / 2.0);
-            let x_min = x_min - (size.x / 2.0);
-            if transform.translation.x >= x_max {
-                transform.translation.x = x_min;
-            } else if transform.translation.x <= x_min {
-                transform.translation.x = x_max;
-            }
-
-            let y_max = y_max + (size.y / 2.0);
-            let y_min = y_min - (size.y / 2.0);
-            if transform.translation.y >= y_max {
-                transform.translation.y = y_min;
-            } else if transform.translation.y <= y_min {
-                transform.translation.y = y_max;
-            }
-        }
     }
 }

@@ -5,6 +5,7 @@ mod camera;
 mod config;
 #[cfg(feature = "dev")]
 mod debug;
+mod physics;
 mod simulation;
 mod state;
 mod ui;
@@ -57,6 +58,7 @@ impl Plugin for AppPlugin {
         app.add_plugins((
             camera::CameraPlugin,
             simulation::SimulationPlugin,
+            physics::PhysicsPlugin,
             ui::UiPlugin,
             upgrade::UpgradePlugin,
             util::UtilPlugin,
