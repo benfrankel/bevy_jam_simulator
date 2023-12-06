@@ -307,20 +307,6 @@ impl UpgradeSequence {
     }
 }
 
-fn random_upgrade(upgrade_list: &UpgradeList) -> Option<UpgradeKind> {
-    ALL_UPGRADE_KINDS
-        .choose_weighted(&mut thread_rng(), |&kind| {
-            let upgrade = upgrade_list.get(kind);
-            if upgrade.remaining > 0 {
-                upgrade.weight
-            } else {
-                0.0
-            }
-        })
-        .ok()
-        .copied()
-}
-
 fn replace_available_upgrades(
     mut commands: Commands,
     mut despawn: ResMut<DespawnSet>,
@@ -335,19 +321,42 @@ fn replace_available_upgrades(
             despawn.recursive(button);
         }
 
-        for _ in 0..container.slots {
-            // Initial sequence of upgrades, and then randomly chosen upgrades (weighted)
-            let Some(upgrade_kind) = upgrade_sequence
-                .next(&upgrade_list)
-                .or_else(|| random_upgrade(&upgrade_list))
-            else {
-                error!("Could not choose an upgrade to make available.");
-                break;
-            };
-
+        let mut add_upgrade = |upgrade_kind: UpgradeKind| {
             let upgrade_button =
                 spawn_upgrade_button(&mut commands, theme, &upgrade_list, upgrade_kind);
             commands.entity(upgrade_button).set_parent(entity);
+        };
+
+        let mut remaining_upgrades = container.slots;
+
+        // Initial sequence of upgrades, and then randomly chosen upgrades (weighted)
+        if let Some(upgrade_kind) = upgrade_sequence.next(&upgrade_list) {
+            add_upgrade(upgrade_kind);
+            remaining_upgrades -= 1;
+            if remaining_upgrades == 0 {
+                continue;
+            }
+        }
+
+        let selected_upgrades = ALL_UPGRADE_KINDS.choose_multiple_weighted(
+            &mut thread_rng(),
+            remaining_upgrades,
+            |&kind| {
+                let upgrade = upgrade_list.get(kind);
+                if upgrade.remaining > 0 {
+                    upgrade.weight
+                } else {
+                    0.0
+                }
+            },
+        );
+        match selected_upgrades {
+            Ok(selected_upgrades) => {
+                for upgrade_kind in selected_upgrades {
+                    add_upgrade(*upgrade_kind);
+                }
+            },
+            Err(error) => error!("Failed to choose random upgrade(s): {:?}", error),
         }
     }
 }
