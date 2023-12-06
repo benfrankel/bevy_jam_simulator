@@ -22,10 +22,7 @@ fn spawn_camera(mut commands: Commands, mut root: ResMut<AppRoot>) {
             Camera2dBundle {
                 projection: OrthographicProjection {
                     near: -1000.0,
-                    scaling_mode: ScalingMode::Fixed {
-                        width: CAMERA_WIDTH,
-                        height: CAMERA_HEIGHT,
-                    },
+                    scaling_mode: ScalingMode::WindowSize(6.0),
                     ..default()
                 },
                 ..default()
