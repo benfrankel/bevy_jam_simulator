@@ -37,19 +37,21 @@ impl Plugin for UpgradePlugin {
 }
 
 pub struct Upgrade {
+    /// The name of the upgrade. This will be shown on the button.
     pub name: String,
+    /// The description of the upgrade. This will be shown as a tooltip.
     pub description: String,
 
-    // How many lines of code this upgrade costs (will increase with cost scaling)
+    /// How many lines of code this upgrade costs (will increase with cost scaling)
     pub cost: f64,
-    // The relative odds of this upgrade being offered
+    /// The relative odds of this upgrade being offered
     pub weight: f32,
-    // How many more copies of this upgrade can be enabled
+    /// How many more copies of this upgrade can be enabled
     pub remaining: usize,
 
-    // A one-shot system that runs whenever a copy of this upgrade is enabled
+    /// A one-shot system that runs whenever a copy of this upgrade is enabled
     pub enable: Option<SystemId>,
-    // A one-shot system that runs every frame for each active copy of this upgrade
+    /// A one-shot system that runs every frame for each active copy of this upgrade
     pub update: Option<SystemId>,
 }
 
