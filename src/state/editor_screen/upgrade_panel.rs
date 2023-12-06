@@ -3,7 +3,6 @@ use bevy::prelude::*;
 use bevy_mod_picking::prelude::*;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use strum::IntoEnumIterator;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
@@ -19,6 +18,7 @@ use crate::ui::FONT_HANDLE;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
+use crate::upgrade::ALL_UPGRADE_KINDS;
 use crate::upgrade::INITIAL_UPGRADES;
 use crate::util::DespawnSet;
 use crate::AppSet;
@@ -308,8 +308,7 @@ impl UpgradeSequence {
 }
 
 fn random_upgrade(upgrade_list: &UpgradeList) -> Option<UpgradeKind> {
-    UpgradeKind::iter()
-        .collect::<Vec<_>>()
+    ALL_UPGRADE_KINDS
         .choose_weighted(&mut thread_rng(), |&kind| {
             let upgrade = upgrade_list.get(kind);
             if upgrade.remaining > 0 {

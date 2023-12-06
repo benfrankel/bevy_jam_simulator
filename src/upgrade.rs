@@ -6,7 +6,7 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 use rand::thread_rng;
 use rand::Rng;
-use strum::EnumIter;
+use strum::EnumCount;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
@@ -107,10 +107,14 @@ pub const INITIAL_UPGRADES: [UpgradeKind; 5] = [
 macro_rules! generate_upgrade_list {
     (|$world:ident| $($enumname:ident: $upgrade:expr),+ $(,)?) => {
         /// Enum containing all upgrade types.
-        #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
+        #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumCount)]
         pub enum UpgradeKind {
             $($enumname),+
         }
+
+        pub const ALL_UPGRADE_KINDS: [UpgradeKind; UpgradeKind::COUNT] = [
+            $(UpgradeKind::$enumname),+
+        ];
 
         /// A system that initializes and inserts the UpgradeList resource.
         fn load_upgrade_list($world: &mut World) {
