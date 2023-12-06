@@ -6,6 +6,7 @@ use strum::EnumIter;
 use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::spawn_editor_screen;
+use crate::state::editor_screen::SceneView;
 use crate::state::editor_screen::UpgradeContainer;
 use crate::AppRoot;
 use crate::AppSet;
@@ -122,9 +123,13 @@ fn load_upgrade_list(world: &mut World) {
             weight: 0.0,
             remaining: 1,
 
-            enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-                simulation.spawns_per_click += 1
-            })),
+            enable: Some(
+                world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+                    for mut scene_view in &mut scene_view_query {
+                        scene_view.spawns_per_click += 1;
+                    }
+                }),
+            ),
             update: None,
         },
         Upgrade {
