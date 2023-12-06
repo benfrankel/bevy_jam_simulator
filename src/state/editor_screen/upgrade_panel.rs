@@ -31,10 +31,7 @@ impl Plugin for UpgradePanelPlugin {
                     .in_set(AppSet::Update)
                     .run_if(on_event::<UpgradeEvent>()),
             )
-            .add_systems(
-                PostUpdate,
-                update_upgrade_button_disabled.in_set(AppSet::AnimateSync),
-            );
+            .add_systems(Update, update_upgrade_button_disabled.in_set(AppSet::End));
     }
 }
 

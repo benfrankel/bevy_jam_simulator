@@ -14,9 +14,6 @@ mod util;
 
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
-use bevy::transform::TransformSystem;
-use bevy::ui::UiSystem;
-use bevy_rapier2d::plugin::PhysicsSet;
 
 pub struct AppPlugin;
 
@@ -30,29 +27,19 @@ impl Plugin for AppPlugin {
         app.configure_sets(
             Update,
             (
-                AppSet::ResetSync,
+                AppSet::Start,
                 AppSet::Tick,
                 AppSet::Input,
                 AppSet::RunUpgrades,
                 AppSet::Simulate,
                 AppSet::Update,
-                AppSet::UpdateFlush,
                 AppSet::Despawn,
+                AppSet::ApplyDeferred,
+                AppSet::End,
             )
                 .chain(),
         )
-        .configure_sets(
-            PostUpdate,
-            (
-                UiSystem::Layout,
-                PhysicsSet::Writeback,
-                AppSet::AnimateSync,
-                AppSet::Animate,
-                TransformSystem::TransformPropagate,
-            )
-                .chain(),
-        )
-        .add_systems(Update, apply_deferred.in_set(AppSet::UpdateFlush));
+        .add_systems(Update, apply_deferred.in_set(AppSet::ApplyDeferred));
 
         // Order-dependent plugins
         app.add_plugins((
@@ -90,7 +77,7 @@ impl Plugin for AppPlugin {
 #[derive(SystemSet, Clone, Eq, PartialEq, Hash, Debug)]
 pub enum AppSet {
     /// Initialize start-of-frame values
-    ResetSync,
+    Start,
     /// Tick timers
     Tick,
     /// Handle input
@@ -101,14 +88,12 @@ pub enum AppSet {
     Simulate,
     /// Update everything else
     Update,
-    /// Apply commands
-    UpdateFlush,
     /// Queue despawn commands
     Despawn,
-    /// Initialize start-of-frame animation values
-    AnimateSync,
-    /// Update animations
-    Animate,
+    /// Apply deferred (commands)
+    ApplyDeferred,
+    /// Synchronize end-of-frame values (after commands have been applied)
+    End,
 }
 
 // Global entities

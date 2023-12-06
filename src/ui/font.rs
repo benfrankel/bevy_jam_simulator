@@ -22,7 +22,7 @@ impl Plugin for FontPlugin {
         );
 
         app.register_type::<FontSize>()
-            .add_systems(Update, scale_font_size.in_set(AppSet::Update));
+            .add_systems(Update, scale_font_size.in_set(AppSet::End));
     }
 }
 

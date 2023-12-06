@@ -8,7 +8,7 @@ pub struct InteractionPalettePlugin;
 impl Plugin for InteractionPalettePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<InteractionPalette>()
-            .add_systems(PostUpdate, update_interaction_color.in_set(AppSet::Animate));
+            .add_systems(Update, update_interaction_color.in_set(AppSet::End));
     }
 }
 
