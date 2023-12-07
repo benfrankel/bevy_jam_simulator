@@ -253,7 +253,7 @@ generate_upgrade_list!(
     SplashOfLifePlugin: Upgrade {
         name: "SplashOfLifePlugin".to_string(),
         description: "Spawns 32 entities immediately.".to_string(),
-        base_cost: 1.0,
+        base_cost: 2.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: usize::MAX,
@@ -268,14 +268,24 @@ generate_upgrade_list!(
     },
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
-        description: "Writes 10 lines of code immediately.".to_string(),
+        description: "Writes 32 lines of code immediately.".to_string(),
         base_cost: 1.0,
-        tech_debt: 0.0,
+        tech_debt: 1.0,
         weight: 1.0,
         remaining: usize::MAX,
         install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-            simulation.lines += 10.0;
+            simulation.lines += 32.0;
         })),
         ..default()
     },
+    Refactor: Upgrade {
+        name: "Refactor".to_string(),
+        description: "Improves the quality of the codebase.".to_string(),
+        base_cost: 10.0,
+        cost_scale_factor: 1.5,
+        tech_debt: -5.0,
+        weight: 1.0,
+        remaining: usize::MAX,
+        ..default()
+    }
 );
