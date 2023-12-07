@@ -73,6 +73,10 @@ pub struct Upgrade {
     pub upgrade_min: usize,
     /// The maximum number of installed upgrades allowed for this upgrade to be offered.
     pub upgrade_max: usize,
+    /// The minimum amount of technical debt required for this upgrade to be offered.
+    pub tech_debt_min: f64,
+    /// The maximum amount of technical debt allowed for this upgrade to be offered.
+    pub tech_debt_max: f64,
     /// A list of (upgrade, count) that must be installed for this upgrade to be offered.
     pub requirements: Vec<(UpgradeKind, usize)>,
 
@@ -102,6 +106,8 @@ impl Default for Upgrade {
             line_max: f64::INFINITY,
             upgrade_min: 0,
             upgrade_max: usize::MAX,
+            tech_debt_min: f64::NEG_INFINITY,
+            tech_debt_max: f64::INFINITY,
             requirements: vec![],
 
             install: None,
@@ -116,6 +122,8 @@ impl Upgrade {
             && (self.entity_min <= simulation.entities && simulation.entities <= self.entity_max)
             && (self.line_min <= simulation.lines && simulation.lines <= self.line_max)
             && (self.upgrade_min <= simulation.upgrades && simulation.upgrades <= self.upgrade_max)
+            && (self.tech_debt_min <= simulation.tech_debt
+                && simulation.tech_debt <= self.tech_debt_max)
             && self
                 .requirements
                 .iter()
@@ -298,10 +306,11 @@ generate_upgrade_list!(
         name: "Refactor".to_string(),
         description: "Improves the quality of the codebase.".to_string(),
         base_cost: 10.0,
-        cost_scale_factor: 1.5,
+        cost_scale_factor: 1.3,
         tech_debt: -5.0,
-        weight: 1.0,
+        weight: 2.0,
         remaining: usize::MAX,
+        tech_debt_min: 15.0,
         ..default()
     },
     TenXDev: Upgrade {

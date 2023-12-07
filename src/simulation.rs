@@ -28,7 +28,6 @@ pub struct Simulation {
     pub upgrades: usize,
     pub lines: f64,
     pub entities: f64,
-
     pub tech_debt: f64,
 }
 
