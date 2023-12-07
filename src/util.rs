@@ -15,13 +15,32 @@ impl Plugin for UtilPlugin {
 }
 
 pub fn pretty_num(x: f64) -> String {
+    // See: https://en.wikipedia.org/wiki/Names_of_large_numbers
+    const SUFFIXES: [&str; 10] = [
+        "million",
+        "billion",
+        "trillion",
+        "quadrillion",
+        "quintillion",
+        "sextillion",
+        "septillion",
+        "octillion",
+        "nonillion",
+        "decillion",
+    ];
+
     let abs = x.abs();
     if abs < 1e9 {
+        // Example: 23,480,501
         format_num!(",.0", x)
-    } else if abs < 1e18 {
-        // TODO: e.g. "123.456 billion", "8.012 quadrillion" instead of scientific notation
-        format_num!(".3e", x).replace("e+", "e")
+    } else if abs < 1e36 {
+        // Example: 17.012 quadrillion
+        let exp_group = abs.log10().floor() as i32 / 3;
+        let x = x / (10f64.powi(exp_group * 3));
+        let suffix = SUFFIXES[exp_group as usize - 2];
+        format!("{} {suffix}", format_num!(".3", x))
     } else if abs < f64::INFINITY {
+        // Example: 4.802e65
         format_num!(".3e", x).replace("e+", "e")
     } else {
         "INFINITY".to_string()
