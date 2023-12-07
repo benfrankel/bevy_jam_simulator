@@ -68,7 +68,10 @@ fn click_spawn(
         .unwrap()
         .spawns_per_click
     {
-        events.send(SpawnEvent(world_pos));
+        events.send(SpawnEvent {
+            position: world_pos,
+            count: 1.0,
+        });
     }
 }
 

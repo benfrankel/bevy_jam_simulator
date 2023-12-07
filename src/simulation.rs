@@ -77,8 +77,14 @@ impl Default for Simulation {
     }
 }
 
+/// Maximum number of entities that can be spawned in the scene view for a single SpawnEvent.
+const MAX_SPAWN_PER_EVENT: usize = 100;
+
 #[derive(Event, Reflect)]
-pub struct SpawnEvent(pub Vec2);
+pub struct SpawnEvent {
+    pub position: Vec2,
+    pub count: f64,
+}
 
 fn spawn_entities(
     mut commands: Commands,
@@ -89,34 +95,37 @@ fn spawn_entities(
 ) {
     let mut rng = rand::thread_rng();
     for event in events.read() {
-        simulation.entities += 1.0;
+        simulation.entities += event.count;
 
-        let speed = rng.gen_range(0.5..=1.5);
-        let angle = rng.gen_range(0.0..=TAU);
-        let velocity = (speed * Vec2::from_angle(angle)).extend(-0.01);
+        let spawn_count = MAX_SPAWN_PER_EVENT.min(event.count as usize);
+        for _ in 0..spawn_count {
+            let speed = rng.gen_range(0.5..=1.5);
+            let angle = rng.gen_range(0.0..=TAU);
+            let velocity = (speed * Vec2::from_angle(angle)).extend(-0.01);
 
-        let size = rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max);
+            let size = rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max);
 
-        let entity = commands
-            .spawn((
-                Name::new("Entity"),
-                SpriteBundle {
-                    sprite: Sprite {
-                        color: *simulation.entity_colors.choose(&mut rng).unwrap(),
-                        custom_size: Some(vec2(size, size)),
+            let entity = commands
+                .spawn((
+                    Name::new("Entity"),
+                    SpriteBundle {
+                        sprite: Sprite {
+                            color: *simulation.entity_colors.choose(&mut rng).unwrap(),
+                            custom_size: Some(vec2(size, size)),
+                            ..default()
+                        },
+                        transform: Transform::from_translation(event.position.extend(0.0)),
                         ..default()
                     },
-                    transform: Transform::from_translation(event.0.extend(0.0)),
-                    ..default()
-                },
-                Velocity(velocity),
-                WrapWithinSceneView,
-            ))
-            .set_parent(root.world)
-            .id();
+                    Velocity(velocity),
+                    WrapWithinSceneView,
+                ))
+                .set_parent(root.world)
+                .id();
 
-        for mut despawn_queue in &mut entity_cap_query {
-            despawn_queue.push(entity);
+            for mut despawn_queue in &mut entity_cap_query {
+                despawn_queue.push(entity);
+            }
         }
     }
 }
@@ -187,12 +196,9 @@ fn spawn_entities_passively(
 ) {
     if entity_spawner.timer.tick(time.delta()).just_finished() {
         entity_spawner.timer.reset();
-        // simulation.entities += entity_spawner.amount;
-        // TODO:
-        // This shouldn't use spawn event directly because the spawn event adds one at a time.
-        // When amount is huge due to exponential increase, it will cause floating point problems.
-        for _ in 0..(entity_spawner.amount as usize) {
-            events.send(SpawnEvent((bounds.min.xy() + bounds.max.xy()) / 2.0));
-        }
+        events.send(SpawnEvent {
+            position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+            count: entity_spawner.amount,
+        });
     }
 }

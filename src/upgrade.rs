@@ -305,9 +305,10 @@ generate_upgrade_list!(
         remaining: usize::MAX,
         install: Some(
             world.register_system(|mut events: EventWriter<SpawnEvent>, bounds: Res<SceneViewBounds>| {
-                for _ in 0..32 {
-                    events.send(SpawnEvent((bounds.min.xy() + bounds.max.xy()) / 2.0));
-                }
+                events.send(SpawnEvent {
+                    position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+                    count: 32.0,
+                });
             }),
         ),
         ..default()
