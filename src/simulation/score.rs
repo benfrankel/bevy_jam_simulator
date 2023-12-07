@@ -9,17 +9,18 @@ fn logistic_function(x: f64, l: f64, k: f64, x_0: f64) -> f64 {
     l / (1.0 + (-k * (x - x_0)).exp())
 }
 
-/// Calculate score using a logistic function based on the given upper and lower values.
-/// When x = upper, the output will be approximately 4.620.
-/// When x = lower, the output will be approximately 0.379.
+/// Calculate the score (between 1 and 5) using a logistic function
+/// based on the given upper and lower values.
+/// When x = upper, the output will be approximately 4.523.
+/// When x = lower, the output will be approximately 1.477.
 fn calculate_score(x: f64, lower: f64, upper: f64) -> f64 {
-    let k = 5.0 / (upper - lower);
+    let k = 4.0 / (upper - lower);
     let x_0 = (upper + lower) / 2.0;
-    logistic_function(x, 5.0, k, x_0)
+    1.0 + logistic_function(x, 4.0, k, x_0)
 }
 
 impl Simulation {
-    /// Returns the calculated score (between 0 and 5) for each category.
+    /// Returns the calculated score (between 1 and 5) for each category.
     /// 1. Fun
     /// 2. Presentation
     /// 3. Theme Interpretation
@@ -43,5 +44,20 @@ impl Simulation {
         ];
         scores[5] = scores.iter().sum::<f64>() / 5.0;
         scores
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn calculate_score_test() {
+        // Low
+        assert_eq!(format!("{:.3}", calculate_score(-1.0, -1.0, 1.0)), "1.477");
+        // Midpoint
+        assert_eq!(format!("{:.3}", calculate_score(0.0, -1.0, 1.0)), "3.000");
+        // High
+        assert_eq!(format!("{:.3}", calculate_score(1.0, -1.0, 1.0)), "4.523");
     }
 }
