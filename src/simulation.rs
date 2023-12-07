@@ -23,7 +23,7 @@ impl Plugin for SimulationPlugin {
     }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct Simulation {
     pub upgrades: usize,
     pub lines: f64,
@@ -39,6 +39,28 @@ pub struct Simulation {
     pub entity_speed_min: f32,
     /// Maximum speed for new entities.
     pub entity_speed_max: f32,
+
+    /// Minimum size for new entities.
+    pub entity_size_min: f32,
+    /// Maximum size for new entities.
+    pub entity_size_max: f32,
+}
+
+impl Default for Simulation {
+    fn default() -> Self {
+        Self {
+            upgrades: 0,
+            lines: 0.0,
+            entities: 0.0,
+            tech_debt: 0.0,
+            fun_factor: 0.0,
+            presentation_factor: 0.0,
+            entity_speed_min: 0.0,
+            entity_speed_max: 0.0,
+            entity_size_min: 8.0,
+            entity_size_max: 8.0,
+        }
+    }
 }
 
 #[derive(Event, Reflect)]
@@ -59,6 +81,8 @@ fn spawn_entities(
         let angle = rng.gen_range(0.0..=TAU);
         let velocity = (speed * Vec2::from_angle(angle)).extend(-0.01);
 
+        let size = rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max);
+
         let entity = commands
             .spawn((
                 Name::new("Entity"),
@@ -70,7 +94,7 @@ fn spawn_entities(
                             blue: rng.gen_range(0.0..1.0),
                             alpha: 1.0,
                         },
-                        custom_size: Some(vec2(8.0, 8.0)),
+                        custom_size: Some(vec2(size, size)),
                         ..default()
                     },
                     transform: Transform::from_translation(event.0.extend(0.0)),

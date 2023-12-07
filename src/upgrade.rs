@@ -304,6 +304,9 @@ generate_upgrade_list!(
         ),
         ..default()
     },
+
+    // Upgrades that increase fun
+
     SpeedupPlugin: Upgrade {
         name: "SpeedupPlugin".to_string(),
         description: "Increases the entity movement speed. Increases the fun factor.".to_string(),
@@ -315,6 +318,21 @@ generate_upgrade_list!(
             world.register_system(|mut simulation: ResMut<Simulation>| {
                 simulation.entity_speed_min += 16.0;
                 simulation.entity_speed_max += 16.0;
+                simulation.fun_factor += 10.0;
+            }),
+        ),
+        ..default()
+    },
+    EntitySizePlugin: Upgrade {
+        name: "EntitySizePlugin".to_string(),
+        description: "Increases the maximum entity size. Increases the fun factor.".to_string(),
+        base_cost: 10.0,
+        cost_scale_factor: 1.2,
+        weight: 1.0,
+        remaining: 2,
+        install: Some(
+            world.register_system(|mut simulation: ResMut<Simulation>| {
+                simulation.entity_size_max += 4.0;
                 simulation.fun_factor += 10.0;
             }),
         ),
@@ -371,6 +389,25 @@ generate_upgrade_list!(
                 typer.chars_per_key *= 2;
             }
         })),
+        ..default()
+    },
+
+    // Misc
+
+    DesignDocument: Upgrade {
+        name: "Design Document".to_string(),
+        description: "Adds 1 extra upgrade slot.".to_string(),
+        upgrade_min: 7,
+        weight: 2.5,
+        base_cost: 20.0,
+        tech_debt: 0.0,
+        install: Some(
+            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
+                for mut container in &mut query {
+                    container.slots += 1;
+                }
+            }),
+        ),
         ..default()
     },
 );
