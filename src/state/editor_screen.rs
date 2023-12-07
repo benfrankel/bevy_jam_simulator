@@ -32,8 +32,6 @@ pub struct EditorScreenStatePlugin;
 impl Plugin for EditorScreenStatePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<EditorScreenAssets>()
-            .register_type::<EditorLayoutBounds>()
-            .init_resource::<EditorLayoutBounds>()
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
             .add_systems(OnExit(EditorScreen), exit_editor_screen)
@@ -99,19 +97,6 @@ pub struct EditorScreenConfig {
 #[reflect(Resource)]
 pub struct EditorScreenAssets {
     // TODO: Music / SFX, sprites
-}
-
-/// Contains the boundary information for the editor.
-#[derive(Resource, Reflect, Default)]
-pub struct EditorLayoutBounds {
-    /// Padding from the top edge.
-    pub top: f32,
-    /// Padding from the bottom edge.
-    pub bottom: f32,
-    /// Padding from the left edge.
-    pub left: f32,
-    /// Padding from the right edge.
-    pub right: f32,
 }
 
 fn enter_editor_screen(
@@ -206,27 +191,6 @@ pub fn spawn_editor_screen(
     let upgrade_panel = spawn_upgrade_panel(commands, theme, upgrade_list, simulation);
     commands.entity(upgrade_panel).set_parent(hbox);
 
-    // Note that insert_resource overwrites if the resource already exists.
-    // This could probably use Val::resolve instead of requiring Px, but that's ok.
-    commands.insert_resource(EditorLayoutBounds {
-        top: match theme.info_bar_height {
-            Val::Px(px) => px,
-            _ => panic!("info_bar_height must be defined in Px"),
-        },
-        bottom: match theme.code_panel_height {
-            Val::Px(px) => px,
-            _ => panic!("code_panel_height must be defined in Px"),
-        },
-        left: match theme.outline_panel_width {
-            Val::Px(px) => px,
-            _ => panic!("outline_panel_width must be defined in Px"),
-        },
-        right: match theme.upgrade_panel_width {
-            Val::Px(px) => px,
-            _ => panic!("upgrade_panel_width must be defined in Px"),
-        },
-    });
-
     editor_screen
 }
 
@@ -235,7 +199,6 @@ fn exit_editor_screen(
     root: Res<AppRoot>,
     mut transform_query: Query<&mut Transform>,
 ) {
-    commands.insert_resource(EditorLayoutBounds::default());
     commands.entity(root.ui).despawn_descendants();
     commands.entity(root.world).despawn_descendants();
 
