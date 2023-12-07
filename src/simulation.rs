@@ -19,8 +19,12 @@ impl Plugin for SimulationPlugin {
             .register_type::<IsEntityCap>()
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
+            .init_resource::<PassiveCodeGen>()
             .add_systems(Startup, spawn_entity_caps)
-            .add_systems(Update, spawn_entities.in_set(AppSet::Simulate));
+            .add_systems(
+                Update,
+                (spawn_entities, generate_passive_code).in_set(AppSet::Simulate),
+            );
     }
 }
 
@@ -126,4 +130,32 @@ fn spawn_entity_caps(mut commands: Commands) {
         OverflowDespawnQueue::new(HARD_CAP),
         IsEntityCap,
     ));
+}
+
+/// Resource for handling passive code generation.
+#[derive(Resource)]
+pub struct PassiveCodeGen {
+    pub timer: Timer,
+    pub increase: f64,
+}
+
+impl Default for PassiveCodeGen {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(2.0, TimerMode::Repeating),
+            increase: 0.0,
+        }
+    }
+}
+
+/// System for handling passive code generation.
+fn generate_passive_code(
+    time: Res<Time>,
+    mut passive_code_gen: ResMut<PassiveCodeGen>,
+    mut simulation: ResMut<Simulation>,
+) {
+    if passive_code_gen.timer.tick(time.delta()).just_finished() {
+        passive_code_gen.timer.reset();
+        simulation.lines += passive_code_gen.increase;
+    }
 }

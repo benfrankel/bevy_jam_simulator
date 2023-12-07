@@ -8,6 +8,7 @@ use rand::Rng;
 use strum::EnumCount;
 
 use crate::config::Config;
+use crate::simulation::PassiveCodeGen;
 use crate::simulation::Simulation;
 use crate::simulation::SpawnEvent;
 use crate::state::editor_screen::spawn_editor_screen;
@@ -415,6 +416,21 @@ generate_upgrade_list!(
             for mut typer in &mut typer_query {
                 typer.chars_per_key *= 2;
             }
+        })),
+        ..default()
+    },
+
+    // Passive code generation
+
+    ProceduralMacro: Upgrade {
+        name: "ProceduralMacroPlugin".to_string(),
+        description: "Periodically generates lines of code. By default, generates 1 line of code every 2 seconds.".to_string(),
+        base_cost: 50.0,
+        tech_debt: 1.0,
+        weight: 0.5,
+        remaining: 1,
+        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeGen>| {
+            passive_code_gen.increase = 1.0;
         })),
         ..default()
     },
