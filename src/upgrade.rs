@@ -41,6 +41,12 @@ pub struct Upgrade {
     pub name: String,
     /// The description of the upgrade. This will be shown as a tooltip.
     pub description: String,
+    /// How much this upgrade contributes to the Presentation score of your submission.
+    pub presentation_score: f32,
+    /// How much this upgrade contributes to the Theme Interpretation score of your submission.
+    pub theme_score: f32,
+    /// How much this upgrade contributes to the Fun score of your submission.
+    pub fun_score: f32,
 
     /// How many lines of code this upgrade costs (will increase with cost scaling)
     pub cost: f64,
@@ -64,6 +70,9 @@ impl Default for Upgrade {
         Self {
             name: "Unnamed".to_string(),
             description: "Undefined.".to_string(),
+            presentation_score: 0.0,
+            theme_score: 0.0,
+            fun_score: 0.0,
             cost: 0.0,
             cost_multiplier: 1.0,
             scales_costs: true,
