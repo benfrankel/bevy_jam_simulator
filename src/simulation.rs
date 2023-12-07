@@ -49,11 +49,6 @@ pub struct Simulation {
     /// Presentation factor, determines the score.
     pub presentation_factor: f64,
 
-    /// Minimum speed for new entities.
-    pub entity_speed_min: f32,
-    /// Maximum speed for new entities.
-    pub entity_speed_max: f32,
-
     /// Minimum size for new entities.
     pub entity_size_min: f32,
     /// Maximum size for new entities.
@@ -72,8 +67,6 @@ impl Default for Simulation {
             tech_debt: 0.0,
             fun_factor: 0.0,
             presentation_factor: 0.0,
-            entity_speed_min: 0.0,
-            entity_speed_max: 0.0,
             entity_size_min: 8.0,
             entity_size_max: 8.0,
             entity_colors: vec![
@@ -98,7 +91,7 @@ fn spawn_entities(
     for event in events.read() {
         simulation.entities += 1.0;
 
-        let speed = rng.gen_range(simulation.entity_speed_min..=simulation.entity_speed_max);
+        let speed = rng.gen_range(0.5..=1.5);
         let angle = rng.gen_range(0.0..=TAU);
         let velocity = (speed * Vec2::from_angle(angle)).extend(-0.01);
 

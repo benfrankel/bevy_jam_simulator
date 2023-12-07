@@ -9,6 +9,8 @@ use rand::Rng;
 use strum::EnumCount;
 
 use crate::config::Config;
+use crate::physics::PhysicsSettings;
+use crate::physics::UNIT_SPEED;
 use crate::simulation::PassiveCodeGen;
 use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
@@ -271,13 +273,13 @@ generate_upgrade_list!(
         description: "Allows entities to move. Makes your game more fun.".to_string(),
         fun_score: 1.0,
         base_cost: 5.0,
-        install: Some(
-            world.register_system(|mut simulation: ResMut<Simulation>| {
-                simulation.entity_speed_min = 8.0;
-                simulation.entity_speed_max = 16.0;
-                simulation.fun_factor += 5.0;
-            }),
-        ),
+        install: Some(world.register_system(|
+            mut physics_settings: ResMut<PhysicsSettings>,
+            mut simulation: ResMut<Simulation>,
+        | {
+            physics_settings.speed_multiplier = UNIT_SPEED;
+            simulation.fun_factor += 5.0;
+        })),
         ..default()
     },
     Brainstorm: Upgrade {
@@ -346,13 +348,13 @@ generate_upgrade_list!(
         cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: 5,
-        install: Some(
-            world.register_system(|mut simulation: ResMut<Simulation>| {
-                simulation.entity_speed_min += 16.0;
-                simulation.entity_speed_max += 16.0;
-                simulation.fun_factor += 10.0;
-            }),
-        ),
+        install: Some(world.register_system(|
+            mut physics_settings: ResMut<PhysicsSettings>,
+            mut simulation: ResMut<Simulation>,
+        | {
+            physics_settings.speed_multiplier += UNIT_SPEED;
+            simulation.fun_factor += 10.0;
+        })),
         ..default()
     },
     EntitySizePlugin: Upgrade {
