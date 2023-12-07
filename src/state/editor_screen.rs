@@ -12,6 +12,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
+use crate::simulation::Simulation;
 use crate::state::editor_screen::code_panel::spawn_light_code_panel;
 use crate::state::editor_screen::info_bar::spawn_info_bar;
 use crate::state::editor_screen::outline_panel::spawn_outline_panel;
@@ -118,18 +119,21 @@ fn enter_editor_screen(
     root: Res<AppRoot>,
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
+    simulation: Res<Simulation>,
 ) {
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
 
-    let editor_screen = spawn_editor_screen(&mut commands, config, &upgrade_list, true);
+    let editor_screen =
+        spawn_editor_screen(&mut commands, config, &upgrade_list, &simulation, true);
     commands.entity(editor_screen).set_parent(root.ui);
 }
 
 pub fn spawn_editor_screen(
     commands: &mut Commands,
     config: &EditorScreenConfig,
-    upgrade_list: &Res<UpgradeList>,
+    upgrade_list: &UpgradeList,
+    simulation: &Simulation,
     light_theme: bool,
 ) -> Entity {
     let theme = if light_theme {
@@ -199,7 +203,7 @@ pub fn spawn_editor_screen(
     };
     commands.entity(code_panel).set_parent(vbox);
 
-    let upgrade_panel = spawn_upgrade_panel(commands, theme, upgrade_list);
+    let upgrade_panel = spawn_upgrade_panel(commands, theme, upgrade_list, simulation);
     commands.entity(upgrade_panel).set_parent(hbox);
 
     // Note that insert_resource overwrites if the resource already exists.

@@ -95,7 +95,7 @@ fn spawn_outline_entry(
     upgrade_list: &UpgradeList,
     upgrade_kind: UpgradeKind,
 ) -> Entity {
-    let upgrade = upgrade_list.get(upgrade_kind);
+    let upgrade = &upgrade_list[upgrade_kind];
 
     let outline_entry = commands
         .spawn((

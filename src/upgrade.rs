@@ -1,3 +1,6 @@
+use std::ops::Index;
+use std::ops::IndexMut;
+
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
@@ -25,14 +28,9 @@ impl Plugin for UpgradePlugin {
             .add_systems(Startup, load_upgrade_list)
             .add_systems(
                 Update,
-                (
-                    (install_upgrades, run_installed_upgrades, apply_deferred)
-                        .chain()
-                        .in_set(AppSet::RunUpgrades),
-                    apply_cost_scaling
-                        .in_set(AppSet::Simulate)
-                        .run_if(on_event::<UpgradeEvent>()),
-                ),
+                (install_upgrades, run_installed_upgrades, apply_deferred)
+                    .chain()
+                    .in_set(AppSet::RunUpgrades),
             );
     }
 }
@@ -49,12 +47,12 @@ pub struct Upgrade {
     /// How much this upgrade contributes to the Fun score of your submission.
     pub fun_score: f32,
 
-    /// How many lines of code this upgrade costs (will increase with cost scaling).
-    pub cost: f64,
-    /// The cost scaling multiplier for this upgrade.
-    pub cost_multiplier: f64,
-    /// Whether enabling this upgrade causes cost scaling.
-    pub scales_costs: bool,
+    /// How many lines of code this upgrade costs without tech debt scaling.
+    pub base_cost: f64,
+    /// The multiplier to the cost of this upgrade per unit of technical debt.
+    pub cost_scale_factor: f64,
+    /// The amount of technical debt this upgrade adds when you install it.
+    pub tech_debt: f64,
     /// The relative odds of this upgrade being offered.
     pub weight: f32,
     /// How many more copies of this upgrade can be installed.
@@ -89,9 +87,9 @@ impl Default for Upgrade {
             theme_score: 0.0,
             fun_score: 0.0,
 
-            cost: 0.0,
-            cost_multiplier: 1.0,
-            scales_costs: true,
+            base_cost: 0.0,
+            cost_scale_factor: 1.0,
+            tech_debt: 1.0,
             weight: 0.0,
             remaining: 1,
             entity_min: 0.0,
@@ -119,6 +117,10 @@ impl Upgrade {
                 .iter()
                 .all(|(kind, count)| outline.0.get(kind).is_some_and(|x| x >= count))
     }
+
+    pub fn cost(&self, simulation: &Simulation) -> f64 {
+        (self.base_cost * self.cost_scale_factor.powf(simulation.tech_debt)).floor()
+    }
 }
 
 #[derive(Event, Reflect, Clone, Copy)]
@@ -130,9 +132,9 @@ fn install_upgrades(world: &mut World, mut reader: Local<ManualEventReader<Upgra
         .copied()
         .collect::<Vec<_>>()
     {
-        let &Upgrade {
+        let Upgrade {
             install, update, ..
-        } = world.resource::<UpgradeList>().get(event.0);
+        } = world.resource::<UpgradeList>()[event.0];
         if let Some(install) = install {
             world.run_system(install).unwrap();
         }
@@ -152,32 +154,20 @@ fn run_installed_upgrades(world: &mut World) {
     }
 }
 
-fn apply_cost_scaling(
-    mut events: EventReader<UpgradeEvent>,
-    mut upgrade_list: ResMut<UpgradeList>,
-) {
-    let count = events
-        .read()
-        .filter(|event| upgrade_list.get(event.0).scales_costs)
-        .count();
-    if count == 0 {
-        return;
-    }
-
-    for upgrade in &mut upgrade_list.0 {
-        // Count will always be 1 or very small, so powf would be overkill
-        for _ in 0..count {
-            upgrade.cost *= upgrade.cost_multiplier;
-        }
-    }
-}
-
 #[derive(Resource, Default)]
 pub struct UpgradeList(pub Vec<Upgrade>);
 
-impl UpgradeList {
-    pub fn get(&self, kind: UpgradeKind) -> &Upgrade {
-        &self.0[kind as usize]
+impl Index<UpgradeKind> for UpgradeList {
+    type Output = Upgrade;
+
+    fn index(&self, index: UpgradeKind) -> &Self::Output {
+        &self.0[index as usize]
+    }
+}
+
+impl IndexMut<UpgradeKind> for UpgradeList {
+    fn index_mut(&mut self, index: UpgradeKind) -> &mut Self::Output {
+        &mut self.0[index as usize]
     }
 }
 
@@ -220,15 +210,16 @@ generate_upgrade_list!(
     DarkMode: Upgrade {
         name: "Dark Mode".to_string(),
         description: "Rite of passage for all developers. Required to write code.".to_string(),
-        scales_costs: false,
+        tech_debt: 0.0,
         install: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
             config: Res<Config>,
             upgrade_list: Res<UpgradeList>,
+            simulation: Res<Simulation>,
         | {
             commands.entity(root.ui).despawn_descendants();
-            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, false);
+            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, &simulation, false);
             commands.entity(editor_screen).set_parent(root.ui);
         })),
         ..default()
@@ -236,8 +227,8 @@ generate_upgrade_list!(
     TouchOfLifePlugin: Upgrade {
         name: "TouchOfLifePlugin".to_string(),
         description: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
-        scales_costs: false,
-        cost: 5.0,
+        tech_debt: 0.0,
+        base_cost: 5.0,
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
                 for mut scene_view in &mut scene_view_query {
@@ -250,7 +241,7 @@ generate_upgrade_list!(
     Brainstorm: Upgrade {
         name: "Brainstorm".to_string(),
         description: "Adds 1 extra upgrade slot.".to_string(),
-        scales_costs: false,
+        tech_debt: 0.0,
         install: Some(
             world.register_system(|mut query: Query<&mut UpgradeContainer>| {
                 for mut container in &mut query {
@@ -263,8 +254,8 @@ generate_upgrade_list!(
     SplashOfLifePlugin: Upgrade {
         name: "SplashOfLifePlugin".to_string(),
         description: "Spawns 32 entities immediately.".to_string(),
-        cost: 1.0,
-        cost_multiplier: 1.2,
+        base_cost: 1.0,
+        cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: usize::MAX,
         install: Some(
@@ -279,8 +270,8 @@ generate_upgrade_list!(
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
         description: "Writes 10 lines of code immediately.".to_string(),
-        cost: 1.0,
-        scales_costs: false,
+        base_cost: 1.0,
+        tech_debt: 0.0,
         weight: 1.0,
         remaining: usize::MAX,
         install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {

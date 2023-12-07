@@ -46,6 +46,7 @@ pub fn spawn_upgrade_panel(
     commands: &mut Commands,
     theme: &EditorScreenTheme,
     upgrade_list: &UpgradeList,
+    simulation: &Simulation,
 ) -> Entity {
     let upgrade_panel = commands
         .spawn((
@@ -101,7 +102,13 @@ pub fn spawn_upgrade_panel(
         .set_parent(upgrade_panel)
         .id();
 
-    let upgrade_button = spawn_upgrade_button(commands, theme, upgrade_list, INITIAL_UPGRADES[0]);
+    let upgrade_button = spawn_upgrade_button(
+        commands,
+        theme,
+        upgrade_list,
+        INITIAL_UPGRADES[0],
+        simulation,
+    );
     commands
         .entity(upgrade_button)
         .set_parent(upgrade_container);
@@ -134,9 +141,10 @@ fn spawn_upgrade_button(
     theme: &EditorScreenTheme,
     upgrade_list: &UpgradeList,
     upgrade_kind: UpgradeKind,
+    simulation: &Simulation,
 ) -> Entity {
-    let upgrade = upgrade_list.get(upgrade_kind);
-    let cost = upgrade.cost.floor();
+    let upgrade = &upgrade_list[upgrade_kind];
+    let cost = upgrade.cost(simulation);
 
     let upgrade_button = commands
         .spawn((
@@ -269,8 +277,7 @@ fn update_upgrade_button_disabled(
     mut button_query: Query<(&UpgradeButton, &mut Disabled)>,
 ) {
     for (button, mut disabled) in &mut button_query {
-        let upgrade = upgrade_list.get(button.0);
-        disabled.0 = simulation.lines < upgrade.cost.floor();
+        disabled.0 = simulation.lines < upgrade_list[button.0].cost(&simulation);
     }
 }
 
@@ -305,7 +312,7 @@ impl UpgradeSequence {
         while self.next_idx < self.sequence.len() {
             self.next_idx += 1;
             let kind = self.sequence[self.next_idx - 1];
-            if upgrade_list.get(kind).is_unlocked(simulation, outline) {
+            if upgrade_list[kind].is_unlocked(simulation, outline) {
                 return Some(kind);
             }
         }
@@ -331,8 +338,13 @@ fn replace_available_upgrades(
         }
 
         let mut add_upgrade = |upgrade_kind: UpgradeKind| {
-            let upgrade_button =
-                spawn_upgrade_button(&mut commands, theme, &upgrade_list, upgrade_kind);
+            let upgrade_button = spawn_upgrade_button(
+                &mut commands,
+                theme,
+                &upgrade_list,
+                upgrade_kind,
+                &simulation,
+            );
             commands.entity(upgrade_button).set_parent(entity);
         };
 
@@ -349,20 +361,18 @@ fn replace_available_upgrades(
         // Filter the list of all upgrade kinds into just the ones that are unlocked
         let unlocked_upgrades = ALL_UPGRADE_KINDS
             .into_iter()
-            .filter(|&kind| upgrade_list.get(kind).is_unlocked(&simulation, &outline))
+            .filter(|&kind| upgrade_list[kind].is_unlocked(&simulation, &outline))
             .collect::<Vec<_>>();
 
         // Choose the next upgrades for the remaining slots randomly (weighted)
         let mut next_upgrades = unlocked_upgrades
-            .choose_multiple_weighted(&mut thread_rng(), slots, |&kind| {
-                upgrade_list.get(kind).weight
-            })
+            .choose_multiple_weighted(&mut thread_rng(), slots, |&kind| upgrade_list[kind].weight)
             .unwrap()
             .collect::<Vec<_>>();
 
         // Sort by name
         // TODO: Sort some other way? Don't sort?
-        next_upgrades.sort_by_key(|&&kind| &upgrade_list.get(kind).name);
+        next_upgrades.sort_by_key(|&&kind| &upgrade_list[kind].name);
 
         for &kind in next_upgrades {
             add_upgrade(kind);
