@@ -91,7 +91,7 @@ fn spawn_entities(
 #[derive(Component, Reflect)]
 struct IsEntityCap;
 
-const HARD_CAP: usize = 1000;
+const HARD_CAP: usize = 10_000;
 
 fn spawn_entity_caps(mut commands: Commands) {
     commands.spawn((
