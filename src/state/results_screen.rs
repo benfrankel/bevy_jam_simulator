@@ -158,21 +158,7 @@ fn enter_results_screen(
             .set_parent(cell);
     }
 
-    // TODO: These must be between 0 and 5.
-    let scores: [f64; 6] = [
-        // Fun
-        simulation.fun_factor,
-        // Presentation
-        simulation.presentation_factor,
-        // Theme Interpretation
-        simulation.entities,
-        // Entities
-        simulation.entities,
-        // Lines of Code
-        simulation.lines,
-        // TODO: Overall
-        0.0,
-    ];
+    let scores: [f64; 6] = simulation.calculate_scores();
     for (row, (&criterion, score)) in TABLE_CRITERIA_TEXT
         .iter()
         .zip(scores.into_iter())

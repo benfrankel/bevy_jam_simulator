@@ -12,6 +12,8 @@ use crate::util::OverflowDespawnQueue;
 use crate::AppRoot;
 use crate::AppSet;
 
+mod score;
+
 pub struct SimulationPlugin;
 
 impl Plugin for SimulationPlugin {
