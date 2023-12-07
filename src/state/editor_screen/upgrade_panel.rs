@@ -329,9 +329,8 @@ fn replace_available_upgrades(
             commands.entity(upgrade_button).set_parent(entity);
         };
 
-        let mut slots = container.slots;
-
         // Try to fill slots from the initial sequence of upgrades first
+        let mut slots = container.slots;
         while slots > 0 {
             let Some(kind) = upgrade_sequence.next(&upgrade_list, &simulation) else {
                 break;
@@ -346,13 +345,19 @@ fn replace_available_upgrades(
             .filter(|&kind| upgrade_list.get(kind).is_unlocked(&simulation))
             .collect::<Vec<_>>();
 
-        // Fill the remaining upgrade slots randomly (weighted) from the list of unlocked upgrades
-        for &kind in unlocked_upgrades
+        // Choose the next upgrades for the remaining slots randomly (weighted)
+        let mut next_upgrades = unlocked_upgrades
             .choose_multiple_weighted(&mut thread_rng(), slots, |&kind| {
                 upgrade_list.get(kind).weight
             })
             .unwrap()
-        {
+            .collect::<Vec<_>>();
+
+        // Sort by name
+        // TODO: Sort some other way? Don't sort?
+        next_upgrades.sort_by_key(|&&kind| &upgrade_list.get(kind).name);
+
+        for &kind in next_upgrades {
             add_upgrade(kind);
         }
     }
