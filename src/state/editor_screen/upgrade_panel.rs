@@ -295,12 +295,12 @@ impl Default for UpgradeSequence {
 }
 
 impl UpgradeSequence {
-    fn next(&mut self, upgrade_list: &UpgradeList) -> Option<UpgradeKind> {
+    fn next(&mut self, upgrade_list: &UpgradeList, simulation: &Simulation) -> Option<UpgradeKind> {
         while self.next_idx < self.sequence.len() {
             self.next_idx += 1;
-            let upgrade_kind = self.sequence[self.next_idx - 1];
-            if upgrade_list.get(upgrade_kind).remaining > 0 {
-                return Some(upgrade_kind);
+            let kind = self.sequence[self.next_idx - 1];
+            if upgrade_list.get(kind).is_unlocked(simulation) {
+                return Some(kind);
             }
         }
         None
@@ -313,10 +313,12 @@ fn replace_available_upgrades(
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
     mut upgrade_sequence: ResMut<UpgradeSequence>,
+    simulation: Res<Simulation>,
     container_query: Query<(Entity, &Children, &UpgradeContainer)>,
 ) {
     let theme = &config.editor_screen.dark_theme;
     for (entity, buttons, container) in &container_query {
+        // Despawn old upgrade options
         for &button in buttons {
             despawn.recursive(button);
         }
@@ -327,36 +329,31 @@ fn replace_available_upgrades(
             commands.entity(upgrade_button).set_parent(entity);
         };
 
-        let mut remaining_upgrades = container.slots;
+        let mut slots = container.slots;
 
-        // Initial sequence of upgrades, and then randomly chosen upgrades (weighted)
-        if let Some(upgrade_kind) = upgrade_sequence.next(&upgrade_list) {
-            add_upgrade(upgrade_kind);
-            remaining_upgrades -= 1;
-            if remaining_upgrades == 0 {
-                continue;
-            }
+        // Try to fill slots from the initial sequence of upgrades first
+        while slots > 0 {
+            let Some(kind) = upgrade_sequence.next(&upgrade_list, &simulation) else {
+                break;
+            };
+            add_upgrade(kind);
+            slots -= 1;
         }
 
-        let selected_upgrades = ALL_UPGRADE_KINDS.choose_multiple_weighted(
-            &mut thread_rng(),
-            remaining_upgrades,
-            |&kind| {
-                let upgrade = upgrade_list.get(kind);
-                if upgrade.remaining > 0 {
-                    upgrade.weight
-                } else {
-                    0.0
-                }
-            },
-        );
-        match selected_upgrades {
-            Ok(selected_upgrades) => {
-                for upgrade_kind in selected_upgrades {
-                    add_upgrade(*upgrade_kind);
-                }
-            },
-            Err(error) => error!("Failed to choose random upgrade(s): {:?}", error),
+        // Filter the list of all upgrade kinds into just the ones that are unlocked
+        let unlocked_upgrades = ALL_UPGRADE_KINDS
+            .into_iter()
+            .filter(|&kind| upgrade_list.get(kind).is_unlocked(&simulation))
+            .collect::<Vec<_>>();
+
+        // Fill the remaining upgrade slots randomly (weighted) from the list of unlocked upgrades
+        for &kind in unlocked_upgrades
+            .choose_multiple_weighted(&mut thread_rng(), slots, |&kind| {
+                upgrade_list.get(kind).weight
+            })
+            .unwrap()
+        {
+            add_upgrade(kind);
         }
     }
 }

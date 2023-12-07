@@ -82,7 +82,7 @@ pub enum AppSet {
     Tick,
     /// Handle input
     Input,
-    /// Enable / update upgrades
+    /// Install and run upgrades
     RunUpgrades,
     /// Step the simulation
     Simulate,

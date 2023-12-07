@@ -20,12 +20,12 @@ impl Plugin for UpgradePlugin {
         app.register_type::<UpgradeEvent>()
             .add_event::<UpgradeEvent>()
             .init_resource::<UpgradeList>()
-            .init_resource::<ActiveUpgrades>()
+            .init_resource::<UpgradeUpdateSystems>()
             .add_systems(Startup, load_upgrade_list)
             .add_systems(
                 Update,
                 (
-                    (enable_upgrades, run_active_upgrades, apply_deferred)
+                    (install_upgrades, run_installed_upgrades, apply_deferred)
                         .chain()
                         .in_set(AppSet::RunUpgrades),
                     apply_cost_scaling
@@ -48,20 +48,32 @@ pub struct Upgrade {
     /// How much this upgrade contributes to the Fun score of your submission.
     pub fun_score: f32,
 
-    /// How many lines of code this upgrade costs (will increase with cost scaling)
+    /// How many lines of code this upgrade costs (will increase with cost scaling).
     pub cost: f64,
     /// The cost scaling multiplier for this upgrade.
     pub cost_multiplier: f64,
     /// Whether enabling this upgrade causes cost scaling.
     pub scales_costs: bool,
-    /// The relative odds of this upgrade being offered
+    /// The relative odds of this upgrade being offered.
     pub weight: f32,
-    /// How many more copies of this upgrade can be enabled
+    /// How many more copies of this upgrade can be installed.
     pub remaining: usize,
+    /// The minimum number of entities required for this upgrade to be offered.
+    pub entity_min: f64,
+    /// The maximum number of entities allowed for this upgrade to be offered.
+    pub entity_max: f64,
+    /// The minimum number of lines of code required for this upgrade to be offered.
+    pub line_min: f64,
+    /// The maximum number of lines of code allowed for this upgrade to be offered.
+    pub line_max: f64,
+    /// The minimum number of installed upgrades required for this upgrade to be offered.
+    pub upgrade_min: usize,
+    /// The maximum number of installed upgrades allowed for this upgrade to be offered.
+    pub upgrade_max: usize,
 
-    /// A one-shot system that runs whenever a copy of this upgrade is enabled
-    pub enable: Option<SystemId>,
-    /// A one-shot system that runs every frame for each active copy of this upgrade
+    /// A one-shot system that runs whenever a copy of this upgrade is installed.
+    pub install: Option<SystemId>,
+    /// A one-shot system that runs every frame for each installed copy of this upgrade.
     pub update: Option<SystemId>,
 }
 
@@ -73,42 +85,61 @@ impl Default for Upgrade {
             presentation_score: 0.0,
             theme_score: 0.0,
             fun_score: 0.0,
+
             cost: 0.0,
             cost_multiplier: 1.0,
             scales_costs: true,
             weight: 0.0,
             remaining: 1,
-            enable: None,
+            entity_min: 0.0,
+            entity_max: f64::INFINITY,
+            line_min: 0.0,
+            line_max: f64::INFINITY,
+            upgrade_min: 0,
+            upgrade_max: usize::MAX,
+
+            install: None,
             update: None,
         }
+    }
+}
+
+impl Upgrade {
+    pub fn is_unlocked(&self, simulation: &Simulation) -> bool {
+        self.remaining > 0
+            && (self.entity_min <= simulation.entities && simulation.entities <= self.entity_max)
+            && (self.line_min <= simulation.lines && simulation.lines <= self.line_max)
+            && (self.upgrade_min <= simulation.upgrades && simulation.upgrades <= self.upgrade_max)
     }
 }
 
 #[derive(Event, Reflect, Clone, Copy)]
 pub struct UpgradeEvent(pub UpgradeKind);
 
-fn enable_upgrades(world: &mut World, mut reader: Local<ManualEventReader<UpgradeEvent>>) {
+fn install_upgrades(world: &mut World, mut reader: Local<ManualEventReader<UpgradeEvent>>) {
     for event in reader
         .read(world.resource::<Events<_>>())
         .copied()
         .collect::<Vec<_>>()
     {
-        let &Upgrade { enable, update, .. } = world.resource::<UpgradeList>().get(event.0);
-        if let Some(enable) = enable {
-            world.run_system(enable).unwrap();
+        let &Upgrade {
+            install, update, ..
+        } = world.resource::<UpgradeList>().get(event.0);
+        if let Some(install) = install {
+            world.run_system(install).unwrap();
         }
         if let Some(update) = update {
-            world.resource_mut::<ActiveUpgrades>().0.push(update);
+            world.resource_mut::<UpgradeUpdateSystems>().0.push(update);
         }
     }
 }
 
 #[derive(Resource, Default)]
-struct ActiveUpgrades(Vec<SystemId>);
+struct UpgradeUpdateSystems(Vec<SystemId>);
 
-fn run_active_upgrades(world: &mut World) {
+fn run_installed_upgrades(world: &mut World) {
     #[allow(clippy::unnecessary_to_owned)]
-    for update in world.resource::<ActiveUpgrades>().0.to_vec() {
+    for update in world.resource::<UpgradeUpdateSystems>().0.to_vec() {
         world.run_system(update).unwrap();
     }
 }
@@ -182,7 +213,7 @@ generate_upgrade_list!(
         name: "Dark Mode".to_string(),
         description: "Rite of passage for all developers. Required to write code.".to_string(),
         scales_costs: false,
-        enable: Some(world.register_system(|
+        install: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
             config: Res<Config>,
@@ -199,7 +230,7 @@ generate_upgrade_list!(
         description: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
         scales_costs: false,
         cost: 5.0,
-        enable: Some(
+        install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
                 for mut scene_view in &mut scene_view_query {
                     scene_view.spawns_per_click += 1;
@@ -212,7 +243,7 @@ generate_upgrade_list!(
         name: "Brainstorm".to_string(),
         description: "Adds 1 extra upgrade slot.".to_string(),
         scales_costs: false,
-        enable: Some(
+        install: Some(
             world.register_system(|mut query: Query<&mut UpgradeContainer>| {
                 for mut container in &mut query {
                     container.slots += 1;
@@ -228,7 +259,7 @@ generate_upgrade_list!(
         cost_multiplier: 1.2,
         weight: 1.0,
         remaining: usize::MAX,
-        enable: Some(
+        install: Some(
             world.register_system(|mut events: EventWriter<SpawnEvent>, bounds: Res<SceneViewBounds>| {
                 for _ in 0..32 {
                     events.send(SpawnEvent((bounds.min.xy() + bounds.max.xy()) / 2.0));
@@ -244,7 +275,7 @@ generate_upgrade_list!(
         scales_costs: false,
         weight: 1.0,
         remaining: usize::MAX,
-        enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
             simulation.lines += 10.0;
         })),
         ..default()
