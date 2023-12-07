@@ -14,6 +14,7 @@ use crate::state::editor_screen::SceneView;
 use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::UpgradeContainer;
 use crate::state::editor_screen::UpgradeOutline;
+use crate::ui::CodeTyper;
 use crate::AppRoot;
 use crate::AppSet;
 
@@ -286,6 +287,18 @@ generate_upgrade_list!(
         tech_debt: -5.0,
         weight: 1.0,
         remaining: usize::MAX,
+        ..default()
+    },
+    TenXDev: Upgrade {
+        name: "10x Dev".to_string(),
+        description: "Multiplies the number of characters typed per key press by 10.".to_string(),
+        base_cost: 50.0,
+        weight: 0.5,
+        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
+            for mut typer in &mut typer_query {
+                typer.chars_per_key *= 10;
+            }
+        })),
         ..default()
     }
 );
