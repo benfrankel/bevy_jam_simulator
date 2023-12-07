@@ -69,6 +69,9 @@ impl DespawnSet {
 
 fn apply_despawn_set(mut commands: Commands, mut despawn: ResMut<DespawnSet>) {
     for entity in despawn.0.drain() {
-        commands.entity(entity).despawn_recursive();
+        if let Some(entity) = commands.get_entity(entity) {
+            entity.despawn_recursive();
+        }
+        // Silently fail if the entity does not exist anymore.
     }
 }
