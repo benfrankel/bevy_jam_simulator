@@ -29,6 +29,11 @@ pub struct Simulation {
     pub lines: f64,
     pub entities: f64,
     pub tech_debt: f64,
+
+    /// Minimum speed for new entities.
+    pub entity_speed_min: f32,
+    /// Maximum speed for new entities.
+    pub entity_speed_max: f32,
 }
 
 #[derive(Event, Reflect)]
@@ -45,7 +50,7 @@ fn spawn_entities(
     for event in events.read() {
         simulation.entities += 1.0;
 
-        let speed = rng.gen_range(10.0..=60.0);
+        let speed = rng.gen_range(simulation.entity_speed_min..=simulation.entity_speed_max);
         let angle = rng.gen_range(0.0..=TAU);
         let velocity = (speed * Vec2::from_angle(angle)).extend(-0.01);
 

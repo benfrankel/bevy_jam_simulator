@@ -196,9 +196,10 @@ impl IndexMut<UpgradeKind> for UpgradeList {
 }
 
 /// The initial sequence of upgrades.
-pub const INITIAL_UPGRADES: [UpgradeKind; 5] = [
+pub const INITIAL_UPGRADES: [UpgradeKind; 6] = [
     UpgradeKind::DarkMode,
     UpgradeKind::TouchOfLifePlugin,
+    UpgradeKind::MovementPlugin,
     UpgradeKind::SplashOfLifePlugin,
     UpgradeKind::Brainstorm,
     UpgradeKind::ImportLibrary,
@@ -257,6 +258,18 @@ generate_upgrade_list!(
                 for mut scene_view in &mut scene_view_query {
                     scene_view.spawns_per_click += 1;
                 }
+            }),
+        ),
+        ..default()
+    },
+    MovementPlugin: Upgrade {
+        name: "MovementPlugin".to_string(),
+        description: "Allows the entities to move.".to_string(),
+        base_cost: 5.0,
+        install: Some(
+            world.register_system(|mut simulation: ResMut<Simulation>| {
+                simulation.entity_speed_min = 8.0;
+                simulation.entity_speed_max = 16.0;
             }),
         ),
         ..default()
