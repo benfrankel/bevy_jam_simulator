@@ -2,6 +2,7 @@ use std::f32::consts::TAU;
 
 use bevy::math::vec2;
 use bevy::prelude::*;
+use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::physics::Velocity;
@@ -44,6 +45,9 @@ pub struct Simulation {
     pub entity_size_min: f32,
     /// Maximum size for new entities.
     pub entity_size_max: f32,
+
+    /// List of colors that the new entities can have.
+    pub entity_colors: Vec<Color>,
 }
 
 impl Default for Simulation {
@@ -59,6 +63,10 @@ impl Default for Simulation {
             entity_speed_max: 0.0,
             entity_size_min: 8.0,
             entity_size_max: 8.0,
+            entity_colors: vec![
+                Color::rgba(0.0, 0.0, 0.0, 1.0),
+                Color::rgba(1.0, 1.0, 1.0, 1.0),
+            ],
         }
     }
 }
@@ -88,12 +96,7 @@ fn spawn_entities(
                 Name::new("Entity"),
                 SpriteBundle {
                     sprite: Sprite {
-                        color: Color::Rgba {
-                            red: rng.gen_range(0.0..1.0),
-                            green: rng.gen_range(0.0..1.0),
-                            blue: rng.gen_range(0.0..1.0),
-                            alpha: 1.0,
-                        },
+                        color: *simulation.entity_colors.choose(&mut rng).unwrap(),
                         custom_size: Some(vec2(size, size)),
                         ..default()
                     },

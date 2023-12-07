@@ -4,6 +4,7 @@ use std::ops::IndexMut;
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
+use rand::Rng;
 use strum::EnumCount;
 
 use crate::config::Config;
@@ -300,6 +301,32 @@ generate_upgrade_list!(
                 for _ in 0..32 {
                     events.send(SpawnEvent((bounds.min.xy() + bounds.max.xy()) / 2.0));
                 }
+            }),
+        ),
+        ..default()
+    },
+
+    // Upgrades that increase presentation
+
+    EntitySkinPlugin: Upgrade {
+        name: "EntitySkinPlugin".to_string(),
+        description: "Adds a new entity skin with a random color.".to_string(),
+        base_cost: 10.0,
+        cost_scale_factor: 1.2,
+        weight: 1.0,
+        remaining: 5,
+        install: Some(
+            world.register_system(|mut simulation: ResMut<Simulation>| {
+                let mut rng = rand::thread_rng();
+                simulation.entity_colors.push(
+                    Color::Rgba {
+                        red: rng.gen_range(0.0..1.0),
+                        green: rng.gen_range(0.0..1.0),
+                        blue: rng.gen_range(0.0..1.0),
+                        alpha: 1.0,
+                    }
+                );
+                simulation.presentation_factor += 10.0;
             }),
         ),
         ..default()
