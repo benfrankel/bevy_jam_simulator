@@ -406,7 +406,7 @@ generate_upgrade_list!(
         requirements: vec![(UpgradeKind::EntitySpawner, 1)],
         base_cost: 100.0,
         cost_scale_factor: 1.2,
-        tech_debt: 0.0,
+        tech_debt: 2.0,
         weight: 0.5,
         remaining: 8,
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
