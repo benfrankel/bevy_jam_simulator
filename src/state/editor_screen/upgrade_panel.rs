@@ -172,7 +172,24 @@ fn spawn_upgrade_button(
                 disabled: theme.upgrade_button_disabled_color,
             },
             Tooltip {
-                text: upgrade.description.clone(),
+                // I have created technical debt to display the technical debt
+                text: format!(
+                    "{}{}",
+                    &upgrade.description,
+                    if upgrade.tech_debt == 0.0 {
+                        "".to_string()
+                    } else {
+                        format!(
+                            "\n\n{} technical debt by {}.",
+                            if upgrade.tech_debt > 0.0 {
+                                "Increases"
+                            } else {
+                                "Decreases"
+                            },
+                            upgrade.tech_debt.abs(),
+                        )
+                    }
+                ),
                 side: TooltipSide::Left,
                 offset: vec2(-12.0, 0.0),
             },

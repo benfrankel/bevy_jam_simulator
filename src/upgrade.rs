@@ -227,7 +227,6 @@ generate_upgrade_list!(
     TouchOfLifePlugin: Upgrade {
         name: "TouchOfLifePlugin".to_string(),
         description: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
-        tech_debt: 0.0,
         base_cost: 5.0,
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
