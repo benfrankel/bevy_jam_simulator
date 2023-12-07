@@ -42,11 +42,10 @@ pub struct ResultsScreenConfig {
 
 const TITLE_TEXT: &str = "Results";
 const TABLE_HEADER_TEXT: [&str; 4] = ["Criteria", "Rank", "Score", "Raw Score"];
-const TABLE_CRITERIA_TEXT: [&str; 6] = [
+const TABLE_CRITERIA_TEXT: [&str; 5] = [
     "Fun",
     "Presentation",
     "Theme Interpretation",
-    "Entities",
     "Lines of Code",
     "Overall",
 ];
@@ -158,7 +157,7 @@ fn enter_results_screen(
             .set_parent(cell);
     }
 
-    let scores: [f64; 6] = simulation.calculate_scores();
+    let scores: [f64; 5] = simulation.calculate_scores();
     for (row, (&criterion, score)) in TABLE_CRITERIA_TEXT
         .iter()
         .zip(scores.into_iter())

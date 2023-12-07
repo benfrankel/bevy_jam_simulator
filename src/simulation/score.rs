@@ -24,25 +24,22 @@ impl Simulation {
     /// 1. Fun
     /// 2. Presentation
     /// 3. Theme Interpretation
-    /// 4. Entities
-    /// 5. Lines of Code
-    /// 6. Overall
-    pub fn calculate_scores(&self) -> [f64; 6] {
-        let mut scores: [f64; 6] = [
+    /// 4. Lines of Code
+    /// 5. Overall
+    pub fn calculate_scores(&self) -> [f64; 5] {
+        let mut scores: [f64; 5] = [
             // Fun
             calculate_score(self.fun_score, 0.0, 70.0),
             // Presentation
             calculate_score(self.presentation_score, 0.0, 40.0),
             // Theme Interpretation
             calculate_score(self.entities, 0.0, 1e9),
-            // Entities
-            calculate_score(self.entities, 0.0, 1e9),
             // Lines of Code
             calculate_score(self.lines, 0.0, 1e9),
             // Overall
             0.0,
         ];
-        scores[5] = scores.iter().sum::<f64>() / 5.0;
+        scores[4] = scores.iter().sum::<f64>() / 4.0;
         scores
     }
 }
