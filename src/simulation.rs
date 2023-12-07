@@ -6,8 +6,6 @@ use rand::Rng;
 
 use crate::physics::Velocity;
 use crate::state::editor_screen::WrapWithinSceneView;
-use crate::upgrade::UpgradeEvent;
-use crate::upgrade::UpgradeList;
 use crate::util::OverflowDespawnQueue;
 use crate::AppRoot;
 use crate::AppSet;
@@ -21,13 +19,7 @@ impl Plugin for SimulationPlugin {
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
             .add_systems(Startup, spawn_entity_caps)
-            .add_systems(
-                Update,
-                (
-                    count_upgrades_and_tech_debt.in_set(AppSet::Simulate),
-                    spawn_entities.in_set(AppSet::Simulate),
-                ),
-            );
+            .add_systems(Update, spawn_entities.in_set(AppSet::Simulate));
     }
 }
 
@@ -38,17 +30,6 @@ pub struct Simulation {
     pub entities: f64,
 
     pub tech_debt: f64,
-}
-
-fn count_upgrades_and_tech_debt(
-    mut events: EventReader<UpgradeEvent>,
-    upgrade_list: Res<UpgradeList>,
-    mut simulation: ResMut<Simulation>,
-) {
-    for event in events.read() {
-        simulation.upgrades += 1;
-        simulation.tech_debt += upgrade_list[event.0].tech_debt;
-    }
 }
 
 #[derive(Event, Reflect)]

@@ -29,9 +29,12 @@ impl Plugin for UpgradePlugin {
             .add_systems(Startup, load_upgrade_list)
             .add_systems(
                 Update,
-                (install_upgrades, run_installed_upgrades, apply_deferred)
-                    .chain()
-                    .in_set(AppSet::RunUpgrades),
+                (
+                    (install_upgrades, run_installed_upgrades, apply_deferred)
+                        .chain()
+                        .in_set(AppSet::RunUpgrades),
+                    process_new_installed_upgrades.in_set(AppSet::Simulate),
+                ),
             );
     }
 }
@@ -152,6 +155,18 @@ fn run_installed_upgrades(world: &mut World) {
     #[allow(clippy::unnecessary_to_owned)]
     for update in world.resource::<UpgradeUpdateSystems>().0.to_vec() {
         world.run_system(update).unwrap();
+    }
+}
+
+fn process_new_installed_upgrades(
+    mut events: EventReader<UpgradeEvent>,
+    mut upgrade_list: ResMut<UpgradeList>,
+    mut simulation: ResMut<Simulation>,
+) {
+    for event in events.read() {
+        upgrade_list[event.0].remaining -= 1;
+        simulation.upgrades += 1;
+        simulation.tech_debt += upgrade_list[event.0].tech_debt;
     }
 }
 
@@ -292,7 +307,8 @@ generate_upgrade_list!(
     TenXDev: Upgrade {
         name: "10x Dev".to_string(),
         description: "Multiplies the number of characters typed per key press by 10.".to_string(),
-        base_cost: 50.0,
+        base_cost: 100.0,
+        tech_debt: 0.0,
         weight: 0.5,
         install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
             for mut typer in &mut typer_query {
@@ -300,5 +316,19 @@ generate_upgrade_list!(
             }
         })),
         ..default()
-    }
+    },
+    Rtfm: Upgrade {
+        name: "RTFM".to_string(),
+        description: "Multiplies the number of characters typed per key press by 2.".to_string(),
+        base_cost: 50.0,
+        tech_debt: -1.0,
+        weight: 0.5,
+        remaining: 4,
+        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
+            for mut typer in &mut typer_query {
+                typer.chars_per_key *= 2;
+            }
+        })),
+        ..default()
+    },
 );
