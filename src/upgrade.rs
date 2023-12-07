@@ -51,11 +51,9 @@ pub struct Upgrade {
     /// The description of the upgrade. This will be shown as a tooltip.
     pub description: String,
     /// How much this upgrade contributes to the Presentation score of your submission.
-    pub presentation_score: f32,
-    /// How much this upgrade contributes to the Theme Interpretation score of your submission.
-    pub theme_score: f32,
+    pub presentation_score: f64,
     /// How much this upgrade contributes to the Fun score of your submission.
-    pub fun_score: f32,
+    pub fun_score: f64,
 
     /// How many lines of code this upgrade costs without tech debt scaling.
     pub base_cost: f64,
@@ -98,7 +96,6 @@ impl Default for Upgrade {
             name: "Unnamed".to_string(),
             description: "Undefined.".to_string(),
             presentation_score: 0.0,
-            theme_score: 0.0,
             fun_score: 0.0,
 
             base_cost: 0.0,
@@ -178,9 +175,12 @@ fn process_new_installed_upgrades(
     mut simulation: ResMut<Simulation>,
 ) {
     for event in events.read() {
-        upgrade_list[event.0].remaining -= 1;
+        let upgrade = &mut upgrade_list[event.0];
+        upgrade.remaining -= 1;
         simulation.upgrades += 1;
-        simulation.tech_debt += upgrade_list[event.0].tech_debt;
+        simulation.tech_debt += upgrade.tech_debt;
+        simulation.presentation_score += upgrade.presentation_score;
+        simulation.fun_score += upgrade.fun_score;
     }
 }
 
@@ -238,6 +238,9 @@ macro_rules! generate_upgrade_list {
 
 generate_upgrade_list!(
     |world|
+
+    // Tutorial upgrades
+
     DarkMode: Upgrade {
         name: "Dark Mode".to_string(),
         description: "Rite of passage for all developers. Required to write code.".to_string(),
@@ -271,14 +274,12 @@ generate_upgrade_list!(
     MovementPlugin: Upgrade {
         name: "MovementPlugin".to_string(),
         description: "Allows entities to move. Makes your game more fun.".to_string(),
-        fun_score: 1.0,
+        fun_score: 5.0,
         base_cost: 5.0,
         install: Some(world.register_system(|
             mut physics_settings: ResMut<PhysicsSettings>,
-            mut simulation: ResMut<Simulation>,
         | {
             physics_settings.speed_multiplier = UNIT_SPEED;
-            simulation.fun_factor += 5.0;
         })),
         ..default()
     },
@@ -312,11 +313,12 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Upgrades that increase presentation
+    // Upgrades that make your game prettier
 
     EntitySkinPlugin: Upgrade {
         name: "EntitySkinPlugin".to_string(),
-        description: "Adds a new entity skin with a random color.".to_string(),
+        description: "Adds a new entity skin with a random color. Makes your game prettier.".to_string(),
+        presentation_score: 10.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
@@ -332,35 +334,14 @@ generate_upgrade_list!(
                         alpha: 1.0,
                     }
                 );
-                simulation.presentation_factor += 10.0;
             }),
         ),
-        ..default()
-    },
-
-    // Upgrades that increase fun
-
-    SpeedupPlugin: Upgrade {
-        name: "SpeedupPlugin".to_string(),
-        description: "Increases the entity movement speed. Makes your game more fun.".to_string(),
-        fun_score: 1.0,
-        base_cost: 10.0,
-        cost_scale_factor: 1.2,
-        weight: 1.0,
-        remaining: 5,
-        install: Some(world.register_system(|
-            mut physics_settings: ResMut<PhysicsSettings>,
-            mut simulation: ResMut<Simulation>,
-        | {
-            physics_settings.speed_multiplier += UNIT_SPEED;
-            simulation.fun_factor += 10.0;
-        })),
         ..default()
     },
     EntitySizePlugin: Upgrade {
         name: "EntitySizePlugin".to_string(),
         description: "Increases the maximum entity size. Makes your game prettier.".to_string(),
-        presentation_score: 1.0,
+        presentation_score: 10.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
@@ -368,9 +349,26 @@ generate_upgrade_list!(
         install: Some(
             world.register_system(|mut simulation: ResMut<Simulation>| {
                 simulation.entity_size_max += 4.0;
-                simulation.fun_factor += 10.0;
             }),
         ),
+        ..default()
+    },
+
+    // Upgrades that make your game more fun
+
+    SpeedupPlugin: Upgrade {
+        name: "SpeedupPlugin".to_string(),
+        description: "Increases the entity movement speed. Makes your game more fun.".to_string(),
+        fun_score: 10.0,
+        base_cost: 10.0,
+        cost_scale_factor: 1.2,
+        weight: 1.0,
+        remaining: 5,
+        install: Some(world.register_system(|
+            mut physics_settings: ResMut<PhysicsSettings>,
+        | {
+            physics_settings.speed_multiplier += UNIT_SPEED;
+        })),
         ..default()
     },
 
@@ -418,7 +416,7 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Upgrades related to code
+    // Programming upgrades
 
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
@@ -514,7 +512,7 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Misc
+    // Miscellaneous
 
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),

@@ -45,9 +45,9 @@ pub struct Simulation {
     pub tech_debt: f64,
 
     /// Fun factor, determines the score.
-    pub fun_factor: f64,
+    pub fun_score: f64,
     /// Presentation factor, determines the score.
-    pub presentation_factor: f64,
+    pub presentation_score: f64,
 
     /// Minimum size for new entities.
     pub entity_size_min: f32,
@@ -65,8 +65,8 @@ impl Default for Simulation {
             lines: 0.0,
             entities: 0.0,
             tech_debt: 0.0,
-            fun_factor: 0.0,
-            presentation_factor: 0.0,
+            fun_score: 0.0,
+            presentation_score: 0.0,
             entity_size_min: 8.0,
             entity_size_max: 8.0,
             entity_colors: vec![

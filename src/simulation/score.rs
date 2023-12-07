@@ -29,9 +29,9 @@ impl Simulation {
     pub fn calculate_scores(&self) -> [f64; 6] {
         let mut scores: [f64; 6] = [
             // Fun
-            calculate_score(self.fun_factor, 0.0, 70.0),
+            calculate_score(self.fun_score, 0.0, 70.0),
             // Presentation
-            calculate_score(self.presentation_factor, 0.0, 40.0),
+            calculate_score(self.presentation_score, 0.0, 40.0),
             // Theme Interpretation
             calculate_score(self.entities, 0.0, 1e9),
             // Entities
