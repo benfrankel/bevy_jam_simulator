@@ -53,9 +53,13 @@ pub struct Simulation {
     pub entity_size_min: f32,
     /// Maximum size for new entities.
     pub entity_size_max: f32,
-
     /// List of colors that the new entities can have.
     pub entity_colors: Vec<Color>,
+
+    /// Minimum offset distance for entities on spawn.
+    pub spawn_offset_min: f32,
+    /// Maximum offset distance for entities on spawn.
+    pub spawn_offset_max: f32,
 }
 
 impl Default for Simulation {
@@ -73,6 +77,8 @@ impl Default for Simulation {
                 Color::rgba(0.0, 0.0, 0.0, 1.0),
                 Color::rgba(1.0, 1.0, 1.0, 1.0),
             ],
+            spawn_offset_min: 0.0,
+            spawn_offset_max: 2.0,
         }
     }
 }
@@ -99,9 +105,15 @@ fn spawn_entities(
 
         let spawn_count = MAX_SPAWN_PER_EVENT.min(event.count as usize);
         for _ in 0..spawn_count {
-            let speed = rng.gen_range(0.5..=1.5);
             let angle = rng.gen_range(0.0..=TAU);
-            let velocity = (speed * Vec2::from_angle(angle)).extend(-0.01);
+            let direction = Vec2::from_angle(angle);
+
+            let speed = rng.gen_range(0.5..=1.5);
+            let velocity = (speed * direction).extend(-0.01);
+
+            let offset = rng.gen_range(simulation.spawn_offset_min..=simulation.spawn_offset_max)
+                * direction;
+            let position = (event.position + offset).extend(0.0);
 
             let size = rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max);
 
@@ -114,7 +126,7 @@ fn spawn_entities(
                             custom_size: Some(vec2(size, size)),
                             ..default()
                         },
-                        transform: Transform::from_translation(event.position.extend(0.0)),
+                        transform: Transform::from_translation(position),
                         ..default()
                     },
                     Velocity(velocity),

@@ -27,8 +27,11 @@ fn apply_velocity(
     mut query: Query<(&mut Transform, &Velocity)>,
     physics_settings: Res<PhysicsSettings>,
 ) {
-    let mul = physics_settings.speed_multiplier * time.delta_seconds();
+    let dt = time.delta_seconds();
+    let mul = physics_settings.speed_multiplier * dt;
     for (mut transform, velocity) in &mut query {
-        transform.translation += velocity.0 * mul;
+        transform.translation.x += velocity.0.x * mul;
+        transform.translation.y += velocity.0.y * mul;
+        transform.translation.z += velocity.0.z * dt;
     }
 }
