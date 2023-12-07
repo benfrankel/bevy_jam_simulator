@@ -12,6 +12,7 @@ use bevy_editor_pls::EditorPlugin;
 use iyes_progress::prelude::*;
 use strum::IntoEnumIterator;
 
+use crate::simulation::Simulation;
 use crate::state::AppState;
 
 pub struct DebugPlugin {
@@ -23,6 +24,7 @@ pub struct DebugPlugin {
     pub editor: bool,
     pub start: AppState,
     pub extend_loading_screen: f32,
+    pub cheats: bool,
 }
 
 impl Plugin for DebugPlugin {
@@ -108,7 +110,37 @@ impl Plugin for DebugPlugin {
 
         app.add_systems(Update, debug_start);
         app.add_systems(Update, debug_end);
+
+        if self.cheats {
+            app.init_resource::<CheatSettings>();
+            app.add_systems(
+                Update,
+                |keyboard_input: Res<Input<KeyCode>>,
+                 mut cheat_settings: ResMut<CheatSettings>,
+                 mut simulation: ResMut<Simulation>| {
+                    if keyboard_input.just_pressed(KeyCode::F5) {
+                        cheat_settings.generate_lines = !cheat_settings.generate_lines;
+                    }
+                    if keyboard_input.just_pressed(KeyCode::F6) {
+                        simulation.lines *= 4.0;
+                    }
+                },
+            );
+            app.add_systems(
+                Update,
+                |cheat_settings: Res<CheatSettings>, mut simulation: ResMut<Simulation>| {
+                    if cheat_settings.generate_lines {
+                        simulation.lines += 1.0;
+                    }
+                },
+            );
+        }
     }
+}
+
+#[derive(Resource, Default)]
+pub struct CheatSettings {
+    pub generate_lines: bool,
 }
 
 const DEBUG_TOGGLE_KEY: KeyCode = KeyCode::F3;
@@ -136,6 +168,7 @@ impl Default for DebugPlugin {
             editor: true,
             extend_loading_screen: 0.0,
             start: default(),
+            cheats: true,
         }
     }
 }
