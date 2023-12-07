@@ -35,7 +35,7 @@ impl Plugin for UpgradePanelPlugin {
             .init_resource::<UpgradeSequence>()
             .add_systems(
                 Update,
-                replace_available_upgrades
+                offer_new_upgrades
                     .in_set(AppSet::Update)
                     .run_if(on_event::<UpgradeEvent>()),
             )
@@ -341,7 +341,7 @@ impl UpgradeSequence {
     }
 }
 
-fn replace_available_upgrades(
+fn offer_new_upgrades(
     mut commands: Commands,
     mut despawn: ResMut<DespawnSet>,
     config: Res<Config>,
@@ -358,14 +358,9 @@ fn replace_available_upgrades(
             despawn.recursive(button);
         }
 
-        let mut add_upgrade = |upgrade_kind: UpgradeKind| {
-            let upgrade_button = spawn_upgrade_button(
-                &mut commands,
-                theme,
-                &upgrade_list,
-                upgrade_kind,
-                &simulation,
-            );
+        let mut add_upgrade = |kind: UpgradeKind| {
+            let upgrade_button =
+                spawn_upgrade_button(&mut commands, theme, &upgrade_list, kind, &simulation);
             commands.entity(upgrade_button).set_parent(entity);
         };
 

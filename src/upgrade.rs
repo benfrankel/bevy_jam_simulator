@@ -36,11 +36,13 @@ impl Plugin for UpgradePlugin {
             .add_systems(
                 Update,
                 (
-                    (install_upgrades, run_installed_upgrades, apply_deferred)
-                        .chain()
-                        .in_set(AppSet::RunUpgrades),
-                    process_new_installed_upgrades.in_set(AppSet::Simulate),
-                ),
+                    process_new_installed_upgrades,
+                    install_upgrades.run_if(on_event::<UpgradeEvent>()),
+                    run_installed_upgrades,
+                    apply_deferred,
+                )
+                    .chain()
+                    .in_set(AppSet::RunUpgrades),
             );
     }
 }
@@ -84,10 +86,12 @@ pub struct Upgrade {
     /// A list of (upgrade, count) that must be installed for this upgrade to be offered.
     pub requirements: Vec<(UpgradeKind, usize)>,
 
+    /// A one-shot system that runs whenever any upgrade is installed.
+    pub update: Option<SystemId>,
     /// A one-shot system that runs whenever a copy of this upgrade is installed.
     pub install: Option<SystemId>,
     /// A one-shot system that runs every frame for each installed copy of this upgrade.
-    pub update: Option<SystemId>,
+    pub run: Option<SystemId>,
 }
 
 impl Default for Upgrade {
@@ -113,8 +117,9 @@ impl Default for Upgrade {
             tech_debt_max: f64::INFINITY,
             requirements: vec![],
 
-            install: None,
             update: None,
+            install: None,
+            run: None,
         }
     }
 }
@@ -138,37 +143,6 @@ impl Upgrade {
     }
 }
 
-#[derive(Event, Reflect, Clone, Copy)]
-pub struct UpgradeEvent(pub UpgradeKind);
-
-fn install_upgrades(world: &mut World, mut reader: Local<ManualEventReader<UpgradeEvent>>) {
-    for event in reader
-        .read(world.resource::<Events<_>>())
-        .copied()
-        .collect::<Vec<_>>()
-    {
-        let Upgrade {
-            install, update, ..
-        } = world.resource::<UpgradeList>()[event.0];
-        if let Some(install) = install {
-            world.run_system(install).unwrap();
-        }
-        if let Some(update) = update {
-            world.resource_mut::<UpgradeUpdateSystems>().0.push(update);
-        }
-    }
-}
-
-#[derive(Resource, Default)]
-struct UpgradeUpdateSystems(Vec<SystemId>);
-
-fn run_installed_upgrades(world: &mut World) {
-    #[allow(clippy::unnecessary_to_owned)]
-    for update in world.resource::<UpgradeUpdateSystems>().0.to_vec() {
-        world.run_system(update).unwrap();
-    }
-}
-
 fn process_new_installed_upgrades(
     mut events: EventReader<UpgradeEvent>,
     mut upgrade_list: ResMut<UpgradeList>,
@@ -181,6 +155,42 @@ fn process_new_installed_upgrades(
         simulation.tech_debt += upgrade.tech_debt;
         simulation.presentation_score += upgrade.presentation_score;
         simulation.fun_score += upgrade.fun_score;
+    }
+}
+
+#[derive(Event, Reflect, Clone, Copy)]
+pub struct UpgradeEvent(pub UpgradeKind);
+
+fn install_upgrades(world: &mut World, mut reader: Local<ManualEventReader<UpgradeEvent>>) {
+    for event in reader
+        .read(world.resource::<Events<_>>())
+        .copied()
+        .collect::<Vec<_>>()
+    {
+        let Upgrade { install, run, .. } = world.resource::<UpgradeList>()[event.0];
+        if let Some(install) = install {
+            world.run_system(install).unwrap();
+        }
+        if let Some(run) = run {
+            world.resource_mut::<UpgradeUpdateSystems>().0.push(run);
+        }
+    }
+
+    // Update all upgrades
+    for kind in ALL_UPGRADE_KINDS {
+        if let Some(update) = world.resource::<UpgradeList>()[kind].update {
+            world.run_system(update).unwrap();
+        }
+    }
+}
+
+#[derive(Resource, Default)]
+struct UpgradeUpdateSystems(Vec<SystemId>);
+
+fn run_installed_upgrades(world: &mut World) {
+    #[allow(clippy::unnecessary_to_owned)]
+    for run in world.resource::<UpgradeUpdateSystems>().0.to_vec() {
+        world.run_system(run).unwrap();
     }
 }
 
