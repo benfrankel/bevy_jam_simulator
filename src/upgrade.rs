@@ -304,6 +304,25 @@ generate_upgrade_list!(
         ),
         ..default()
     },
+    SpeedupPlugin: Upgrade {
+        name: "SpeedupPlugin".to_string(),
+        description: "Increases the entity movement speed. Increases the fun factor.".to_string(),
+        base_cost: 10.0,
+        cost_scale_factor: 1.2,
+        weight: 1.0,
+        remaining: 5,
+        install: Some(
+            world.register_system(|mut simulation: ResMut<Simulation>| {
+                simulation.entity_speed_min += 16.0;
+                simulation.entity_speed_max += 16.0;
+                simulation.fun_factor += 10.0;
+            }),
+        ),
+        ..default()
+    },
+
+    // Upgrades related to code
+
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
         description: "Writes 32 lines of code immediately.".to_string(),
