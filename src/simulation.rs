@@ -6,6 +6,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::physics::Velocity;
+use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::WrapWithinSceneView;
 use crate::util::OverflowDespawnQueue;
 use crate::AppRoot;
@@ -20,10 +21,16 @@ impl Plugin for SimulationPlugin {
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
             .init_resource::<PassiveCodeGen>()
+            .init_resource::<PassiveEntitySpawner>()
             .add_systems(Startup, spawn_entity_caps)
             .add_systems(
                 Update,
-                (spawn_entities, generate_passive_code).in_set(AppSet::Simulate),
+                (
+                    spawn_entities,
+                    generate_passive_code,
+                    spawn_entities_passively,
+                )
+                    .in_set(AppSet::Simulate),
             );
     }
 }
@@ -157,5 +164,40 @@ fn generate_passive_code(
     if passive_code_gen.timer.tick(time.delta()).just_finished() {
         passive_code_gen.timer.reset();
         simulation.lines += passive_code_gen.increase;
+    }
+}
+
+/// Resource for handling passive entity spawning.
+#[derive(Resource)]
+pub struct PassiveEntitySpawner {
+    pub timer: Timer,
+    pub amount: f64,
+}
+
+impl Default for PassiveEntitySpawner {
+    fn default() -> Self {
+        Self {
+            timer: Timer::from_seconds(2.0, TimerMode::Repeating),
+            amount: 0.0,
+        }
+    }
+}
+
+/// System for handling passive entity spawning.
+fn spawn_entities_passively(
+    time: Res<Time>,
+    mut entity_spawner: ResMut<PassiveEntitySpawner>,
+    mut events: EventWriter<SpawnEvent>,
+    bounds: Res<SceneViewBounds>,
+) {
+    if entity_spawner.timer.tick(time.delta()).just_finished() {
+        entity_spawner.timer.reset();
+        // simulation.entities += entity_spawner.amount;
+        // TODO:
+        // This shouldn't use spawn event directly because the spawn event adds one at a time.
+        // When amount is huge due to exponential increase, it will cause floating point problems.
+        for _ in 0..(entity_spawner.amount as usize) {
+            events.send(SpawnEvent((bounds.min.xy() + bounds.max.xy()) / 2.0));
+        }
     }
 }

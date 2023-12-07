@@ -10,6 +10,7 @@ use strum::EnumCount;
 
 use crate::config::Config;
 use crate::simulation::PassiveCodeGen;
+use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
 use crate::simulation::SpawnEvent;
 use crate::state::editor_screen::spawn_editor_screen;
@@ -365,6 +366,50 @@ generate_upgrade_list!(
                 simulation.fun_factor += 10.0;
             }),
         ),
+        ..default()
+    },
+
+    // Passive entity spawning
+
+    EntitySpawner: Upgrade {
+        name: "EntitySpawnerPlugin".to_string(),
+        description: "Periodically spawns entities. By default, generates 1 entity every 2 seconds.".to_string(),
+        base_cost: 100.0,
+        tech_debt: 1.0,
+        weight: 1.0,
+        remaining: 1,
+        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
+            entity_spawner.amount = 1.0;
+        })),
+        ..default()
+    },
+    BatchSpawner: Upgrade {
+        name: "BatchSpawnerPlugin".to_string(),
+        description: "Doubles the amount of entities spawned by EntitySpawner.".to_string(),
+        requirements: vec![(UpgradeKind::EntitySpawner, 1)],
+        base_cost: 50.0,
+        cost_scale_factor: 1.2,
+        tech_debt: 1.0,
+        weight: 0.5,
+        remaining: 6,
+        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
+            entity_spawner.amount *= 2.0;
+        })),
+        ..default()
+    },
+    SpawnerOptimization: Upgrade {
+        name: "Spawner Optimization".to_string(),
+        description: "Halves the period of the EntitySpawner by optimizing its code.".to_string(),
+        requirements: vec![(UpgradeKind::EntitySpawner, 1)],
+        base_cost: 100.0,
+        cost_scale_factor: 1.2,
+        tech_debt: 0.0,
+        weight: 0.5,
+        remaining: 8,
+        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
+            let new_duration = entity_spawner.timer.duration().div_f64(2.0);
+            entity_spawner.timer.set_duration(new_duration);
+        })),
         ..default()
     },
 
