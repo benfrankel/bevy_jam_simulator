@@ -21,6 +21,7 @@ use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::UpgradeContainer;
 use crate::state::editor_screen::UpgradeOutline;
 use crate::ui::CodeTyper;
+use crate::util::pretty_num;
 use crate::AppRoot;
 use crate::AppSet;
 
@@ -48,10 +49,10 @@ impl Plugin for UpgradePlugin {
 }
 
 pub struct Upgrade {
-    /// The name of the upgrade. This will be shown on the button.
+    /// The name of the upgrade.
     pub name: String,
-    /// The description of the upgrade. This will be shown as a tooltip.
-    pub description: String,
+    /// The desc of the upgrade, with "VALUE" standing in for `self.value`.
+    pub desc: String,
     /// How much this upgrade contributes to the Presentation score of your submission.
     pub presentation_score: f64,
     /// How much this upgrade contributes to the Fun score of your submission.
@@ -86,6 +87,8 @@ pub struct Upgrade {
     /// A list of (upgrade, count) that must be installed for this upgrade to be offered.
     pub requirements: Vec<(UpgradeKind, usize)>,
 
+    /// An updatable value to be used by the upgrade for some purpose.
+    pub value: f64,
     /// A one-shot system that runs whenever any upgrade is installed.
     pub update: Option<SystemId>,
     /// A one-shot system that runs whenever a copy of this upgrade is installed.
@@ -98,7 +101,7 @@ impl Default for Upgrade {
     fn default() -> Self {
         Self {
             name: "Unnamed".to_string(),
-            description: "Undefined.".to_string(),
+            desc: "Undefined.".to_string(),
             presentation_score: 0.0,
             fun_score: 0.0,
 
@@ -117,6 +120,7 @@ impl Default for Upgrade {
             tech_debt_max: f64::INFINITY,
             requirements: vec![],
 
+            value: 0.0,
             update: None,
             install: None,
             run: None,
@@ -140,6 +144,10 @@ impl Upgrade {
 
     pub fn cost(&self, simulation: &Simulation) -> f64 {
         (self.base_cost * self.cost_scale_factor.powf(simulation.tech_debt)).floor()
+    }
+
+    pub fn description(&self) -> String {
+        self.desc.replace("VALUE", &pretty_num(self.value))
     }
 }
 
@@ -253,7 +261,7 @@ generate_upgrade_list!(
 
     DarkMode: Upgrade {
         name: "Dark Mode".to_string(),
-        description: "Rite of passage for all developers. Required to write code.".to_string(),
+        desc: "Rite of passage for all developers. Required to write code.".to_string(),
         tech_debt: 0.0,
         install: Some(world.register_system(|
             mut commands: Commands,
@@ -270,7 +278,7 @@ generate_upgrade_list!(
     },
     TouchOfLifePlugin: Upgrade {
         name: "TouchOfLifePlugin".to_string(),
-        description: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
+        desc: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
         base_cost: 5.0,
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
@@ -283,7 +291,7 @@ generate_upgrade_list!(
     },
     MovementPlugin: Upgrade {
         name: "MovementPlugin".to_string(),
-        description: "Allows entities to move. Makes your game more fun.".to_string(),
+        desc: "Allows entities to move. Makes your game more fun.".to_string(),
         fun_score: 5.0,
         base_cost: 5.0,
         install: Some(world.register_system(|
@@ -295,7 +303,7 @@ generate_upgrade_list!(
     },
     Brainstorm: Upgrade {
         name: "Brainstorm".to_string(),
-        description: "Adds 1 extra upgrade slot.".to_string(),
+        desc: "Adds 1 extra upgrade slot.".to_string(),
         tech_debt: 0.0,
         install: Some(
             world.register_system(|mut query: Query<&mut UpgradeContainer>| {
@@ -308,16 +316,28 @@ generate_upgrade_list!(
     },
     SplashOfLifePlugin: Upgrade {
         name: "SplashOfLifePlugin".to_string(),
-        description: "Spawns 32 entities immediately.".to_string(),
+        desc: "Spawns VALUE entities immediately.".to_string(),
         base_cost: 2.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: usize::MAX,
+        update: Some(
+            world.register_system(|
+                mut upgrade_list: ResMut<UpgradeList>,
+                simulation: Res<Simulation>,
+            | {
+                upgrade_list[UpgradeKind::SplashOfLifePlugin].value = (simulation.entities * 0.1).max(32.0).floor();
+            }),
+        ),
         install: Some(
-            world.register_system(|mut events: EventWriter<SpawnEvent>, bounds: Res<SceneViewBounds>| {
+            world.register_system(|
+                mut events: EventWriter<SpawnEvent>,
+                upgrade_list: Res<UpgradeList>,
+                bounds: Res<SceneViewBounds>,
+            | {
                 events.send(SpawnEvent {
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
-                    count: 32.0,
+                    count: upgrade_list[UpgradeKind::SplashOfLifePlugin].value,
                 });
             }),
         ),
@@ -328,7 +348,7 @@ generate_upgrade_list!(
 
     EntitySkinPlugin: Upgrade {
         name: "EntitySkinPlugin".to_string(),
-        description: "Adds a new entity skin with a random color. Makes your game prettier.".to_string(),
+        desc: "Adds a new entity skin with a random color. Makes your game prettier.".to_string(),
         presentation_score: 10.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
@@ -351,7 +371,7 @@ generate_upgrade_list!(
     },
     EntitySizePlugin: Upgrade {
         name: "EntitySizePlugin".to_string(),
-        description: "Increases the maximum entity size. Makes your game prettier.".to_string(),
+        desc: "Increases the maximum entity size. Makes your game prettier.".to_string(),
         presentation_score: 10.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
@@ -369,7 +389,7 @@ generate_upgrade_list!(
 
     SpeedupPlugin: Upgrade {
         name: "SpeedupPlugin".to_string(),
-        description: "Increases the entity movement speed. Makes your game more fun.".to_string(),
+        desc: "Increases the entity movement speed. Makes your game more fun.".to_string(),
         fun_score: 10.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
@@ -387,7 +407,7 @@ generate_upgrade_list!(
 
     EntitySpawner: Upgrade {
         name: "EntitySpawnerPlugin".to_string(),
-        description: "Spawns 1 entity every 2 seconds.".to_string(),
+        desc: "Spawns 1 entity every 2 seconds.".to_string(),
         base_cost: 100.0,
         tech_debt: 1.0,
         weight: 1.0,
@@ -399,7 +419,7 @@ generate_upgrade_list!(
     },
     BatchSpawner: Upgrade {
         name: "BatchSpawnerPlugin".to_string(),
-        description: "Doubles the amount of entities spawned by EntitySpawnerPlugin.".to_string(),
+        desc: "Doubles the amount of entities spawned by EntitySpawnerPlugin.".to_string(),
         requirements: vec![(UpgradeKind::EntitySpawner, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
@@ -413,7 +433,7 @@ generate_upgrade_list!(
     },
     OptimizeSpawner: Upgrade {
         name: "Optimize Spawner".to_string(),
-        description: "Halves the cooldown of EntitySpawnerPlugin by optimizing its code.".to_string(),
+        desc: "Halves the cooldown of EntitySpawnerPlugin by optimizing its code.".to_string(),
         requirements: vec![(UpgradeKind::EntitySpawner, 1)],
         base_cost: 100.0,
         cost_scale_factor: 1.2,
@@ -431,7 +451,7 @@ generate_upgrade_list!(
 
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
-        description: "Writes 32 lines of code immediately.".to_string(),
+        desc: "Writes 32 lines of code immediately.".to_string(),
         base_cost: 1.0,
         tech_debt: 1.0,
         weight: 1.0,
@@ -443,7 +463,7 @@ generate_upgrade_list!(
     },
     Refactor: Upgrade {
         name: "Refactor".to_string(),
-        description: "Improves the quality of the codebase.".to_string(),
+        desc: "Improves the quality of the codebase.".to_string(),
         base_cost: 10.0,
         cost_scale_factor: 1.3,
         tech_debt: -5.0,
@@ -454,7 +474,7 @@ generate_upgrade_list!(
     },
     TenXDev: Upgrade {
         name: "10x Dev".to_string(),
-        description: "Multiplies the number of characters typed per key press by 10.".to_string(),
+        desc: "Multiplies the number of characters typed per key press by 10.".to_string(),
         base_cost: 100.0,
         tech_debt: 0.0,
         weight: 0.5,
@@ -467,7 +487,7 @@ generate_upgrade_list!(
     },
     Rtfm: Upgrade {
         name: "RTFM".to_string(),
-        description: "Doubles the number of characters typed per key press.".to_string(),
+        desc: "Doubles the number of characters typed per key press.".to_string(),
         base_cost: 50.0,
         tech_debt: -1.0,
         weight: 0.5,
@@ -484,7 +504,7 @@ generate_upgrade_list!(
 
     ProceduralMacro: Upgrade {
         name: "ProceduralMacroPlugin".to_string(),
-        description: "Writes 1 line of code every 2 seconds.".to_string(),
+        desc: "Writes 1 line of code every 2 seconds.".to_string(),
         base_cost: 50.0,
         tech_debt: 1.0,
         weight: 1.0,
@@ -496,7 +516,7 @@ generate_upgrade_list!(
     },
     NewMacro: Upgrade {
         name: "New Macro".to_string(),
-        description: "Doubles the amount of code written by ProceduralMacroPlugin.".to_string(),
+        desc: "Doubles the amount of code written by ProceduralMacroPlugin.".to_string(),
         requirements: vec![(UpgradeKind::ProceduralMacro, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
@@ -510,7 +530,7 @@ generate_upgrade_list!(
     },
     DynamicLinking: Upgrade {
         name: "Dynamic Linking".to_string(),
-        description: "Halves the cooldown of ProceduralMacroPlugin by speeding up the build process.".to_string(),
+        desc: "Halves the cooldown of ProceduralMacroPlugin by speeding up the build process.".to_string(),
         requirements: vec![(UpgradeKind::ProceduralMacro, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
@@ -527,7 +547,7 @@ generate_upgrade_list!(
 
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),
-        description: "Adds 1 extra upgrade slot.".to_string(),
+        desc: "Adds 1 extra upgrade slot.".to_string(),
         upgrade_min: 7,
         weight: 2.5,
         base_cost: 20.0,

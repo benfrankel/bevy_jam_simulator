@@ -176,7 +176,7 @@ fn spawn_upgrade_button(
                 // I have created technical debt to display the technical debt
                 text: format!(
                     "{}{}",
-                    &upgrade.description,
+                    &upgrade.description(),
                     if upgrade.tech_debt == 0.0 {
                         "".to_string()
                     } else {

@@ -117,7 +117,7 @@ fn spawn_outline_entry(
                 disabled: Color::NONE,
             },
             Tooltip {
-                text: upgrade.description.clone(),
+                text: upgrade.description(),
                 side: TooltipSide::Right,
                 offset: vec2(12.0, 0.0),
             },
