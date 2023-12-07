@@ -397,8 +397,8 @@ generate_upgrade_list!(
         })),
         ..default()
     },
-    SpawnerOptimization: Upgrade {
-        name: "Spawner Optimization".to_string(),
+    OptimizeSpawner: Upgrade {
+        name: "Optimize Spawner".to_string(),
         description: "Halves the period of the EntitySpawner by optimizing its code.".to_string(),
         requirements: vec![(UpgradeKind::EntitySpawner, 1)],
         base_cost: 100.0,
