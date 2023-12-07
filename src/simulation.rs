@@ -30,6 +30,11 @@ pub struct Simulation {
     pub entities: f64,
     pub tech_debt: f64,
 
+    /// Fun factor, determines the score.
+    pub fun_factor: f64,
+    /// Presentation factor, determines the score.
+    pub presentation_factor: f64,
+
     /// Minimum speed for new entities.
     pub entity_speed_min: f32,
     /// Maximum speed for new entities.

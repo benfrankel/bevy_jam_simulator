@@ -264,12 +264,13 @@ generate_upgrade_list!(
     },
     MovementPlugin: Upgrade {
         name: "MovementPlugin".to_string(),
-        description: "Allows the entities to move.".to_string(),
+        description: "Allows the entities to move. Increases the fun factor.".to_string(),
         base_cost: 5.0,
         install: Some(
             world.register_system(|mut simulation: ResMut<Simulation>| {
                 simulation.entity_speed_min = 8.0;
                 simulation.entity_speed_max = 16.0;
+                simulation.fun_factor += 5.0;
             }),
         ),
         ..default()

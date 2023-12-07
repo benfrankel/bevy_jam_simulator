@@ -4,6 +4,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
+use crate::simulation::Simulation;
 use crate::state::AppState::*;
 use crate::ui::vh;
 use crate::ui::vmin;
@@ -56,7 +57,12 @@ pub struct ResultsScreenAssets {
     // TODO: Music / SFX maybe
 }
 
-fn enter_results_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
+fn enter_results_screen(
+    mut commands: Commands,
+    root: Res<AppRoot>,
+    config: Res<Config>,
+    simulation: Res<Simulation>,
+) {
     let config = &config.results_screen;
     let title_text_style = TextStyle {
         font: BOLD_FONT_HANDLE,
@@ -152,9 +158,34 @@ fn enter_results_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<
             .set_parent(cell);
     }
 
-    for (row, &criterion) in TABLE_CRITERIA_TEXT.iter().enumerate() {
-        // TODO: Populate cells based on resource values like entity count / lines of code
-        let entries = [criterion, "#13", "4.233", "4.233"];
+    // TODO: These must be between 0 and 5.
+    let scores: [f64; 6] = [
+        // Fun
+        simulation.fun_factor,
+        // Presentation
+        simulation.presentation_factor,
+        // Theme Interpretation
+        simulation.entities,
+        // Entities
+        simulation.entities,
+        // Lines of Code
+        simulation.lines,
+        // TODO: Overall
+        0.0,
+    ];
+    for (row, (&criterion, score)) in TABLE_CRITERIA_TEXT
+        .iter()
+        .zip(scores.into_iter())
+        .enumerate()
+    {
+        let entries = [
+            criterion,
+            // TODO: Compute ranking
+            "#13",
+            &format!("{:.3}", score),
+            // TODO: Distinction between raw score & adjusted score
+            &format!("{:.3}", score),
+        ];
         for (col, &text) in entries.iter().enumerate() {
             let cell = commands
                 .spawn((
