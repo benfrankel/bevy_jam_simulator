@@ -60,4 +60,20 @@ mod tests {
         // High
         assert_eq!(format!("{:.3}", calculate_score(1.0, -1.0, 1.0)), "4.523");
     }
+
+    #[test]
+    fn calculate_score_edge_cases_test() {
+        // Same test with different scales
+        assert!(f64::abs(calculate_score(f64::INFINITY, -1.0, 1.0) - 5.0) < 0.001);
+        assert!(f64::abs(calculate_score(-f64::INFINITY, -1.0, 1.0) - 1.0) < 0.001);
+
+        assert!(f64::abs(calculate_score(f64::INFINITY, 0.0, 1e9) - 5.0) < 0.001);
+        assert!(f64::abs(calculate_score(-f64::INFINITY, 0.0, 1e9) - 1.0) < 0.001);
+
+        assert!(f64::abs(calculate_score(f64::INFINITY, -1e9, 1e9) - 5.0) < 0.001);
+        assert!(f64::abs(calculate_score(-f64::INFINITY, -1e9, 1e9) - 1.0) < 0.001);
+
+        assert!(f64::abs(calculate_score(f64::INFINITY, -1e32, 1e32) - 5.0) < 0.001);
+        assert!(f64::abs(calculate_score(-f64::INFINITY, -1e32, 1e32) - 1.0) < 0.001);
+    }
 }
