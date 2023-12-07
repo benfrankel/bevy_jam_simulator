@@ -10,6 +10,7 @@ use crate::state::editor_screen::spawn_editor_screen;
 use crate::state::editor_screen::SceneView;
 use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::UpgradeContainer;
+use crate::state::editor_screen::UpgradeOutline;
 use crate::AppRoot;
 use crate::AppSet;
 
@@ -70,6 +71,8 @@ pub struct Upgrade {
     pub upgrade_min: usize,
     /// The maximum number of installed upgrades allowed for this upgrade to be offered.
     pub upgrade_max: usize,
+    /// A list of (upgrade, count) that must be installed for this upgrade to be offered.
+    pub requirements: Vec<(UpgradeKind, usize)>,
 
     /// A one-shot system that runs whenever a copy of this upgrade is installed.
     pub install: Option<SystemId>,
@@ -97,6 +100,7 @@ impl Default for Upgrade {
             line_max: f64::INFINITY,
             upgrade_min: 0,
             upgrade_max: usize::MAX,
+            requirements: vec![],
 
             install: None,
             update: None,
@@ -105,11 +109,15 @@ impl Default for Upgrade {
 }
 
 impl Upgrade {
-    pub fn is_unlocked(&self, simulation: &Simulation) -> bool {
+    pub fn is_unlocked(&self, simulation: &Simulation, outline: &UpgradeOutline) -> bool {
         self.remaining > 0
             && (self.entity_min <= simulation.entities && simulation.entities <= self.entity_max)
             && (self.line_min <= simulation.lines && simulation.lines <= self.line_max)
             && (self.upgrade_min <= simulation.upgrades && simulation.upgrades <= self.upgrade_max)
+            && self
+                .requirements
+                .iter()
+                .all(|(kind, count)| outline.0.get(kind).is_some_and(|x| x >= count))
     }
 }
 

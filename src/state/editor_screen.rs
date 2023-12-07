@@ -15,6 +15,7 @@ use crate::config::Config;
 use crate::state::editor_screen::code_panel::spawn_light_code_panel;
 use crate::state::editor_screen::info_bar::spawn_info_bar;
 use crate::state::editor_screen::outline_panel::spawn_outline_panel;
+pub use crate::state::editor_screen::outline_panel::UpgradeOutline;
 use crate::state::editor_screen::scene_view::spawn_scene_view;
 pub use crate::state::editor_screen::scene_view::SceneView;
 pub use crate::state::editor_screen::scene_view::SceneViewBounds;

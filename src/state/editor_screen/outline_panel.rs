@@ -39,7 +39,7 @@ impl Plugin for OutlinePanelPlugin {
 
 #[derive(Resource, Default, Reflect)]
 #[reflect(Resource)]
-struct UpgradeOutline(HashMap<UpgradeKind, usize>);
+pub struct UpgradeOutline(pub HashMap<UpgradeKind, usize>);
 
 // TODO: Add scrollbar
 pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {

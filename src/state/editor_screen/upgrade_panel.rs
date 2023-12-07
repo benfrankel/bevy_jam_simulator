@@ -7,6 +7,7 @@ use rand::thread_rng;
 use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenTheme;
+use crate::state::editor_screen::UpgradeOutline;
 use crate::state::AppState;
 use crate::ui::Disabled;
 use crate::ui::FontSize;
@@ -295,11 +296,16 @@ impl Default for UpgradeSequence {
 }
 
 impl UpgradeSequence {
-    fn next(&mut self, upgrade_list: &UpgradeList, simulation: &Simulation) -> Option<UpgradeKind> {
+    fn next(
+        &mut self,
+        upgrade_list: &UpgradeList,
+        simulation: &Simulation,
+        outline: &UpgradeOutline,
+    ) -> Option<UpgradeKind> {
         while self.next_idx < self.sequence.len() {
             self.next_idx += 1;
             let kind = self.sequence[self.next_idx - 1];
-            if upgrade_list.get(kind).is_unlocked(simulation) {
+            if upgrade_list.get(kind).is_unlocked(simulation, outline) {
                 return Some(kind);
             }
         }
@@ -314,6 +320,7 @@ fn replace_available_upgrades(
     upgrade_list: Res<UpgradeList>,
     mut upgrade_sequence: ResMut<UpgradeSequence>,
     simulation: Res<Simulation>,
+    outline: Res<UpgradeOutline>,
     container_query: Query<(Entity, &Children, &UpgradeContainer)>,
 ) {
     let theme = &config.editor_screen.dark_theme;
@@ -332,7 +339,7 @@ fn replace_available_upgrades(
         // Try to fill slots from the initial sequence of upgrades first
         let mut slots = container.slots;
         while slots > 0 {
-            let Some(kind) = upgrade_sequence.next(&upgrade_list, &simulation) else {
+            let Some(kind) = upgrade_sequence.next(&upgrade_list, &simulation, &outline) else {
                 break;
             };
             add_upgrade(kind);
@@ -342,7 +349,7 @@ fn replace_available_upgrades(
         // Filter the list of all upgrade kinds into just the ones that are unlocked
         let unlocked_upgrades = ALL_UPGRADE_KINDS
             .into_iter()
-            .filter(|&kind| upgrade_list.get(kind).is_unlocked(&simulation))
+            .filter(|&kind| upgrade_list.get(kind).is_unlocked(&simulation, &outline))
             .collect::<Vec<_>>();
 
         // Choose the next upgrades for the remaining slots randomly (weighted)
