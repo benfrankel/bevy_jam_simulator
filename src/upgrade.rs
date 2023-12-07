@@ -1,6 +1,5 @@
 use std::ops::Index;
 use std::ops::IndexMut;
-use std::time::Duration;
 
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
@@ -527,31 +526,32 @@ generate_upgrade_list!(
         })),
         ..default()
     },
-    NewMacro: Upgrade {
-        name: "New Macro".to_string(),
+    MetaMacro: Upgrade {
+        name: "Meta Macro".to_string(),
         desc: "Doubles the amount of code written by ProceduralMacroPlugin.".to_string(),
         requirements: vec![(ProceduralMacro, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
         tech_debt: 1.0,
         weight: 0.5,
-        remaining: 5,
+        remaining: 6,
         install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeGen>| {
             passive_code_gen.increase *= 2.0;
         })),
         ..default()
     },
-    DynamicLinking: Upgrade {
-        name: "Dynamic Linking".to_string(),
-        desc: "Halves the cooldown of ProceduralMacroPlugin by speeding up the build process.".to_string(),
+    OptimizeBuild: Upgrade {
+        name: "Optimize Build".to_string(),
+        desc: "Halves the cooldown of ProceduralMacroPlugin by optimizing the build process.".to_string(),
         requirements: vec![(ProceduralMacro, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
         tech_debt: 0.0,
         weight: 0.5,
-        remaining: 1,
+        remaining: 8,
         install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeGen>| {
-            passive_code_gen.timer.set_duration(Duration::from_secs(1));
+            let new_duration = passive_code_gen.timer.duration().div_f64(2.0);
+            passive_code_gen.timer.set_duration(new_duration);
         })),
         ..default()
     },
