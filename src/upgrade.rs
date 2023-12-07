@@ -44,8 +44,10 @@ pub struct Upgrade {
 
     /// How many lines of code this upgrade costs (will increase with cost scaling)
     pub cost: f64,
-    /// The amount by which cost is multiplied whenever an upgrade is enabled.
+    /// The cost scaling multiplier for this upgrade.
     pub cost_multiplier: f64,
+    /// Whether enabling this upgrade causes cost scaling.
+    pub scales_costs: bool,
     /// The relative odds of this upgrade being offered
     pub weight: f32,
     /// How many more copies of this upgrade can be enabled
@@ -64,6 +66,7 @@ impl Default for Upgrade {
             description: "Undefined.".to_string(),
             cost: 0.0,
             cost_multiplier: 1.0,
+            scales_costs: true,
             weight: 0.0,
             remaining: 1,
             enable: None,
@@ -101,9 +104,23 @@ fn run_active_upgrades(world: &mut World) {
     }
 }
 
-fn apply_cost_scaling(mut upgrade_list: ResMut<UpgradeList>) {
+fn apply_cost_scaling(
+    mut events: EventReader<UpgradeEvent>,
+    mut upgrade_list: ResMut<UpgradeList>,
+) {
+    let count = events
+        .read()
+        .filter(|event| upgrade_list.get(event.0).scales_costs)
+        .count();
+    if count == 0 {
+        return;
+    }
+
     for upgrade in &mut upgrade_list.0 {
-        upgrade.cost *= upgrade.cost_multiplier;
+        // Count will always be 1 or very small, so powf would be overkill
+        for _ in 0..count {
+            upgrade.cost *= upgrade.cost_multiplier;
+        }
     }
 }
 
@@ -155,6 +172,7 @@ generate_upgrade_list!(
     DarkMode: Upgrade {
         name: "Dark Mode".to_string(),
         description: "Rite of passage for all developers. Required to write code.".to_string(),
+        scales_costs: false,
         enable: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
@@ -170,6 +188,7 @@ generate_upgrade_list!(
     TouchOfLifePlugin: Upgrade {
         name: "TouchOfLifePlugin".to_string(),
         description: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
+        scales_costs: false,
         cost: 5.0,
         enable: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
@@ -183,6 +202,7 @@ generate_upgrade_list!(
     Brainstorm: Upgrade {
         name: "Brainstorm".to_string(),
         description: "Adds 1 extra upgrade slot.".to_string(),
+        scales_costs: false,
         enable: Some(
             world.register_system(|mut query: Query<&mut UpgradeContainer>| {
                 for mut container in &mut query {
@@ -212,6 +232,7 @@ generate_upgrade_list!(
         name: "Import Library".to_string(),
         description: "Writes 10 lines of code immediately.".to_string(),
         cost: 1.0,
+        scales_costs: false,
         weight: 1.0,
         remaining: usize::MAX,
         enable: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
