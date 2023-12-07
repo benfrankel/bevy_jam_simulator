@@ -13,6 +13,7 @@ bevy_mod_debugdump = { version = "0.9", optional = true }
 bevy_mod_picking = { version = "0.17", default-features = false, features = [
     "backend_bevy_ui",
 ] }
+format_num = "0.1"
 iyes_progress = "0.10"
 leafwing-input-manager = "0.11"
 #noise = "0.8"

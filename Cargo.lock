@@ -819,6 +819,7 @@ dependencies = [
  "bevy_kira_audio",
  "bevy_mod_debugdump",
  "bevy_mod_picking",
+ "format_num",
  "iyes_progress",
  "leafwing-input-manager",
  "rand",
@@ -2064,6 +2065,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e13624c2627564efccf4934284bdd98cbaa14e79b0b5a141218e507b3a823456"
 dependencies = [
  "percent-encoding",
+]
+
+[[package]]
+name = "format_num"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14ac05eb8d2eb4ed1eeff847911deae077b0b53332465de9d6a26b0ea9961bc8"
+dependencies = [
+ "regex",
 ]
 
 [[package]]

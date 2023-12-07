@@ -21,6 +21,7 @@ use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
 use crate::upgrade::ALL_UPGRADE_KINDS;
 use crate::upgrade::INITIAL_UPGRADES;
+use crate::util::pretty_num;
 use crate::util::DespawnSet;
 use crate::AppSet;
 
@@ -186,7 +187,7 @@ fn spawn_upgrade_button(
                             } else {
                                 "Decreases"
                             },
-                            upgrade.tech_debt.abs(),
+                            pretty_num(upgrade.tech_debt.abs()),
                         )
                     }
                 ),
@@ -224,8 +225,11 @@ fn spawn_upgrade_button(
         .spawn((
             Name::new("UpgradeCost"),
             TextBundle::from_section(
-                // TODO: Format for big numbers
-                format!("{} line{}", cost, if cost == 1.0 { "" } else { "s" }),
+                format!(
+                    "{} line{}",
+                    pretty_num(cost),
+                    if cost == 1.0 { "" } else { "s" }
+                ),
                 TextStyle {
                     font: FONT_HANDLE,
                     color: theme.upgrade_button_text_color,

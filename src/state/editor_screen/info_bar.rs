@@ -4,6 +4,7 @@ use super::EditorScreenTheme;
 use crate::simulation::Simulation;
 use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
+use crate::util::pretty_num;
 use crate::AppSet;
 
 pub struct InfoBarPlugin;
@@ -59,14 +60,13 @@ fn update_info_bar_text(
     simulation: Res<Simulation>,
     mut info_bar_query: Query<&mut Text, With<InfoBarText>>,
 ) {
-    // TODO: E.g. Format large numbers like 2,346,834 and then 8.435e22
-    let lines = simulation.lines.floor();
-    let entities = simulation.entities.floor();
+    let lines = pretty_num(simulation.lines.floor());
+    let entities = pretty_num(simulation.entities.floor());
 
     let info = format!(
-        "{lines} line{}, {entities} entit{}",
-        if lines == 1.0 { "" } else { "s" },
-        if entities == 1.0 { "y" } else { "ies" }
+        "{lines} line{} and {entities} entit{}",
+        if lines == "1" { "" } else { "s" },
+        if entities == "1" { "y" } else { "ies" }
     );
 
     for mut text in &mut info_bar_query {
