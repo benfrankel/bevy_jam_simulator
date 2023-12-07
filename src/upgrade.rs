@@ -245,6 +245,8 @@ macro_rules! generate_upgrade_list {
 
         /// A system that initializes and inserts the UpgradeList resource.
         fn load_upgrade_list($world: &mut World) {
+            use UpgradeKind::*;
+
             let upgrade_list = UpgradeList(vec![
                 $($upgrade),+
             ]);
@@ -326,7 +328,7 @@ generate_upgrade_list!(
                 mut upgrade_list: ResMut<UpgradeList>,
                 simulation: Res<Simulation>,
             | {
-                upgrade_list[UpgradeKind::SplashOfLifePlugin].value = (simulation.entities * 0.1).max(32.0).floor();
+                upgrade_list[SplashOfLifePlugin].value = (simulation.entities * 0.1).max(32.0).floor();
             }),
         ),
         install: Some(
@@ -337,7 +339,7 @@ generate_upgrade_list!(
             | {
                 events.send(SpawnEvent {
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
-                    count: upgrade_list[UpgradeKind::SplashOfLifePlugin].value,
+                    count: upgrade_list[SplashOfLifePlugin].value,
                 });
             }),
         ),
@@ -420,7 +422,7 @@ generate_upgrade_list!(
     BatchSpawner: Upgrade {
         name: "BatchSpawnerPlugin".to_string(),
         desc: "Doubles the amount of entities spawned by EntitySpawnerPlugin.".to_string(),
-        requirements: vec![(UpgradeKind::EntitySpawner, 1)],
+        requirements: vec![(EntitySpawner, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
         tech_debt: 1.0,
@@ -434,7 +436,7 @@ generate_upgrade_list!(
     OptimizeSpawner: Upgrade {
         name: "Optimize Spawner".to_string(),
         desc: "Halves the cooldown of EntitySpawnerPlugin by optimizing its code.".to_string(),
-        requirements: vec![(UpgradeKind::EntitySpawner, 1)],
+        requirements: vec![(EntitySpawner, 1)],
         base_cost: 100.0,
         cost_scale_factor: 1.2,
         tech_debt: 2.0,
@@ -451,13 +453,24 @@ generate_upgrade_list!(
 
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
-        desc: "Writes 32 lines of code immediately.".to_string(),
+        desc: "Writes VALUE lines of code immediately.".to_string(),
         base_cost: 1.0,
         tech_debt: 1.0,
         weight: 1.0,
         remaining: usize::MAX,
-        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-            simulation.lines += 32.0;
+        update: Some(
+            world.register_system(|
+                mut upgrade_list: ResMut<UpgradeList>,
+                simulation: Res<Simulation>,
+            | {
+                upgrade_list[ImportLibrary].value = (simulation.lines * 0.1).max(32.0).floor();
+            }),
+        ),
+        install: Some(world.register_system(|
+            upgrade_list: Res<UpgradeList>,
+            mut simulation: ResMut<Simulation>,
+        | {
+            simulation.lines += upgrade_list[ImportLibrary].value;
         })),
         ..default()
     },
@@ -517,7 +530,7 @@ generate_upgrade_list!(
     NewMacro: Upgrade {
         name: "New Macro".to_string(),
         desc: "Doubles the amount of code written by ProceduralMacroPlugin.".to_string(),
-        requirements: vec![(UpgradeKind::ProceduralMacro, 1)],
+        requirements: vec![(ProceduralMacro, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
         tech_debt: 1.0,
@@ -531,7 +544,7 @@ generate_upgrade_list!(
     DynamicLinking: Upgrade {
         name: "Dynamic Linking".to_string(),
         desc: "Halves the cooldown of ProceduralMacroPlugin by speeding up the build process.".to_string(),
-        requirements: vec![(UpgradeKind::ProceduralMacro, 1)],
+        requirements: vec![(ProceduralMacro, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
         tech_debt: 0.0,
