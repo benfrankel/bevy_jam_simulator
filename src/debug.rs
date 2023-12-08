@@ -12,6 +12,7 @@ use bevy_editor_pls::EditorPlugin;
 use iyes_progress::prelude::*;
 use strum::IntoEnumIterator;
 
+use crate::simulation::LinesAddedEvent;
 use crate::simulation::Simulation;
 use crate::state::AppState;
 
@@ -128,9 +129,13 @@ impl Plugin for DebugPlugin {
             );
             app.add_systems(
                 Update,
-                |cheat_settings: Res<CheatSettings>, mut simulation: ResMut<Simulation>| {
-                    if cheat_settings.generate_lines {
-                        simulation.lines += 1.0;
+                |mut cheat_settings: ResMut<CheatSettings>,
+                 time: Res<Time>,
+                 mut events: EventWriter<LinesAddedEvent>| {
+                    if cheat_settings.generate_lines
+                        && cheat_settings.timer.tick(time.delta()).just_finished()
+                    {
+                        events.send(LinesAddedEvent { count: 1.0 });
                     }
                 },
             );
@@ -138,9 +143,19 @@ impl Plugin for DebugPlugin {
     }
 }
 
-#[derive(Resource, Default)]
+#[derive(Resource)]
 pub struct CheatSettings {
     pub generate_lines: bool,
+    pub timer: Timer,
+}
+
+impl Default for CheatSettings {
+    fn default() -> Self {
+        Self {
+            generate_lines: false,
+            timer: Timer::from_seconds(0.2, TimerMode::Repeating),
+        }
+    }
 }
 
 const DEBUG_TOGGLE_KEY: KeyCode = KeyCode::F3;

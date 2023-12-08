@@ -565,13 +565,14 @@ generate_upgrade_list!(
                 mut upgrade_list: ResMut<UpgradeList>,
                 simulation: Res<Simulation>,
             | {
-                upgrade_list[ImportLibrary].value = (simulation.lines * 0.1).max(32.0).floor();
+                upgrade_list[ImportLibrary].value = (simulation.total_lines * 0.1).max(32.0).floor();
             }),
         ),
         install: Some(world.register_system(|
             upgrade_list: Res<UpgradeList>,
             mut simulation: ResMut<Simulation>,
         | {
+            // TODO: Should this stack with specialization skills?
             simulation.lines += upgrade_list[ImportLibrary].value;
         })),
         ..default()

@@ -56,6 +56,9 @@ pub struct Simulation {
     /// Presentation factor, affects the submissions' results.
     pub presentation_score: f64,
 
+    /// Total lines generated during this playthrough before the costs are subtracted.
+    pub total_lines: f64,
+
     /// Newly added line count will be multiplied by this.
     pub line_multiplier: f64,
 
@@ -86,6 +89,8 @@ impl Default for Simulation {
             tech_debt: 0.0,
             fun_score: 0.0,
             presentation_score: 0.0,
+
+            total_lines: 0.0,
 
             line_multiplier: 1.0,
 
@@ -293,6 +298,7 @@ fn handle_line_added_events(
     }
     total *= simulation.line_multiplier;
     simulation.lines += total;
+    simulation.total_lines += total;
 
     // Spawn entities
     let spawned_entities = (total * simulation.entity_spawn_per_line).floor();
