@@ -7,6 +7,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
+use crate::simulation::SpritePackAssets;
 use crate::state::editor_screen::EditorScreenAssets;
 use crate::state::AppState::*;
 use crate::ui::FontSize;
@@ -20,6 +21,7 @@ impl Plugin for LoadingScreenStatePlugin {
         app.register_type::<IsLoadingBarFill>()
             .add_loading_state(LoadingState::new(LoadingScreen))
             .add_collection_to_loading_state::<_, EditorScreenAssets>(LoadingScreen)
+            .add_collection_to_loading_state::<_, SpritePackAssets>(LoadingScreen)
             .add_plugins(ProgressPlugin::new(LoadingScreen).continue_to(EditorScreen))
             .add_systems(OnEnter(LoadingScreen), enter_loading)
             .add_systems(OnExit(LoadingScreen), exit_loading)

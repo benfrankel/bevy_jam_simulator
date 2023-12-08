@@ -7,6 +7,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
+use crate::simulation::SpritePackAssets;
 use crate::state::editor_screen::EditorScreenAssets;
 use crate::state::AppState::*;
 use crate::ui::FontSize;
@@ -24,6 +25,7 @@ impl Plugin for TitleScreenStatePlugin {
             .init_collection::<TitleScreenAssets>()
             .add_loading_state(LoadingState::new(TitleScreen))
             .add_collection_to_loading_state::<_, EditorScreenAssets>(TitleScreen)
+            .add_collection_to_loading_state::<_, SpritePackAssets>(TitleScreen)
             .add_plugins(ProgressPlugin::new(TitleScreen))
             .add_systems(OnEnter(TitleScreen), enter_title_screen)
             .add_systems(OnExit(TitleScreen), exit_title_screen);

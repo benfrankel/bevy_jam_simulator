@@ -6,7 +6,6 @@ use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use rand::Rng;
 use strum::EnumCount;
 
 use crate::config::Config;
@@ -16,6 +15,7 @@ use crate::simulation::PassiveCodeTyper;
 use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
 use crate::simulation::SpawnEvent;
+use crate::simulation::SpritePack;
 use crate::state::editor_screen::spawn_editor_screen;
 use crate::state::editor_screen::SceneView;
 use crate::state::editor_screen::SceneViewBounds;
@@ -293,7 +293,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
         vec![Inspiration],
         vec![VelocityPlugin],
         vec![ImportLibrary, SplashOfLifePlugin],
-        vec![Coffee],
+        vec![Coffee, OneBitSpritePack],
         vec![Brainstorm],
     ]));
 }
@@ -339,27 +339,30 @@ generate_upgrade_list!(
 
     // Presentation score
 
+    OneBitSpritePack: Upgrade {
+        name: "1-bit Sprite Pack".to_string(),
+        desc: "Downloads a 1-bit sprite pack for your entities. Makes your game prettier.".to_string(),
+        presentation_score: 10.0,
+        base_cost: 25.0,
+        install: Some(world.register_system(|
+            mut simulation: ResMut<Simulation>
+        | {
+            simulation.sprite_pack = SpritePack::OneBit(vec![]);
+            simulation.sprite_pack.add_skin(&mut thread_rng());
+        })),
+        ..default()
+    },
     EntitySkinPlugin: Upgrade {
         name: "EntitySkinPlugin".to_string(),
         desc: "Introduces a new entity skin with a random color. Makes your game prettier.".to_string(),
-        presentation_score: 5.0,
+        presentation_score: 4.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: 5,
-        install: Some(
-            world.register_system(|mut simulation: ResMut<Simulation>| {
-                let mut rng = rand::thread_rng();
-                simulation.entity_colors.push(
-                    Color::Rgba {
-                        red: rng.gen_range(0.0..1.0),
-                        green: rng.gen_range(0.0..1.0),
-                        blue: rng.gen_range(0.0..1.0),
-                        alpha: 1.0,
-                    }
-                );
-            }),
-        ),
+        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+            simulation.sprite_pack.add_skin(&mut thread_rng());
+        })),
         ..default()
     },
     EntitySizePlugin: Upgrade {
@@ -370,11 +373,9 @@ generate_upgrade_list!(
         cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: 2,
-        install: Some(
-            world.register_system(|mut simulation: ResMut<Simulation>| {
-                simulation.entity_size_max += 4.0;
-            }),
-        ),
+        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+            simulation.entity_size_max += 4.0;
+        })),
         ..default()
     },
 
@@ -674,11 +675,9 @@ generate_upgrade_list!(
         name: "Brainstorm".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
         tech_debt: 0.0,
-        install: Some(
-            world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
-                sequence.slots += 1;
-            }),
-        ),
+        install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
+            sequence.slots += 1;
+        })),
         ..default()
     },
     DesignDocument: Upgrade {
@@ -688,11 +687,9 @@ generate_upgrade_list!(
         base_cost: 20.0,
         upgrade_min: 7,
         weight: 2.5,
-        install: Some(
-            world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
-                sequence.slots += 1;
-            }),
-        ),
+        install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
+            sequence.slots += 1;
+        })),
         ..default()
     },
 );

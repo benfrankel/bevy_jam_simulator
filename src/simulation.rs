@@ -1,11 +1,13 @@
+mod sprite_pack;
+
 use std::f32::consts::TAU;
 
-use bevy::math::vec2;
 use bevy::prelude::*;
-use rand::seq::SliceRandom;
 use rand::Rng;
 
 use crate::physics::Velocity;
+pub use crate::simulation::sprite_pack::SpritePack;
+pub use crate::simulation::sprite_pack::SpritePackAssets;
 use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::WrapWithinSceneView;
 use crate::state::AppState;
@@ -22,6 +24,7 @@ impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SpawnEvent>()
             .register_type::<IsEntityCap>()
+            .add_plugins(sprite_pack::SpritePackPlugin)
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
             .init_resource::<PassiveCodeTyper>()
@@ -46,10 +49,9 @@ pub struct Simulation {
     pub lines: f64,
     pub entities: f64,
     pub tech_debt: f64,
-
-    /// Fun factor, determines the score.
+    /// Fun score, affects the submission's results.
     pub fun_score: f64,
-    /// Presentation factor, determines the score.
+    /// Presentation factor, affects the submissions' results.
     pub presentation_score: f64,
 
     /// Minimum size for new entities.
@@ -58,6 +60,8 @@ pub struct Simulation {
     pub entity_size_max: f32,
     /// List of colors that the new entities can have.
     pub entity_colors: Vec<Color>,
+    /// The sprite pack to use.
+    pub sprite_pack: SpritePack,
 
     /// Minimum offset distance for entities on spawn.
     pub spawn_offset_min: f32,
@@ -74,12 +78,15 @@ impl Default for Simulation {
             tech_debt: 0.0,
             fun_score: 0.0,
             presentation_score: 0.0,
+
             entity_size_min: 8.0,
             entity_size_max: 8.0,
             entity_colors: vec![
                 Color::rgba(0.0, 0.0, 0.0, 1.0),
                 Color::rgba(1.0, 1.0, 1.0, 1.0),
             ],
+            sprite_pack: default(),
+
             spawn_offset_min: 0.0,
             spawn_offset_max: 2.0,
         }
@@ -99,8 +106,9 @@ fn spawn_entities(
     mut commands: Commands,
     mut events: EventReader<SpawnEvent>,
     root: Res<AppRoot>,
-    mut entity_cap_query: Query<&mut OverflowDespawnQueue, With<IsEntityCap>>,
     mut simulation: ResMut<Simulation>,
+    sprite_pack_assets: Res<SpritePackAssets>,
+    mut entity_cap_query: Query<&mut OverflowDespawnQueue, With<IsEntityCap>>,
 ) {
     let mut rng = rand::thread_rng();
     for event in events.read() {
@@ -119,24 +127,24 @@ fn spawn_entities(
             let position = (event.position + offset).extend(0.0);
 
             let size = rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max);
+            let size = Vec2::splat(size);
 
             let entity = commands
                 .spawn((
                     Name::new("Entity"),
-                    SpriteBundle {
-                        sprite: Sprite {
-                            color: *simulation.entity_colors.choose(&mut rng).unwrap(),
-                            custom_size: Some(vec2(size, size)),
-                            ..default()
-                        },
-                        transform: Transform::from_translation(position),
-                        ..default()
-                    },
+                    SpatialBundle::from_transform(Transform::from_translation(position)),
                     Velocity(velocity),
                     WrapWithinSceneView,
                 ))
                 .set_parent(root.world)
                 .id();
+            simulation.sprite_pack.apply(
+                &mut commands,
+                entity,
+                &sprite_pack_assets,
+                size,
+                &mut rng,
+            );
 
             for mut despawn_queue in &mut entity_cap_query {
                 despawn_queue.push(entity);
