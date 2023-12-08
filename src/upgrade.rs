@@ -898,7 +898,7 @@ generate_upgrade_list!(
             "Brainstorm Again",
             "Think Twice",
             "Drink Water",
-            "Sleep on it",
+            "Take a Nap",
             "Talk to a Friend",
             "Order a Pizza",
             "Go for a Walk",
