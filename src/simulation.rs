@@ -223,7 +223,8 @@ fn type_code_passively(
 
     let count = count as usize;
     for (mut code, mut text) in &mut code_query {
-        code.enter(&mut simulation, &mut text.sections[0].value, count);
+        let lines = code.enter(&mut text.sections[0].value, count);
+        simulation.lines += lines;
     }
 }
 

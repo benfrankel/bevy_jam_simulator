@@ -57,7 +57,8 @@ impl Default for CodeTyper {
 }
 
 impl CodeTyper {
-    pub fn enter(&mut self, simulation: &mut Simulation, text: &mut String, count: usize) {
+    pub fn enter(&mut self, text: &mut String, count: usize) -> f64 {
+        let mut typed_lines: f64 = 0.0;
         for _ in 0..count {
             loop {
                 // Push a character
@@ -66,7 +67,7 @@ impl CodeTyper {
 
                 // If it was a newline, update typer's lines
                 if c == '\n' {
-                    simulation.lines += 1.0;
+                    typed_lines += 1.0;
                     self.lines_count += 1;
                     if self.lines_count > self.lines_max {
                         self.lines_count -= 1;
@@ -79,6 +80,7 @@ impl CodeTyper {
                 }
             }
         }
+        typed_lines
     }
 }
 
@@ -98,6 +100,7 @@ pub fn type_code(
 
     for (mut typer, mut text) in &mut typer_query {
         let count = keys * typer.chars_per_key;
-        typer.enter(&mut simulation, &mut text.sections[0].value, count);
+        let lines = typer.enter(&mut text.sections[0].value, count);
+        simulation.lines += lines;
     }
 }
