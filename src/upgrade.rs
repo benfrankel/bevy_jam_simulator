@@ -258,93 +258,6 @@ macro_rules! generate_upgrade_list {
 generate_upgrade_list!(
     |world|
 
-    // Tutorial upgrades
-
-    DarkMode: Upgrade {
-        name: "Dark Mode".to_string(),
-        desc: "Rite of passage for all developers. Required to write code.".to_string(),
-        tech_debt: 0.0,
-        install: Some(world.register_system(|
-            mut commands: Commands,
-            root: Res<AppRoot>,
-            config: Res<Config>,
-            upgrade_list: Res<UpgradeList>,
-            simulation: Res<Simulation>,
-        | {
-            commands.entity(root.ui).despawn_descendants();
-            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, &simulation, false);
-            commands.entity(editor_screen).set_parent(root.ui);
-        })),
-        ..default()
-    },
-    TouchOfLifePlugin: Upgrade {
-        name: "TouchOfLifePlugin".to_string(),
-        desc: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
-        base_cost: 5.0,
-        install: Some(
-            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
-                for mut scene_view in &mut scene_view_query {
-                    scene_view.spawns_per_click += 1;
-                }
-            }),
-        ),
-        ..default()
-    },
-    MovementPlugin: Upgrade {
-        name: "MovementPlugin".to_string(),
-        desc: "Allows entities to move. Makes your game more fun.".to_string(),
-        fun_score: 5.0,
-        base_cost: 5.0,
-        install: Some(world.register_system(|
-            mut physics_settings: ResMut<PhysicsSettings>,
-        | {
-            physics_settings.speed_multiplier = UNIT_SPEED;
-        })),
-        ..default()
-    },
-    Brainstorm: Upgrade {
-        name: "Brainstorm".to_string(),
-        desc: "Adds 1 extra upgrade slot.".to_string(),
-        tech_debt: 0.0,
-        install: Some(
-            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
-                for mut container in &mut query {
-                    container.slots += 1;
-                }
-            }),
-        ),
-        ..default()
-    },
-    SplashOfLifePlugin: Upgrade {
-        name: "SplashOfLifePlugin".to_string(),
-        desc: "Spawns VALUE entities immediately.".to_string(),
-        base_cost: 2.0,
-        cost_scale_factor: 1.2,
-        weight: 1.0,
-        remaining: usize::MAX,
-        update: Some(
-            world.register_system(|
-                mut upgrade_list: ResMut<UpgradeList>,
-                simulation: Res<Simulation>,
-            | {
-                upgrade_list[SplashOfLifePlugin].value = (simulation.entities * 0.1).max(32.0).floor();
-            }),
-        ),
-        install: Some(
-            world.register_system(|
-                mut events: EventWriter<SpawnEvent>,
-                upgrade_list: Res<UpgradeList>,
-                bounds: Res<SceneViewBounds>,
-            | {
-                events.send(SpawnEvent {
-                    position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
-                    count: upgrade_list[SplashOfLifePlugin].value,
-                });
-            }),
-        ),
-        ..default()
-    },
-
     // Upgrades that make your game prettier
 
     EntitySkinPlugin: Upgrade {
@@ -388,6 +301,19 @@ generate_upgrade_list!(
 
     // Upgrades that make your game more fun
 
+    MovementPlugin: Upgrade {
+        name: "MovementPlugin".to_string(),
+        desc: "Allows entities to move. Makes your game more fun.".to_string(),
+        fun_score: 5.0,
+        base_cost: 5.0,
+        install: Some(world.register_system(|
+            mut physics_settings: ResMut<PhysicsSettings>,
+        | {
+            physics_settings.speed_multiplier = UNIT_SPEED;
+        })),
+        ..default()
+    },
+
     SpeedupPlugin: Upgrade {
         name: "SpeedupPlugin".to_string(),
         desc: "Increases the entity movement speed. Makes your game more fun.".to_string(),
@@ -404,7 +330,23 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Passive entity spawning
+    // Manual entity spawning
+
+    TouchOfLifePlugin: Upgrade {
+        name: "TouchOfLifePlugin".to_string(),
+        desc: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
+        base_cost: 5.0,
+        install: Some(
+            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+                for mut scene_view in &mut scene_view_query {
+                    scene_view.spawns_per_click += 1;
+                }
+            }),
+        ),
+        ..default()
+    },
+
+    // Automatic entity spawning
 
     EntitySpawner: Upgrade {
         name: "EntitySpawnerPlugin".to_string(),
@@ -446,39 +388,23 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Programming upgrades
+    // Manual code entry
 
-    ImportLibrary: Upgrade {
-        name: "Import Library".to_string(),
-        desc: "Writes VALUE lines of code immediately.".to_string(),
-        base_cost: 1.0,
-        weight: 1.0,
-        remaining: usize::MAX,
-        update: Some(
-            world.register_system(|
-                mut upgrade_list: ResMut<UpgradeList>,
-                simulation: Res<Simulation>,
-            | {
-                upgrade_list[ImportLibrary].value = (simulation.lines * 0.1).max(32.0).floor();
-            }),
-        ),
+    DarkMode: Upgrade {
+        name: "Dark Mode".to_string(),
+        desc: "Rite of passage for all developers. Required to write code.".to_string(),
+        tech_debt: 0.0,
         install: Some(world.register_system(|
+            mut commands: Commands,
+            root: Res<AppRoot>,
+            config: Res<Config>,
             upgrade_list: Res<UpgradeList>,
-            mut simulation: ResMut<Simulation>,
+            simulation: Res<Simulation>,
         | {
-            simulation.lines += upgrade_list[ImportLibrary].value;
+            commands.entity(root.ui).despawn_descendants();
+            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, &simulation, false);
+            commands.entity(editor_screen).set_parent(root.ui);
         })),
-        ..default()
-    },
-    Refactor: Upgrade {
-        name: "Refactor".to_string(),
-        desc: "Improves the quality of the codebase.".to_string(),
-        base_cost: 10.0,
-        cost_scale_factor: 1.3,
-        tech_debt: -5.0,
-        weight: 2.0,
-        remaining: usize::MAX,
-        tech_debt_min: 15.0,
         ..default()
     },
     TenXDev: Upgrade {
@@ -509,7 +435,7 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Passive code typing
+    // Automatic code entry
 
     ProceduralMacro: Upgrade {
         name: "ProceduralMacroPlugin".to_string(),
@@ -551,8 +477,21 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Miscellaneous
+    // Upgrade slots
 
+    Brainstorm: Upgrade {
+        name: "Brainstorm".to_string(),
+        desc: "Adds 1 extra upgrade slot.".to_string(),
+        tech_debt: 0.0,
+        install: Some(
+            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
+                for mut container in &mut query {
+                    container.slots += 1;
+                }
+            }),
+        ),
+        ..default()
+    },
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
@@ -567,6 +506,71 @@ generate_upgrade_list!(
                 }
             }),
         ),
+        ..default()
+    },
+
+    // Infinitely repeatable
+
+    SplashOfLifePlugin: Upgrade {
+        name: "SplashOfLifePlugin".to_string(),
+        desc: "Spawns VALUE entities immediately.".to_string(),
+        base_cost: 2.0,
+        cost_scale_factor: 1.2,
+        weight: 1.0,
+        remaining: usize::MAX,
+        update: Some(
+            world.register_system(|
+                mut upgrade_list: ResMut<UpgradeList>,
+                simulation: Res<Simulation>,
+            | {
+                upgrade_list[SplashOfLifePlugin].value = (simulation.entities * 0.1).max(32.0).floor();
+            }),
+        ),
+        install: Some(
+            world.register_system(|
+                mut events: EventWriter<SpawnEvent>,
+                upgrade_list: Res<UpgradeList>,
+                bounds: Res<SceneViewBounds>,
+            | {
+                events.send(SpawnEvent {
+                    position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+                    count: upgrade_list[SplashOfLifePlugin].value,
+                });
+            }),
+        ),
+        ..default()
+    },
+    ImportLibrary: Upgrade {
+        name: "Import Library".to_string(),
+        desc: "Writes VALUE lines of code immediately.".to_string(),
+        base_cost: 1.0,
+        weight: 1.0,
+        remaining: usize::MAX,
+        update: Some(
+            world.register_system(|
+                mut upgrade_list: ResMut<UpgradeList>,
+                simulation: Res<Simulation>,
+            | {
+                upgrade_list[ImportLibrary].value = (simulation.lines * 0.1).max(32.0).floor();
+            }),
+        ),
+        install: Some(world.register_system(|
+            upgrade_list: Res<UpgradeList>,
+            mut simulation: ResMut<Simulation>,
+        | {
+            simulation.lines += upgrade_list[ImportLibrary].value;
+        })),
+        ..default()
+    },
+    Refactor: Upgrade {
+        name: "Refactor".to_string(),
+        desc: "Improves the quality of the codebase.".to_string(),
+        base_cost: 10.0,
+        cost_scale_factor: 1.3,
+        tech_debt: -5.0,
+        weight: 2.0,
+        remaining: usize::MAX,
+        tech_debt_min: 15.0,
         ..default()
     },
 );
