@@ -330,7 +330,7 @@ fn offer_next_upgrades(
         let (next_upgrades, desc) = sequence.next(&upgrade_list, &simulation, &outline);
 
         for kind in next_upgrades {
-            if kind == UpgradeKind::BrainstormAgain {
+            if kind == UpgradeKind::RefreshUpgradeList {
                 // Add a separator.
                 spawn_separator(&mut commands, theme, entity);
             }

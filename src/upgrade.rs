@@ -308,7 +308,7 @@ impl UpgradeSequence {
         upgrades.sort();
 
         // Add an upgrade that refreshes the upgrade list to reduce the dependency on luck.
-        upgrades.push(UpgradeKind::BrainstormAgain);
+        upgrades.push(UpgradeKind::RefreshUpgradeList);
 
         (upgrades, String::new())
     }
@@ -894,16 +894,37 @@ generate_upgrade_list!(
 
     // Misc
 
-    BrainstormAgain: Upgrade {
-        name: "Brainstorm Again".to_string(),
-        desc: "Refreshes the list of upgrades in exchange for lines of code. The cost doubles each time you use this.".to_string(),
-        tech_debt: 0.0,
-        base_cost: 1.0,
-        remaining: usize::MAX,
-        no_outline: true,
-        install: Some(world.register_system(|mut list: ResMut<UpgradeList>| {
-            list[BrainstormAgain].base_cost *= 2.0;
-        })),
-        ..default()
+    RefreshUpgradeList: {
+        let mut names: [&str; 3] = [
+            "Brainstorm Again",
+            "Go for a Walk",
+            "Think Twice",
+        ];
+        names.shuffle(&mut thread_rng());
+        let mut name_i: usize = 0;
+
+        Upgrade {
+            name: names[name_i].to_string(),
+            desc: "\
+                Refreshes the list of upgrades in exchange for lines of code. \
+                The cost doubles each time you use this.".to_string(),
+            tech_debt: 0.0,
+            base_cost: 1.0,
+            remaining: usize::MAX,
+            no_outline: true,
+            install: Some(world.register_system(move |mut list: ResMut<UpgradeList>| {
+                let this = &mut list[RefreshUpgradeList];
+                // Increase base cost
+                this.base_cost *= 2.0;
+                // Update name
+                name_i += 1;
+                if name_i >= names.len() {
+                    names.shuffle(&mut thread_rng());
+                    name_i = 0;
+                }
+                this.name = names[name_i].to_string();
+            })),
+            ..default()
+        }
     },
 );
