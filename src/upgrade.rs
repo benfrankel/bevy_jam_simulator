@@ -60,19 +60,23 @@ pub struct Upgrade {
     pub name: String,
     /// The desc of the upgrade, with "VALUE" standing in for `self.value`.
     pub desc: String,
+    /// If true, this upgrade won't be added to the outline and won't count as an upgrade.
+    pub no_outline: bool,
+    /// The amount of technical debt this upgrade adds when you install it.
+    pub tech_debt: f64,
     /// How much this upgrade contributes to the Presentation score of your submission.
     pub presentation_score: f64,
     /// How much this upgrade contributes to the Fun score of your submission.
     pub fun_score: f64,
-    /// The amount of technical debt this upgrade adds when you install it.
-    pub tech_debt: f64,
     /// How many lines of code this upgrade costs without tech debt scaling.
     pub base_cost: f64,
     /// The multiplier to the cost of this upgrade per unit of technical debt.
     pub cost_scale_factor: f64,
-    /// If true, this upgrade won't be added to the outline and won't count as an upgrade.
-    pub no_outline: bool,
 
+    /// The relative odds of this upgrade being offered.
+    pub weight: f32,
+    /// How many more copies of this upgrade can be installed.
+    pub remaining: usize,
     /// The minimum number of entities required for this upgrade to be offered.
     pub entity_min: f64,
     /// The maximum number of entities allowed for this upgrade to be offered.
@@ -93,10 +97,6 @@ pub struct Upgrade {
     pub installed_min: Vec<(UpgradeKind, usize)>,
     /// A list of (upgrade, maximum) allowed to be installed for this upgrade to be offered.
     pub installed_max: Vec<(UpgradeKind, usize)>,
-    /// The relative odds of this upgrade being offered.
-    pub weight: f32,
-    /// How many more copies of this upgrade can be installed.
-    pub remaining: usize,
 
     /// An updatable value to be used by the upgrade for some purpose.
     pub value: f64,
@@ -113,13 +113,15 @@ impl Default for Upgrade {
         Self {
             name: "Unnamed".to_string(),
             desc: "Undefined.".to_string(),
+            no_outline: false,
+            tech_debt: 0.0,
             presentation_score: 0.0,
             fun_score: 0.0,
-            tech_debt: 1.0,
             base_cost: 0.0,
             cost_scale_factor: 1.0,
-            no_outline: false,
 
+            weight: 0.0,
+            remaining: 1,
             entity_min: 0.0,
             entity_max: f64::INFINITY,
             line_min: 0.0,
@@ -130,8 +132,6 @@ impl Default for Upgrade {
             tech_debt_max: f64::INFINITY,
             installed_min: vec![],
             installed_max: vec![],
-            weight: 0.0,
-            remaining: 1,
 
             value: 0.0,
             update: None,
@@ -378,9 +378,8 @@ generate_upgrade_list!(
     Inspiration: Upgrade {
         name: "Inspiration".to_string(),
         desc: "Allows new types of upgrades to unlock when you have enough entities.".to_string(),
-        tech_debt: 0.0,
-        base_cost: 5.0,
         no_outline: true,
+        base_cost: 5.0,
         ..default()
     },
 
@@ -389,6 +388,7 @@ generate_upgrade_list!(
     OneBitSpritePack: Upgrade {
         name: "1-bit Sprite Pack".to_string(),
         desc: "Downloads a 1-bit sprite pack for your entities. Makes your game prettier.".to_string(),
+        tech_debt: 1.0,
         presentation_score: 10.0,
         base_cost: 25.0,
         install: Some(world.register_system(|
@@ -404,6 +404,7 @@ generate_upgrade_list!(
     EntitySkinPlugin: Upgrade {
         name: "EntitySkinPlugin".to_string(),
         desc: "Introduces a new entity skin with a random color. Makes your game prettier.".to_string(),
+        tech_debt: 1.0,
         presentation_score: 4.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
@@ -418,6 +419,7 @@ generate_upgrade_list!(
     EntitySizePlugin: Upgrade {
         name: "EntitySizePlugin".to_string(),
         desc: "Increases the maximum entity size. Makes your game prettier.".to_string(),
+        tech_debt: 1.0,
         presentation_score: 2.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
@@ -434,6 +436,7 @@ generate_upgrade_list!(
     VelocityPlugin: Upgrade {
         name: "VelocityPlugin".to_string(),
         desc: "Allows entities to move. Makes your game more fun.".to_string(),
+        tech_debt: 1.0,
         fun_score: 5.0,
         base_cost: 5.0,
         install: Some(world.register_system(|
@@ -447,6 +450,7 @@ generate_upgrade_list!(
     SpeedupPlugin: Upgrade {
         name: "SpeedupPlugin".to_string(),
         desc: "Increases the entity movement speed. Makes your game more fun.".to_string(),
+        tech_debt: 1.0,
         fun_score: 10.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
@@ -465,6 +469,7 @@ generate_upgrade_list!(
     SplashOfLifePlugin: Upgrade {
         name: "SplashOfLifePlugin".to_string(),
         desc: "Spawns VALUE entities immediately.".to_string(),
+        tech_debt: 1.0,
         base_cost: 2.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
@@ -497,6 +502,7 @@ generate_upgrade_list!(
     TouchOfLifePlugin: Upgrade {
         name: "TouchOfLifePlugin".to_string(),
         desc: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
+        tech_debt: 1.0,
         base_cost: 5.0,
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
@@ -511,6 +517,7 @@ generate_upgrade_list!(
     Coffee: Upgrade {
         name: "Coffee".to_string(),
         desc: "Doubles the number of entities spawned per click.".to_string(),
+        tech_debt: 1.0,
         base_cost: 25.0,
         weight: 1.0,
         remaining: 3,
@@ -529,6 +536,7 @@ generate_upgrade_list!(
     EntitySpawnerPlugin: Upgrade {
         name: "EntitySpawnerPlugin".to_string(),
         desc: "Spawns 1 entity every 2 seconds.".to_string(),
+        tech_debt: 1.0,
         base_cost: 100.0,
         weight: 1.0,
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
@@ -540,11 +548,12 @@ generate_upgrade_list!(
     BatchSpawnerPlugin: Upgrade {
         name: "BatchSpawnerPlugin".to_string(),
         desc: "Doubles the number of entities spawned by EntitySpawnerPlugin.".to_string(),
+        tech_debt: 1.0,
         base_cost: 50.0,
         cost_scale_factor: 1.2,
-        installed_min: vec![(EntitySpawnerPlugin, 1)],
         weight: 0.5,
         remaining: 6,
+        installed_min: vec![(EntitySpawnerPlugin, 1)],
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
             entity_spawner.amount *= 2.0;
         })),
@@ -557,9 +566,9 @@ generate_upgrade_list!(
         tech_debt: 2.0,
         base_cost: 100.0,
         cost_scale_factor: 1.2,
-        installed_min: vec![(EntitySpawnerPlugin, 1)],
         weight: 0.5,
         remaining: 8,
+        installed_min: vec![(EntitySpawnerPlugin, 1)],
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
             let new_duration = entity_spawner.timer.duration().div_f64(2.0);
             entity_spawner.timer.set_duration(new_duration);
@@ -572,6 +581,7 @@ generate_upgrade_list!(
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
         desc: "Writes VALUE lines of code immediately.".to_string(),
+        tech_debt: 1.0,
         base_cost: 1.0,
         weight: 1.0,
         remaining: usize::MAX,
@@ -598,7 +608,6 @@ generate_upgrade_list!(
     DarkModeDracula: Upgrade {
         name: "Dark Mode (Dracula)".to_string(),
         desc: "Rite of passage for all developers. Required to write code.".to_string(),
-        tech_debt: 0.0,
         install: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
@@ -618,7 +627,6 @@ generate_upgrade_list!(
     DarkModeBamboo: Upgrade {
         name: "Dark Mode (Bamboo)".to_string(),
         desc: "Rite of passage for all developers. Required to write code.".to_string(),
-        tech_debt: 0.0,
         install: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
@@ -640,7 +648,6 @@ generate_upgrade_list!(
     MechanicalKeyboard: Upgrade {
         name: "Mechanical Keyboard".to_string(),
         desc: "Doubles the number of characters typed per key press.".to_string(),
-        tech_debt: 0.0,
         base_cost: 50.0,
         weight: 0.5,
         install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
@@ -656,6 +663,7 @@ generate_upgrade_list!(
     ProceduralMacro: Upgrade {
         name: "Procedural Macro".to_string(),
         desc: "Writes 30 characters every 2 seconds.".to_string(),
+        tech_debt: 1.0,
         base_cost: 50.0,
         weight: 1.0,
         remaining: 1,
@@ -668,11 +676,12 @@ generate_upgrade_list!(
     MetaMacro: Upgrade {
         name: "Meta Macro".to_string(),
         desc: "Doubles the output of Procedural Macro.".to_string(),
+        tech_debt: 1.0,
         base_cost: 50.0,
         cost_scale_factor: 1.2,
-        installed_min: vec![(ProceduralMacro, 1)],
         weight: 0.5,
         remaining: 6,
+        installed_min: vec![(ProceduralMacro, 1)],
         install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
             typer.chars *= 2.0;
         })),
@@ -682,12 +691,11 @@ generate_upgrade_list!(
     OptimizeBuild: Upgrade {
         name: "Optimize Build".to_string(),
         desc: "Halves the cooldown of Procedural Macro by optimizing the build process.".to_string(),
-        tech_debt: 0.0,
         base_cost: 50.0,
         cost_scale_factor: 1.2,
-        installed_min: vec![(ProceduralMacro, 1)],
         weight: 0.5,
         remaining: 8,
+        installed_min: vec![(ProceduralMacro, 1)],
         install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
             let new_duration = typer.timer.duration().div_f64(2.0);
             typer.timer.set_duration(new_duration);
@@ -701,8 +709,8 @@ generate_upgrade_list!(
         tech_debt: 2.0,
         base_cost: 200.0,
         cost_scale_factor: 1.2,
-        entity_min: 1000.0,
         weight: 0.1,
+        entity_min: 1000.0,
         install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
             typer.chars_per_entity += 1.0;
         })),
@@ -717,9 +725,9 @@ generate_upgrade_list!(
         tech_debt: -5.0,
         base_cost: 10.0,
         cost_scale_factor: 1.5,
-        tech_debt_min: 10.0,
         weight: 2.0,
         remaining: usize::MAX,
+        tech_debt_min: 10.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             upgrade_list[Refactor].tech_debt_min += 5.0;
         })),
@@ -733,9 +741,9 @@ generate_upgrade_list!(
         tech_debt: -3.0,
         base_cost: 20.0,
         cost_scale_factor: 1.3,
-        tech_debt_min: 3.0,
         weight: 1.0,
         remaining: 2,
+        tech_debt_min: 3.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             for upgrade in &mut upgrade_list.0 {
                 if upgrade.tech_debt > 0.0 {
@@ -751,11 +759,10 @@ generate_upgrade_list!(
     Rtfm: Upgrade {
         name: "RTFM".to_string(),
         desc: "Reduces all future technical debt increases by 5%.".to_string(),
-        tech_debt: 0.0,
         base_cost: 20.0,
-        tech_debt_min: 5.0,
         weight: 1.0,
         remaining: 2,
+        tech_debt_min: 5.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             for upgrade in &mut upgrade_list.0 {
                 if upgrade.tech_debt > 0.0 {
@@ -769,12 +776,12 @@ generate_upgrade_list!(
     CiCd: Upgrade {
         name: "CI/CD".to_string(),
         desc: "Reduces all future technical debt increases by 10%.".to_string(),
-        installed_min: vec![(Rtfm, 2), (UnitTests, 1)],
         tech_debt: 0.5,
-        cost_scale_factor: 1.2,
         base_cost: 50.0,
+        cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: 2,
+        installed_min: vec![(Rtfm, 2), (UnitTests, 1)],
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             for upgrade in &mut upgrade_list.0 {
                 if upgrade.tech_debt > 0.0 {
@@ -790,7 +797,6 @@ generate_upgrade_list!(
     Brainstorm: Upgrade {
         name: "Brainstorm".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
-        tech_debt: 0.0,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.slots += 1;
         })),
@@ -800,10 +806,9 @@ generate_upgrade_list!(
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
-        tech_debt: 0.0,
         base_cost: 20.0,
-        upgrade_min: 7,
         weight: 2.5,
+        upgrade_min: 7,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.slots += 1;
         })),
@@ -812,91 +817,119 @@ generate_upgrade_list!(
 
     // Specialization
 
-    // Specialization entry point
     Specialization: Upgrade {
         name: "Specialization".to_string(),
-        desc: "Select this upgrade when you are ready to specialize.".to_string(),
-        tech_debt: 0.0,
-        base_cost: 0.0,
+        desc: "Offers a specialization.".to_string(),
         no_outline: true,
-        upgrade_min: 20,
+        base_cost: 100.0,
         weight: 2.5,
+        upgrade_min: 20,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.push(
                 vec![TenXDev, RockstarDev],
                 "This is a specialization upgrade. \
-                 You can only select one. \
-                 The rejected options will never appear again.".to_string(),
+                 You can only select one path. \
+                 The rejected option will never appear again.".to_string(),
             );
         })),
         ..default()
     },
 
-    // 10x Dev
-    TenXDev: Upgrade {
-        name: "10x Dev".to_string(),
-        desc: "\
-            Multiplies all code generation by 10. \
-            Subsequent level-ups will double the multiplier. \
-        ".to_string(),
-        tech_debt: 0.0,
-        base_cost: 100.0,
-        remaining: 6,
-        install: Some(world.register_system(|
-            mut simulation: ResMut<Simulation>,
-            mut upgrade_list: ResMut<UpgradeList>,
-        | {
-            let this = &mut upgrade_list[TenXDev];
-            if this.remaining == 5 {
-                // First time (remaining is decreased beforehand)
-                simulation.line_multiplier *= 10.0;
-                // "Unlock" the subsequent level-ups of this upgrade.
-                this.weight = 1.0;
-            } else {
-                // Level-up
-                simulation.line_multiplier *= 2.0;
-            }
-            // Special scaling
-            this.base_cost *= 100.0;
-        })),
-        ..default()
+    TenXDev: {
+        const NAMES: [&str; 6] = [
+            "10x Dev",
+            "100x Dev",
+            "1,000x Dev",
+            "10,000x Dev",
+            "100,000x Dev",
+            "1,000,000x Dev",
+        ];
+        let mut name_idx = 0;
+
+        Upgrade {
+            name: "10x Dev".to_string(),
+            desc: "\
+                Multiplies all code generation by 10. \
+                Subsequent level-ups will double the multiplier. \
+            ".to_string(),
+            remaining: 6,
+            install: Some(world.register_system(move |
+                mut simulation: ResMut<Simulation>,
+                mut upgrade_list: ResMut<UpgradeList>,
+            | {
+                let this = &mut upgrade_list[TenXDev];
+
+                if name_idx + 1 < NAMES.len() {
+                    name_idx += 1;
+                    this.name = NAMES[name_idx].to_string();
+                }
+
+                if this.remaining == 5 {
+                    // First time (remaining is decreased beforehand)
+                    simulation.line_multiplier *= 10.0;
+                    // "Unlock" the subsequent level-ups of this upgrade.
+                    this.weight = 1.0;
+                } else {
+                    // Level-up
+                    simulation.line_multiplier *= 2.0;
+                }
+                // Special scaling
+                this.base_cost *= 100.0;
+            })),
+            ..default()
+        }
     },
 
-    // Rockstar Dev
-    RockstarDev: Upgrade {
-        name: "Rockstar Dev".to_string(),
-        desc: "\
-            Each generated line will spawn 4 entities. \
-            Subsequent level-ups will double the entity per line ratio. \
-        ".to_string(),
-        tech_debt: 0.0,
-        base_cost: 100.0,
-        remaining: 6,
-        install: Some(world.register_system(|
-            mut simulation: ResMut<Simulation>,
-            mut upgrade_list: ResMut<UpgradeList>,
-        | {
-            let this = &mut upgrade_list[RockstarDev];
-            if this.remaining == 5 {
-                // First time (remaining is decreased beforehand)
-                simulation.entity_spawn_per_line = 4.0;
-                // "Unlock" the subsequent level-ups of this upgrade.
-                this.weight = 1.0;
-            } else {
-                // Level-up
-                simulation.entity_spawn_per_line *= 2.0;
-            }
-            // Special scaling
-            this.base_cost *= 10.0;
-        })),
-        ..default()
+    RockstarDev: {
+        const NAMES: [&str; 6] = [
+            "Rockstar Dev",
+            "Superstar Dev",
+            "Hypergiant Dev",
+            "Neutron Star Dev",
+            "Black Hole Dev",
+            "Quasar Dev",
+        ];
+        let mut name_idx = 0;
+
+        Upgrade {
+            name: NAMES[0].to_string(),
+            desc: "\
+                Each generated line will spawn 4 entities. \
+                Subsequent level-ups will double the entity per line ratio. \
+            ".to_string(),
+            remaining: 6,
+            install: Some(world.register_system(move |
+                mut simulation: ResMut<Simulation>,
+                mut upgrade_list: ResMut<UpgradeList>,
+            | {
+                let this = &mut upgrade_list[RockstarDev];
+
+                if name_idx + 1 < NAMES.len() {
+                    name_idx += 1;
+                    this.name = NAMES[name_idx].to_string();
+                }
+
+                if this.remaining == 5 {
+                    // First time (remaining is decreased beforehand)
+                    simulation.entity_spawn_per_line += 4.0;
+                    // Make subsequent copies of this upgrade available randomly.
+                    this.weight = 1.0;
+                } else {
+                    // Level up
+                    simulation.entity_spawn_per_line *= 2.0;
+                }
+                // Special scaling
+                this.base_cost *= 10.0;
+            })),
+            ..default()
+        }
     },
 
     // Misc
 
     RefreshUpgradeList: {
         let mut names: [&str; 10] = [
-            "Brainstorm Again",
+            "Playtest",
             "Think Twice",
             "Drink Water",
             "Take a Nap",
@@ -913,9 +946,8 @@ generate_upgrade_list!(
         Upgrade {
             name: names[name_idx].to_string(),
             desc: "Refreshes your upgrade options. Costs twice as much next time.".to_string(),
-            tech_debt: 0.0,
-            base_cost: 1.0,
             no_outline: true,
+            base_cost: 1.0,
             remaining: usize::MAX,
             install: Some(world.register_system(move |mut list: ResMut<UpgradeList>| {
                 let this = &mut list[RefreshUpgradeList];
