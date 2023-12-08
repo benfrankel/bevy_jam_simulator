@@ -59,6 +59,9 @@ pub struct Simulation {
     /// Newly added line count will be multiplied by this.
     pub line_multiplier: f64,
 
+    /// For each added line, this many entities will spawn.
+    pub entity_spawn_per_line: f64,
+
     /// Minimum size for new entities.
     pub entity_size_min: f32,
     /// Maximum size for new entities.
@@ -85,6 +88,8 @@ impl Default for Simulation {
             presentation_score: 0.0,
 
             line_multiplier: 1.0,
+
+            entity_spawn_per_line: 0.0,
 
             entity_size_min: 8.0,
             entity_size_max: 8.0,
@@ -279,10 +284,22 @@ pub struct LinesAddedEvent {
 fn handle_line_added_events(
     mut events: EventReader<LinesAddedEvent>,
     mut simulation: ResMut<Simulation>,
+    mut spawn_events: EventWriter<SpawnEvent>,
+    bounds: Res<SceneViewBounds>,
 ) {
     let mut total: f64 = 0.0;
     for event in events.read() {
         total += event.count;
     }
-    simulation.lines += total * simulation.line_multiplier;
+    total *= simulation.line_multiplier;
+    simulation.lines += total;
+
+    // Spawn entities
+    let spawned_entities = (total * simulation.entity_spawn_per_line).floor();
+    if spawned_entities > 0.0 {
+        spawn_events.send(SpawnEvent {
+            position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+            count: spawned_entities,
+        });
+    }
 }

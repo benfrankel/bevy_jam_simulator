@@ -237,6 +237,10 @@ pub struct UpgradeSequence {
     sequence: Vec<Vec<UpgradeKind>>,
     next_idx: usize,
     slots: usize,
+    /// This field can be set by upgrades. If not None, the next set of upgrades will be
+    /// the given list and the refresh button won't be offered. The given string will be
+    /// rendered beneath the list.
+    forced_list: Option<(Vec<UpgradeKind>, String)>,
 }
 
 impl UpgradeSequence {
@@ -245,15 +249,17 @@ impl UpgradeSequence {
             sequence,
             next_idx: 0,
             slots: 1,
+            forced_list: None,
         }
     }
 
+    /// Get the next upgrade list, with optional description.
     pub fn next(
         &mut self,
         upgrade_list: &UpgradeList,
         simulation: &Simulation,
         outline: &UpgradeOutline,
-    ) -> Vec<UpgradeKind> {
+    ) -> (Vec<UpgradeKind>, String) {
         // Use the initial sequence of upgrades first
         while self.next_idx < self.sequence.len() {
             self.next_idx += 1;
@@ -264,8 +270,13 @@ impl UpgradeSequence {
                 .collect::<Vec<_>>();
 
             if !upgrades.is_empty() {
-                return upgrades;
+                return (upgrades, String::new());
             }
+        }
+
+        // Check if there's a forced list.
+        if let Some(output) = self.forced_list.take() {
+            return output;
         }
 
         // Filter the list of all upgrade kinds into just the ones that are unlocked
@@ -289,7 +300,7 @@ impl UpgradeSequence {
         // Add an upgrade that refreshes the upgrade list to reduce the dependency on luck.
         upgrades.push(UpgradeKind::BrainstormAgain);
 
-        upgrades
+        (upgrades, String::new())
     }
 }
 
@@ -605,19 +616,6 @@ generate_upgrade_list!(
         })),
         ..default()
     },
-    TenXDev: Upgrade {
-        name: "10x Dev".to_string(),
-        desc: "Multiplies the number of characters typed per key press by 10.".to_string(),
-        tech_debt: 0.0,
-        base_cost: 100.0,
-        weight: 0.5,
-        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
-            for mut typer in &mut typer_query {
-                typer.chars_per_key *= 10;
-            }
-        })),
-        ..default()
-    },
 
     // Lines (automatic)
 
@@ -765,6 +763,85 @@ generate_upgrade_list!(
         weight: 2.5,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.slots += 1;
+        })),
+        ..default()
+    },
+
+    // Specialization
+
+    // Specialization entry point
+    Specialization: Upgrade {
+        name: "Specialization".to_string(),
+        desc: "Select this upgrade when you are ready to specialize.".to_string(),
+        tech_debt: 0.0,
+        base_cost: 0.0,
+        upgrade_min: 20,
+        weight: 2.5,
+        install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
+            sequence.forced_list = Some((
+                vec![TenXDev, RockstarDev],
+                "This is a specialization upgrade. \
+                 You can only select one. \
+                 The rejected options will never appear again.".to_string(),
+            ));
+        })),
+        ..default()
+    },
+    // 10x Dev
+    TenXDev: Upgrade {
+        name: "10x Dev".to_string(),
+        desc: "\
+            Multiplies all code generation by 10. \
+            Subsequent level-ups will double the multiplier. \
+        ".to_string(),
+        tech_debt: 0.0,
+        base_cost: 100.0,
+        remaining: 6,
+        install: Some(world.register_system(|
+            mut simulation: ResMut<Simulation>,
+            mut upgrade_list: ResMut<UpgradeList>,
+        | {
+            let this = &mut upgrade_list[TenXDev];
+            if this.remaining == 5 {
+                // First time (remaining is decreased beforehand)
+                simulation.line_multiplier *= 10.0;
+                // "Unlock" the subsequent level-ups of this upgrade.
+                this.weight = 1.0;
+            } else {
+                // Level-up
+                simulation.line_multiplier *= 2.0;
+            }
+            // Special scaling
+            this.base_cost *= 100.0;
+        })),
+        ..default()
+    },
+    // Rockstar Dev
+    RockstarDev: Upgrade {
+        name: "Rockstar Dev".to_string(),
+        desc: "\
+            Each generated line will spawn 4 entities. \
+            Subsequent level-ups will double the entity per line ratio. \
+        ".to_string(),
+        tech_debt: 0.0,
+        base_cost: 100.0,
+        remaining: 6,
+        install: Some(world.register_system(|
+            mut simulation: ResMut<Simulation>,
+            mut upgrade_list: ResMut<UpgradeList>,
+        | {
+            let this = &mut upgrade_list[RockstarDev];
+            if this.remaining == 5 {
+                // First time (remaining is decreased beforehand)
+                simulation.entity_spawn_per_line = 4.0;
+                // "Unlock" the subsequent level-ups of this upgrade.
+                this.weight = 1.0;
+            } else {
+                // Level-up
+                simulation.entity_spawn_per_line *= 2.0;
+            }
+            // Special scaling
+            this.base_cost *= 10.0;
         })),
         ..default()
     },

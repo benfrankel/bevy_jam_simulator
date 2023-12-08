@@ -327,10 +327,7 @@ fn offer_next_upgrades(
             despawn.recursive(button);
         }
 
-        let next_upgrades = sequence.next(&upgrade_list, &simulation, &outline);
-        // Sort next upgrades by name
-        // TODO: Sort some other way? Don't sort?
-        // next_upgrades.sort_by_key(|&kind| &upgrade_list[kind].name);
+        let (next_upgrades, desc) = sequence.next(&upgrade_list, &simulation, &outline);
 
         for kind in next_upgrades {
             if kind == UpgradeKind::BrainstormAgain {
@@ -340,6 +337,28 @@ fn offer_next_upgrades(
             let upgrade_button =
                 spawn_upgrade_button(&mut commands, theme, &upgrade_list, kind, &simulation);
             commands.entity(upgrade_button).set_parent(entity);
+        }
+
+        // Show description if present.
+        if !desc.is_empty() {
+            spawn_separator(&mut commands, theme, entity);
+            let mut text_bundle = TextBundle::from_section(
+                desc,
+                TextStyle {
+                    font: FONT_HANDLE,
+                    color: theme.outline_panel_text_color,
+                    ..default()
+                },
+            );
+            // Panel width - horizontal padding
+            text_bundle.style.max_width = Px(280.0 - 24.0);
+            commands
+                .spawn((
+                    Name::new("Description"),
+                    text_bundle,
+                    FontSize::new(theme.outline_panel_font_size),
+                ))
+                .set_parent(entity);
         }
     }
 }
