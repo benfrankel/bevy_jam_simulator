@@ -33,6 +33,8 @@ pub struct ResultsScreenConfig {
     background_color: Color,
     border_color: Color,
     border_width: Val,
+    text_color: Color,
+    hyperlink_text_color: Color,
     font_size: Val,
 
     title_text_color: Color,
@@ -40,7 +42,6 @@ pub struct ResultsScreenConfig {
 
     table_header_background_color: Color,
     table_header_text_color: Color,
-    table_text_color: Color,
 
     return_button_normal_color: Color,
     return_button_hovered_color: Color,
@@ -206,7 +207,11 @@ fn enter_results_screen(
                         text,
                         TextStyle {
                             font: FONT_HANDLE,
-                            color: config.table_text_color,
+                            color: if col == 0 && row != 3 {
+                                config.hyperlink_text_color
+                            } else {
+                                config.text_color
+                            },
                             ..default()
                         },
                     ),
@@ -243,7 +248,7 @@ fn enter_results_screen(
                 ),
                 TextStyle {
                     font: FONT_HANDLE,
-                    color: config.table_text_color,
+                    color: config.text_color,
                     ..default()
                 },
             ),

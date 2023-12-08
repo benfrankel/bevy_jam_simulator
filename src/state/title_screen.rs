@@ -36,6 +36,7 @@ pub struct TitleScreenConfig {
     border_width: Val,
     background_color: Color,
     text_color: Color,
+    hyperlink_text_color: Color,
     font_size: Val,
 
     title_background_color: Color,
@@ -50,13 +51,23 @@ pub struct TitleScreenConfig {
 }
 
 const TITLE_TEXT: &str = "Bevy Jam #4 Simulator";
-const BODY_TEXT: &str = "Welcome to the fourth official Bevy Jam!
- 
-In this 9 day event, your goal is to make a game in Bevy Engine,
-the free and open-source game engine built in Rust.
- 
-The theme is: That's a LOT of Entities!";
-const THEME: &str = "That's a LOT of Entities!";
+// bevy_text cringe
+const BODY_TEXT: [[&str; 4]; 4] = [
+    ["Welcome to the fourth official Bevy Jam!", "", "", ""],
+    [
+        "In this 9 day event, your goal is to make a game in ",
+        "Bevy Engine",
+        ",",
+        "",
+    ],
+    [
+        "the free and open-source game engine built in Rust.",
+        "",
+        "",
+        "",
+    ],
+    ["The theme is: ", "", "", "That's a LOT of entities!"],
+];
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
@@ -153,7 +164,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                     justify_content: JustifyContent::Center,
                     margin: UiRect::axes(Vw(1.9), Vh(5.0)),
                     flex_direction: FlexDirection::Column,
-                    row_gap: Vh(1.4),
+                    row_gap: Vh(3.0),
                     ..default()
                 },
                 ..default()
@@ -162,35 +173,45 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
         .set_parent(container)
         .id();
 
-    // Ugly workaround to be able to customize line spacing
-    for (i, line) in BODY_TEXT.lines().enumerate() {
-        // Ugly workaround to put the theme in bold
-        let mut sections = vec![];
-        for (j, section) in line.split(THEME).enumerate() {
-            sections.push(TextSection::new(
-                section,
-                TextStyle {
-                    font: FONT_HANDLE,
-                    color: config.text_color,
-                    ..default()
-                },
-            ));
-            if j > 0 {
-                sections.push(TextSection::new(
-                    THEME,
-                    TextStyle {
-                        font: BOLD_FONT_HANDLE,
-                        color: config.text_color,
-                        ..default()
-                    },
-                ));
-            }
-        }
-
+    // bevy_text cringe
+    for (i, line) in BODY_TEXT.into_iter().enumerate() {
         commands
             .spawn((
                 Name::new(format!("BodyTextLine{i}")),
-                TextBundle::from_sections(sections),
+                TextBundle::from_sections([
+                    TextSection::new(
+                        line[0],
+                        TextStyle {
+                            font: FONT_HANDLE,
+                            color: config.text_color,
+                            ..default()
+                        },
+                    ),
+                    TextSection::new(
+                        line[1],
+                        TextStyle {
+                            font: FONT_HANDLE,
+                            color: config.hyperlink_text_color,
+                            ..default()
+                        },
+                    ),
+                    TextSection::new(
+                        line[2],
+                        TextStyle {
+                            font: FONT_HANDLE,
+                            color: config.text_color,
+                            ..default()
+                        },
+                    ),
+                    TextSection::new(
+                        line[3],
+                        TextStyle {
+                            font: BOLD_FONT_HANDLE,
+                            color: config.text_color,
+                            ..default()
+                        },
+                    ),
+                ]),
                 FontSize::new(config.font_size),
             ))
             .set_parent(body_container);
