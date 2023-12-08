@@ -358,40 +358,43 @@ fn offer_new_upgrades(
             despawn.recursive(button);
         }
 
-        let mut add_upgrade = |kind: UpgradeKind| {
-            let upgrade_button =
-                spawn_upgrade_button(&mut commands, theme, &upgrade_list, kind, &simulation);
-            commands.entity(upgrade_button).set_parent(entity);
-        };
-
         // Try to fill slots from the initial sequence of upgrades first
         let mut slots = container.slots;
+        let mut next_upgrades = vec![];
         while slots > 0 {
             let Some(kind) = upgrade_sequence.next(&upgrade_list, &simulation, &outline) else {
                 break;
             };
-            add_upgrade(kind);
+            next_upgrades.push(kind);
             slots -= 1;
         }
 
         // Filter the list of all upgrade kinds into just the ones that are unlocked
         let unlocked_upgrades = ALL_UPGRADE_KINDS
             .into_iter()
-            .filter(|&kind| upgrade_list[kind].is_unlocked(&simulation, &outline))
+            .filter(|&kind| {
+                !next_upgrades.contains(&kind)
+                    && upgrade_list[kind].is_unlocked(&simulation, &outline)
+            })
             .collect::<Vec<_>>();
 
-        // Choose the next upgrades for the remaining slots randomly (weighted)
-        let mut next_upgrades = unlocked_upgrades
-            .choose_multiple_weighted(&mut thread_rng(), slots, |&kind| upgrade_list[kind].weight)
-            .unwrap()
-            .collect::<Vec<_>>();
+        // Randomly choose the next upgrades for the remaining slots (weighted)
+        next_upgrades.extend(
+            unlocked_upgrades
+                .choose_multiple_weighted(&mut thread_rng(), slots, |&kind| {
+                    upgrade_list[kind].weight
+                })
+                .unwrap(),
+        );
 
         // Sort by name
         // TODO: Sort some other way? Don't sort?
-        next_upgrades.sort_by_key(|&&kind| &upgrade_list[kind].name);
+        next_upgrades.sort_by_key(|&kind| &upgrade_list[kind].name);
 
-        for &kind in next_upgrades {
-            add_upgrade(kind);
+        for kind in next_upgrades {
+            let upgrade_button =
+                spawn_upgrade_button(&mut commands, theme, &upgrade_list, kind, &simulation);
+            commands.entity(upgrade_button).set_parent(entity);
         }
     }
 }
