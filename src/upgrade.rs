@@ -324,7 +324,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
         ),
         (
             vec![Inspiration],
-            "\"I don't know what I'm going to make yet, but I should start spawning entities to fit the jam theme.\"".to_string(),
+            "\"I don't know what I'm making yet, but I should start spawning entities to fit the jam theme.\"".to_string(),
         ),
         (
             vec![VelocityPlugin],
@@ -379,6 +379,7 @@ generate_upgrade_list!(
         name: "Inspiration".to_string(),
         desc: "Allows new types of upgrades to unlock when you have enough entities.".to_string(),
         tech_debt: 0.0,
+        base_cost: 5.0,
         no_outline: true,
         ..default()
     },
@@ -894,7 +895,7 @@ generate_upgrade_list!(
     // Misc
 
     RefreshUpgradeList: {
-        let mut names: [&str; 8] = [
+        let mut names: [&str; 10] = [
             "Brainstorm Again",
             "Think Twice",
             "Drink Water",
@@ -903,15 +904,15 @@ generate_upgrade_list!(
             "Order a Pizza",
             "Go for a Walk",
             "Take a Shower",
+            "Read a Book",
+            "Look at Clouds",
         ];
         names.shuffle(&mut thread_rng());
         let mut name_idx = 0usize;
 
         Upgrade {
             name: names[name_idx].to_string(),
-            desc: "\
-                Refreshes the list of upgrades in exchange for lines of code. \
-                The cost doubles each time you use this.".to_string(),
+            desc: "Refreshes your upgrade options. Costs twice as much next time.".to_string(),
             tech_debt: 0.0,
             base_cost: 1.0,
             no_outline: true,
