@@ -682,6 +682,9 @@ generate_upgrade_list!(
         remaining: usize::MAX,
         ..default()
     },
+
+    // Technical debt (multiplier)
+
     Rtfm: Upgrade {
         name: "RTFM".to_string(),
         desc: "Reduces all future technical debt increases by 10%.".to_string(),
@@ -689,7 +692,25 @@ generate_upgrade_list!(
         base_cost: 20.0,
         tech_debt_min: 5.0,
         weight: 1.0,
-        remaining: 4,
+        remaining: 2,
+        install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
+            for upgrade in &mut upgrade_list.0 {
+                if upgrade.tech_debt > 0.0 {
+                    upgrade.tech_debt *= 0.9;
+                }
+            }
+        })),
+        ..default()
+    },
+    Cicd: Upgrade {
+        name: "CI/CD".to_string(),
+        desc: "Reduces all future technical debt increases by 10%.".to_string(),
+        installed_min: vec![(Rtfm, 2)],
+        tech_debt: 0.5,
+        cost_scale_factor: 1.2,
+        base_cost: 50.0,
+        weight: 1.0,
+        remaining: 2,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             for upgrade in &mut upgrade_list.0 {
                 if upgrade.tech_debt > 0.0 {
