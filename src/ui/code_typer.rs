@@ -18,7 +18,7 @@ impl Plugin for CodeTyperPlugin {
 const FILLER_CODE: &str = concat!(
     " to generate lines of code!
 // Install the next plugin to start spawning entities.
-\n
+
 ",
     include_str!("code_typer.rs"),
 );

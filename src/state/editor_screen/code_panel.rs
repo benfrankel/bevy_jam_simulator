@@ -77,7 +77,8 @@ pub fn spawn_code_panel(commands: &mut Commands, theme: &EditorScreenTheme) -> E
                     color: theme.code_panel_text_color,
                     ..default()
                 },
-            ),
+            )
+            .with_no_wrap(),
             FontSize::new(theme.code_panel_font_size),
             CodeTyper {
                 lines_count: 1,
