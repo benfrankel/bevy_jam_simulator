@@ -60,8 +60,12 @@ pub struct Upgrade {
     pub name: String,
     /// The desc of the upgrade, with "VALUE" standing in for `self.value`.
     pub desc: String,
+    /// An updatable value to be used by the upgrade for some purpose.
+    pub value: f64,
     /// If true, this upgrade won't be added to the outline and won't count as an upgrade.
     pub no_outline: bool,
+    /// If true, this upgrade's count will not be included in the outline.
+    pub hide_count: bool,
     /// The amount of technical debt this upgrade adds when you install it.
     pub tech_debt: f64,
     /// How much this upgrade contributes to the Presentation score of your submission.
@@ -98,8 +102,6 @@ pub struct Upgrade {
     /// A list of (upgrade, maximum) allowed to be installed for this upgrade to be offered.
     pub installed_max: Vec<(UpgradeKind, usize)>,
 
-    /// An updatable value to be used by the upgrade for some purpose.
-    pub value: f64,
     /// A one-shot system that runs whenever any upgrade is installed.
     pub update: Option<SystemId>,
     /// A one-shot system that runs whenever a copy of this upgrade is installed.
@@ -113,7 +115,9 @@ impl Default for Upgrade {
         Self {
             name: "Unnamed".to_string(),
             desc: "Undefined.".to_string(),
+            value: 0.0,
             no_outline: false,
+            hide_count: false,
             tech_debt: 0.0,
             presentation_score: 0.0,
             fun_score: 0.0,
@@ -133,7 +137,6 @@ impl Default for Upgrade {
             installed_min: vec![],
             installed_max: vec![],
 
-            value: 0.0,
             update: None,
             install: None,
             run: None,
@@ -176,7 +179,7 @@ fn process_new_installed_upgrades(
     audio_assets: Res<AudioAssets>,
 ) {
     for event in events.read() {
-        let upgrade = &mut upgrade_list[event.0];
+        let upgrade = &mut upgrade_list[event.kind];
         upgrade.remaining -= 1;
         simulation.tech_debt += upgrade.tech_debt;
         simulation.presentation_score += upgrade.presentation_score;
@@ -188,16 +191,21 @@ fn process_new_installed_upgrades(
     }
 }
 
-#[derive(Event, Reflect, Clone, Copy)]
-pub struct UpgradeEvent(pub UpgradeKind);
+#[derive(Event, Reflect, Clone)]
+pub struct UpgradeEvent {
+    pub kind: UpgradeKind,
+    // This is a hack to deal with names/descs that change on install.
+    pub name: String,
+    pub desc: String,
+}
 
 fn install_upgrades(world: &mut World, mut reader: Local<ManualEventReader<UpgradeEvent>>) {
     for event in reader
         .read(world.resource::<Events<_>>())
-        .copied()
+        .cloned()
         .collect::<Vec<_>>()
     {
-        let Upgrade { install, run, .. } = world.resource::<UpgradeList>()[event.0];
+        let Upgrade { install, run, .. } = world.resource::<UpgradeList>()[event.kind];
         if let Some(install) = install {
             world.run_system(install).unwrap();
         }
@@ -319,12 +327,12 @@ fn load_upgrade_sequence(mut commands: Commands) {
     commands.insert_resource(UpgradeSequence::new(vec![
         (vec![DarkModeDracula, DarkModeBamboo], String::new()),
         (
-            vec![TouchOfLifePlugin],
+            vec![Inspiration],
             "\"Much better. Now I can get started.\"".to_string(),
         ),
         (
-            vec![Inspiration],
-            "\"I don't know what I'm making yet, but I should start spawning entities to fit the jam theme.\"".to_string(),
+            vec![TouchOfLifePlugin],
+            "\"I don't know what I'm making, but I should start spawning entities.\"".to_string(),
         ),
         (
             vec![VelocityPlugin],
@@ -479,7 +487,8 @@ generate_upgrade_list!(
                 mut upgrade_list: ResMut<UpgradeList>,
                 simulation: Res<Simulation>,
             | {
-                upgrade_list[SplashOfLifePlugin].value = (simulation.entities * 0.1).max(32.0).floor();
+                let this = &mut upgrade_list[SplashOfLifePlugin];
+                this.value = (simulation.entities * 0.1).max(32.0).floor();
             }),
         ),
         install: Some(
@@ -488,9 +497,10 @@ generate_upgrade_list!(
                 upgrade_list: Res<UpgradeList>,
                 bounds: Res<SceneViewBounds>,
             | {
+                let this = &upgrade_list[SplashOfLifePlugin];
                 events.send(SpawnEvent {
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
-                    count: upgrade_list[SplashOfLifePlugin].value,
+                    count: this.value,
                 });
             }),
         ),
@@ -590,15 +600,17 @@ generate_upgrade_list!(
                 mut upgrade_list: ResMut<UpgradeList>,
                 simulation: Res<Simulation>,
             | {
-                upgrade_list[ImportLibrary].value = (simulation.total_lines * 0.1).max(32.0).floor();
+                let this = &mut upgrade_list[ImportLibrary];
+                this.value = (simulation.total_lines * 0.1).max(32.0).floor();
             }),
         ),
         install: Some(world.register_system(|
             upgrade_list: Res<UpgradeList>,
             mut simulation: ResMut<Simulation>,
         | {
+            let this = &upgrade_list[ImportLibrary];
             // TODO: Should this stack with specialization skills?
-            simulation.lines += upgrade_list[ImportLibrary].value;
+            simulation.lines += this.value;
         })),
         ..default()
     },
@@ -729,7 +741,8 @@ generate_upgrade_list!(
         remaining: usize::MAX,
         tech_debt_min: 10.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
-            upgrade_list[Refactor].tech_debt_min += 5.0;
+            let this = &mut upgrade_list[Refactor];
+            this.tech_debt_min += 5.0;
         })),
         ..default()
     },
@@ -819,7 +832,7 @@ generate_upgrade_list!(
 
     Specialization: Upgrade {
         name: "Specialization".to_string(),
-        desc: "Offers a specialization.".to_string(),
+        desc: "Offers a choice between powerful specialization paths.".to_string(),
         no_outline: true,
         base_cost: 100.0,
         weight: 2.5,
@@ -829,7 +842,7 @@ generate_upgrade_list!(
                 vec![TenXDev, RockstarDev],
                 "This is a specialization upgrade. \
                  You can only select one path. \
-                 The rejected option will never appear again.".to_string(),
+                 The rejected options will never appear again.".to_string(),
             );
         })),
         ..default()
@@ -848,10 +861,9 @@ generate_upgrade_list!(
 
         Upgrade {
             name: "10x Dev".to_string(),
-            desc: "\
-                Multiplies all code generation by 10. \
-                Subsequent level-ups will double the multiplier. \
-            ".to_string(),
+            desc: "Multiplies all code generation by VALUE.".to_string(),
+            value: 10.0,
+            hide_count: true,
             remaining: 6,
             install: Some(world.register_system(move |
                 mut simulation: ResMut<Simulation>,
@@ -863,15 +875,17 @@ generate_upgrade_list!(
                     name_idx += 1;
                     this.name = NAMES[name_idx].to_string();
                 }
+                this.value *= 10.0;
 
                 if this.remaining == 5 {
                     // First time (remaining is decreased beforehand)
                     simulation.line_multiplier *= 10.0;
-                    // "Unlock" the subsequent level-ups of this upgrade.
+                    // Make subsequent copies of this upgrade available in the random pool.
+                    this.base_cost = 100.0;
                     this.weight = 1.0;
                 } else {
                     // Level-up
-                    simulation.line_multiplier *= 2.0;
+                    simulation.line_multiplier *= 10.0;
                 }
                 // Special scaling
                 this.base_cost *= 100.0;
@@ -893,10 +907,9 @@ generate_upgrade_list!(
 
         Upgrade {
             name: NAMES[0].to_string(),
-            desc: "\
-                Each generated line will spawn 4 entities. \
-                Subsequent level-ups will double the entity per line ratio. \
-            ".to_string(),
+            desc: "Spawns VALUE entities whenever a line of code is produced.".to_string(),
+            value: 4.0,
+            hide_count: true,
             remaining: 6,
             install: Some(world.register_system(move |
                 mut simulation: ResMut<Simulation>,
@@ -908,18 +921,20 @@ generate_upgrade_list!(
                     name_idx += 1;
                     this.name = NAMES[name_idx].to_string();
                 }
+                this.value *= 2.0;
 
                 if this.remaining == 5 {
                     // First time (remaining is decreased beforehand)
                     simulation.entity_spawn_per_line += 4.0;
-                    // Make subsequent copies of this upgrade available randomly.
+                    // Make subsequent copies of this upgrade available in the random pool.
+                    this.base_cost = 100.0;
                     this.weight = 1.0;
                 } else {
                     // Level up
                     simulation.entity_spawn_per_line *= 2.0;
                 }
                 // Special scaling
-                this.base_cost *= 10.0;
+                this.base_cost *= 100.0;
             })),
             ..default()
         }
@@ -938,7 +953,7 @@ generate_upgrade_list!(
             "Go for a Walk",
             "Take a Shower",
             "Read a Book",
-            "Look at Clouds",
+            "Watch Clouds",
         ];
         names.shuffle(&mut thread_rng());
         let mut name_idx = 0usize;

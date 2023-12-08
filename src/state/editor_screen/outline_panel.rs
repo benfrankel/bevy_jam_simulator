@@ -28,12 +28,11 @@ impl Plugin for OutlinePanelPlugin {
             .add_systems(
                 Update,
                 (
-                    update_outline_container.in_set(AppSet::Update),
-                    update_outline_header.in_set(AppSet::Update),
-                    update_outline_entry_text
-                        .in_set(AppSet::Update)
-                        .run_if(resource_changed::<UpgradeOutline>()),
-                ),
+                    update_outline_container,
+                    update_outline_header,
+                    update_outline_entry_text.run_if(on_event::<UpgradeEvent>()),
+                )
+                    .in_set(AppSet::Update),
             );
     }
 }
@@ -93,11 +92,10 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
 fn spawn_outline_entry(
     commands: &mut Commands,
     theme: &EditorScreenTheme,
-    upgrade_list: &UpgradeList,
     upgrade_kind: UpgradeKind,
+    upgrade_name: String,
+    upgrade_desc: String,
 ) -> Entity {
-    let upgrade = &upgrade_list[upgrade_kind];
-
     let outline_entry = commands
         .spawn((
             Name::new("OutlineEntry"),
@@ -118,10 +116,11 @@ fn spawn_outline_entry(
                 disabled: Color::NONE,
             },
             Tooltip {
-                text: upgrade.description(),
+                text: upgrade_desc,
                 side: TooltipSide::Right,
                 offset: vec2(12.0, 0.0),
             },
+            OutlineEntry(upgrade_kind),
         ))
         .id();
 
@@ -129,7 +128,7 @@ fn spawn_outline_entry(
         .spawn((
             Name::new("OutlineEntryText"),
             TextBundle::from_section(
-                upgrade.name.clone(),
+                upgrade_name,
                 TextStyle {
                     font: FONT_HANDLE,
                     color: theme.outline_panel_text_color,
@@ -137,7 +136,6 @@ fn spawn_outline_entry(
                 },
             ),
             FontSize::new(theme.outline_panel_font_size),
-            OutlineEntryText(upgrade_kind),
         ))
         .set_parent(outline_entry);
 
@@ -157,7 +155,7 @@ fn update_outline_container(
 ) {
     let theme = &theme.0;
     for event in events.read() {
-        let upgrade_kind = event.0;
+        let upgrade_kind = event.kind;
         let count = outline.0.entry(upgrade_kind).or_insert(0);
         *count += 1;
 
@@ -168,8 +166,13 @@ fn update_outline_container(
         }
 
         for container in &container_query {
-            let outline_entry =
-                spawn_outline_entry(&mut commands, theme, &upgrade_list, upgrade_kind);
+            let outline_entry = spawn_outline_entry(
+                &mut commands,
+                theme,
+                upgrade_kind,
+                event.name.clone(),
+                event.desc.clone(),
+            );
             commands.entity(outline_entry).set_parent(container);
         }
     }
@@ -190,23 +193,37 @@ fn update_outline_header(
 }
 
 #[derive(Component, Reflect)]
-struct OutlineEntryText(UpgradeKind);
+struct OutlineEntry(UpgradeKind);
 
 fn update_outline_entry_text(
+    mut events: EventReader<UpgradeEvent>,
     outline: Res<UpgradeOutline>,
-    mut entry_query: Query<(&mut Text, &OutlineEntryText)>,
+    upgrade_list: Res<UpgradeList>,
+    mut entry_query: Query<(&mut Tooltip, &OutlineEntry, &Children)>,
+    mut text_query: Query<&mut Text>,
 ) {
-    for (mut text, entry) in &mut entry_query {
-        let count = outline.0[&entry.0];
-        if count <= 1 {
-            continue;
-        }
-        let text = &mut text.sections[0].value;
+    for event in events.read() {
+        for (mut tooltip, entry, children) in &mut entry_query {
+            if entry.0 != event.kind {
+                continue;
+            }
 
-        // Replace the previous count if it exists
-        if let Some(idx) = text.find(" (") {
-            text.truncate(idx);
+            let upgrade = &upgrade_list[entry.0];
+            tooltip.text = event.desc.clone();
+
+            for &child in children {
+                let Ok(mut text) = text_query.get_mut(child) else {
+                    continue;
+                };
+                let text = &mut text.sections[0].value;
+
+                *text = event.name.clone();
+
+                let count = outline.0[&entry.0];
+                if !upgrade.hide_count && count >= 2 {
+                    text.push_str(&format!(" ({count})"));
+                }
+            }
         }
-        text.push_str(&format!(" ({count})"));
     }
 }

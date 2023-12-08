@@ -176,11 +176,20 @@ fn spawn_upgrade_button(
                 offset: vec2(-12.0, 0.0),
             },
             On::<Pointer<Click>>::run(
-                move |mut events: EventWriter<_>, mut simulation: ResMut<Simulation>| {
-                    if simulation.lines >= cost {
-                        simulation.lines -= cost;
-                        events.send(UpgradeEvent(upgrade_kind));
+                move |mut events: EventWriter<_>,
+                      mut simulation: ResMut<Simulation>,
+                      upgrade_list: Res<UpgradeList>| {
+                    if simulation.lines < cost {
+                        return;
                     }
+                    simulation.lines -= cost;
+
+                    let upgrade = &upgrade_list[upgrade_kind];
+                    events.send(UpgradeEvent {
+                        kind: upgrade_kind,
+                        name: upgrade.name.clone(),
+                        desc: upgrade.description(),
+                    });
                 },
             ),
             UpgradeButton(upgrade_kind),
