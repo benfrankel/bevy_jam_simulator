@@ -165,18 +165,22 @@ fn enter_results_screen(
             .set_parent(cell);
     }
 
-    let scores: [f64; 5] = simulation.calculate_scores();
+    let scores: [f64; 4] = simulation.calculate_scores();
     for (row, (&criterion, score)) in TABLE_CRITERIA_TEXT
         .iter()
         .zip(scores.into_iter())
         .enumerate()
     {
+        const SUBMISSIONS: f64 = 83.0;
+        const LO: f64 = 1.5;
+        const HI: f64 = 4.5;
+        // Clamp score to the interval [LO, HI] and then linearly map to the interval [1, SUBMISSIONS]
+        let rank = (1.0 - (score.clamp(LO, HI) - LO) / (HI - LO)) * (SUBMISSIONS - 1.0) + 1.0;
+
         let entries = [
             criterion,
-            // TODO: Compute ranking
-            "#13",
+            &format!("#{}", rank),
             &format!("{:.3}", score),
-            // TODO: Distinction between raw score & adjusted score
             &format!("{:.3}", score),
         ];
         for (col, &text) in entries.iter().enumerate() {
