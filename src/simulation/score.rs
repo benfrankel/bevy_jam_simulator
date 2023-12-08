@@ -32,7 +32,7 @@ impl Simulation {
             // Presentation
             calculate_score(self.presentation_score, 0.0, 40.0),
             // Theme Interpretation
-            calculate_score(self.entities, 0.0, 1e9),
+            calculate_score((self.entities.abs() + 1.0).log10(), 0.0, 100.0),
             // Overall
             0.0,
         ];
