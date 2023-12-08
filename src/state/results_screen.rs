@@ -5,9 +5,12 @@ use bevy_mod_picking::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 
-use super::editor_screen::EditorScreenStartTime;
 use crate::config::Config;
+use crate::simulation::PassiveCodeTyper;
+use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
+use crate::state::editor_screen::EditorScreenStartTime;
+use crate::state::editor_screen::UpgradeOutline;
 use crate::state::AppState;
 use crate::state::AppState::*;
 use crate::ui::FontSize;
@@ -52,8 +55,6 @@ pub struct ResultsScreenConfig {
 const TITLE_TEXT: &str = "Results";
 const TABLE_HEADER_TEXT: [&str; 4] = ["Criteria", "Rank", "Score*", "Raw Score"];
 const TABLE_CRITERIA_TEXT: [&str; 4] = ["Fun", "Presentation", "Theme Interpretation", "Overall"];
-// TODO: Ranked from 34 ratings. Score is adjusted from raw score by the median number of ratings per game in the jam.
-//       Join another jam
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
@@ -262,6 +263,12 @@ fn enter_results_screen(
 
 fn exit_results_screen(mut commands: Commands, root: Res<AppRoot>) {
     commands.entity(root.ui).despawn_descendants();
+
+    // Reset resources so replaying works
+    commands.insert_resource(Simulation::default());
+    commands.insert_resource(PassiveCodeTyper::default());
+    commands.insert_resource(PassiveEntitySpawner::default());
+    commands.insert_resource(UpgradeOutline::default());
 }
 
 fn spawn_return_button(commands: &mut Commands, config: &ResultsScreenConfig) -> Entity {

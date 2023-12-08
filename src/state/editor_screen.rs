@@ -12,9 +12,6 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
-use crate::simulation::PassiveCodeTyper;
-use crate::simulation::PassiveEntitySpawner;
-use crate::simulation::Simulation;
 pub use crate::state::editor_screen::code_panel::spawn_code_panel;
 use crate::state::editor_screen::code_panel::spawn_light_code_panel;
 use crate::state::editor_screen::info_bar::spawn_info_bar;
@@ -121,12 +118,6 @@ fn enter_editor_screen(
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
     commands.insert_resource(EditorScreenStartTime(time.elapsed_seconds_f64()));
-
-    // Reset resources so replaying works
-    commands.insert_resource(Simulation::default());
-    commands.insert_resource(PassiveCodeTyper::default());
-    commands.insert_resource(PassiveEntitySpawner::default());
-    commands.insert_resource(UpgradeOutline::default());
 
     let screen = spawn_editor_screen(&mut commands, config.light_theme.clone(), true);
     commands.entity(screen).set_parent(root.ui);
