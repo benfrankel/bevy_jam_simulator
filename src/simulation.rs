@@ -87,7 +87,7 @@ impl Default for Simulation {
 }
 
 /// Maximum number of entities that can be spawned in the scene view for a single SpawnEvent.
-const MAX_SPAWN_PER_EVENT: usize = 100;
+const MAX_SPAWN_PER_EVENT: usize = 32;
 
 #[derive(Event, Reflect)]
 pub struct SpawnEvent {
@@ -148,7 +148,7 @@ fn spawn_entities(
 #[derive(Component, Reflect)]
 struct IsEntityCap;
 
-const HARD_CAP: usize = 10_000;
+const HARD_CAP: usize = 8000;
 
 fn spawn_entity_caps(mut commands: Commands) {
     commands.spawn((
