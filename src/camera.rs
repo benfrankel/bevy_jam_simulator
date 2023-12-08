@@ -12,9 +12,7 @@ impl Plugin for CameraPlugin {
     }
 }
 
-pub const CAMERA_WIDTH: f32 = 320.0;
-pub const CAMERA_HEIGHT: f32 = 180.0;
-pub const CAMERA_SCALING: f32 = 6.0;
+pub const CAMERA_SCALING: f32 = 4.0;
 
 fn spawn_camera(mut commands: Commands, mut root: ResMut<AppRoot>) {
     root.camera = commands

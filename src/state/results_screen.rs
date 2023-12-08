@@ -1,14 +1,16 @@
 use bevy::prelude::*;
+use bevy::ui::Val::*;
 use bevy_asset_loader::prelude::*;
+use bevy_mod_picking::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
+use crate::state::AppState;
 use crate::state::AppState::*;
-use crate::ui::vh;
-use crate::ui::vmin;
 use crate::ui::FontSize;
+use crate::ui::InteractionPalette;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
 use crate::AppRoot;
@@ -30,6 +32,7 @@ pub struct ResultsScreenConfig {
     background_color: Color,
     border_color: Color,
     border_width: Val,
+    font_size: Val,
 
     title_text_color: Color,
     title_font_size: Val,
@@ -37,18 +40,18 @@ pub struct ResultsScreenConfig {
     table_header_background_color: Color,
     table_header_text_color: Color,
     table_text_color: Color,
-    table_font_size: Val,
+
+    return_button_normal_color: Color,
+    return_button_hovered_color: Color,
+    return_button_pressed_color: Color,
+    return_button_text_color: Color,
 }
 
 const TITLE_TEXT: &str = "Results";
-const TABLE_HEADER_TEXT: [&str; 4] = ["Criteria", "Rank", "Score", "Raw Score"];
-const TABLE_CRITERIA_TEXT: [&str; 5] = [
-    "Fun",
-    "Presentation",
-    "Theme Interpretation",
-    "Lines of Code",
-    "Overall",
-];
+const TABLE_HEADER_TEXT: [&str; 4] = ["Criteria", "Rank", "Score*", "Raw Score"];
+const TABLE_CRITERIA_TEXT: [&str; 4] = ["Fun", "Presentation", "Theme Interpretation", "Overall"];
+// TODO: Ranked from 34 ratings. Score is adjusted from raw score by the median number of ratings per game in the jam.
+//       Join another jam
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
@@ -63,22 +66,6 @@ fn enter_results_screen(
     simulation: Res<Simulation>,
 ) {
     let config = &config.results_screen;
-    let title_text_style = TextStyle {
-        font: BOLD_FONT_HANDLE,
-        color: config.title_text_color,
-        ..default()
-    };
-    let table_header_text_style = TextStyle {
-        font: BOLD_FONT_HANDLE,
-        color: config.table_header_text_color,
-        ..default()
-    };
-    let table_text_style = TextStyle {
-        font: FONT_HANDLE,
-        color: config.table_text_color,
-        ..default()
-    };
-
     commands.insert_resource(ClearColor(config.background_color));
 
     let screen = commands
@@ -86,10 +73,10 @@ fn enter_results_screen(
             Name::new("ResultsScreen"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
                     align_items: AlignItems::Center,
-                    padding: UiRect::new(vmin(15.0), vmin(15.0), vh(7.0), Val::ZERO),
+                    padding: UiRect::new(VMin(8.3), VMin(8.3), Vh(4.0), Val::ZERO),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
@@ -103,7 +90,14 @@ fn enter_results_screen(
     commands
         .spawn((
             Name::new("TitleText"),
-            TextBundle::from_section(TITLE_TEXT, title_text_style),
+            TextBundle::from_section(
+                TITLE_TEXT,
+                TextStyle {
+                    font: BOLD_FONT_HANDLE,
+                    color: config.title_text_color,
+                    ..default()
+                },
+            ),
             FontSize::new(config.title_font_size),
         ))
         .set_parent(screen);
@@ -114,9 +108,10 @@ fn enter_results_screen(
             NodeBundle {
                 style: Style {
                     display: Display::Grid,
-                    width: Val::Percent(100.0),
-                    margin: UiRect::top(vh(10.0)),
+                    width: Percent(100.0),
+                    margin: UiRect::top(Vh(5.5)),
                     border: UiRect::all(config.border_width),
+                    column_gap: Px(-1.0),
                     grid_template_columns: vec![
                         GridTrack::auto(),
                         GridTrack::fr(1.0),
@@ -139,7 +134,7 @@ fn enter_results_screen(
                 Name::new(format!("HeaderCell{i}")),
                 NodeBundle {
                     style: Style {
-                        padding: UiRect::all(vmin(3.5)),
+                        padding: UiRect::all(VMin(2.0)),
                         ..default()
                     },
                     background_color: config.table_header_background_color.into(),
@@ -148,11 +143,19 @@ fn enter_results_screen(
             ))
             .set_parent(table)
             .id();
+
         commands
             .spawn((
                 Name::new("CellText"),
-                TextBundle::from_section(entry, table_header_text_style.clone()),
-                FontSize::new(config.table_font_size),
+                TextBundle::from_section(
+                    entry,
+                    TextStyle {
+                        font: BOLD_FONT_HANDLE,
+                        color: config.table_header_text_color,
+                        ..default()
+                    },
+                ),
+                FontSize::new(config.font_size),
             ))
             .set_parent(cell);
     }
@@ -177,7 +180,7 @@ fn enter_results_screen(
                     Name::new(format!("BodyCellRow{row}Col{col}")),
                     NodeBundle {
                         style: Style {
-                            padding: UiRect::all(vmin(3.5)),
+                            padding: UiRect::all(VMin(3.0)),
                             border: UiRect::top(config.border_width),
                             ..default()
                         },
@@ -190,14 +193,101 @@ fn enter_results_screen(
             commands
                 .spawn((
                     Name::new("CellText"),
-                    TextBundle::from_section(text, table_text_style.clone()),
-                    FontSize::new(config.table_font_size),
+                    TextBundle::from_section(
+                        text,
+                        TextStyle {
+                            font: FONT_HANDLE,
+                            color: config.table_text_color,
+                            ..default()
+                        },
+                    ),
+                    FontSize::new(config.font_size),
                 ))
                 .set_parent(cell);
         }
     }
+
+    let hbox = commands
+        .spawn((
+            Name::new("HBox"),
+            NodeBundle {
+                style: Style {
+                    width: Percent(100.0),
+                    align_items: AlignItems::Center,
+                    justify_content: JustifyContent::SpaceEvenly,
+                    margin: UiRect::top(Vh(4.0)),
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(screen)
+        .id();
+
+    commands
+        .spawn((
+            Name::new("RankedText"),
+            TextBundle::from_section(
+                // TODO: Set number of rankings from time spent in the editor before submitting.
+                format!("Ranked from {} ratings.", 34),
+                TextStyle {
+                    font: FONT_HANDLE,
+                    color: config.table_text_color,
+                    ..default()
+                },
+            ),
+            FontSize::new(config.font_size),
+        ))
+        .set_parent(hbox);
+
+    let return_button = spawn_return_button(&mut commands, config);
+    commands.entity(return_button).set_parent(hbox);
 }
 
 fn exit_results_screen(mut commands: Commands, root: Res<AppRoot>) {
     commands.entity(root.ui).despawn_descendants();
+}
+
+fn spawn_return_button(commands: &mut Commands, config: &ResultsScreenConfig) -> Entity {
+    let return_button = commands
+        .spawn((
+            Name::new("ReturnButton"),
+            ButtonBundle {
+                style: Style {
+                    padding: UiRect::all(Px(16.0)),
+                    justify_content: JustifyContent::Center,
+                    align_items: AlignItems::Center,
+                    ..default()
+                },
+                background_color: config.return_button_normal_color.into(),
+                ..default()
+            },
+            InteractionPalette {
+                normal: config.return_button_normal_color,
+                hovered: config.return_button_hovered_color,
+                pressed: config.return_button_pressed_color,
+                disabled: Color::NONE,
+            },
+            On::<Pointer<Click>>::run(|mut next_state: ResMut<NextState<_>>| {
+                next_state.set(AppState::TitleScreen);
+            }),
+        ))
+        .id();
+
+    commands
+        .spawn((
+            Name::new("ReturnButtonText"),
+            TextBundle::from_section(
+                "Try another jam?",
+                TextStyle {
+                    font: BOLD_FONT_HANDLE,
+                    color: config.return_button_text_color,
+                    ..default()
+                },
+            ),
+            FontSize::new(config.font_size),
+        ))
+        .set_parent(return_button);
+
+    return_button
 }

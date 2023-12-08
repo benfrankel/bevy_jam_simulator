@@ -1,5 +1,6 @@
 use bevy::math::vec2;
 use bevy::prelude::*;
+use bevy::ui::Val::*;
 use bevy::utils::HashMap;
 
 use crate::config::Config;
@@ -49,8 +50,8 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
             NodeBundle {
                 style: Style {
                     min_width: theme.outline_panel_width,
-                    height: Val::Percent(100.0),
-                    padding: UiRect::all(Val::Px(12.0)),
+                    height: Percent(100.0),
+                    padding: UiRect::all(Px(12.0)),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
@@ -76,7 +77,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
                 style: Style {
                     // Hiding this because it looks bad :(
                     // display: Display::None,
-                    margin: UiRect::bottom(Val::Px(10.0)),
+                    margin: UiRect::bottom(Px(10.0)),
                     ..default()
                 },
                 ..default()
@@ -102,9 +103,9 @@ fn spawn_outline_entry(
             Name::new("OutlineEntry"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    margin: UiRect::bottom(Val::Px(1.0)),
-                    padding: UiRect::all(Val::Px(4.0)),
+                    width: Percent(100.0),
+                    margin: UiRect::bottom(Px(1.0)),
+                    padding: UiRect::all(Px(4.0)),
                     ..default()
                 },
                 ..default()

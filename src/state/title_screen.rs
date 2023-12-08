@@ -1,4 +1,5 @@
 use bevy::prelude::*;
+use bevy::ui::Val::*;
 use bevy_asset_loader::prelude::*;
 use bevy_mod_picking::prelude::*;
 use iyes_progress::prelude::*;
@@ -8,9 +9,6 @@ use serde::Serialize;
 use crate::config::Config;
 use crate::state::editor_screen::EditorScreenAssets;
 use crate::state::AppState::*;
-use crate::ui::vh;
-use crate::ui::vmin;
-use crate::ui::vw;
 use crate::ui::FontSize;
 use crate::ui::InteractionPalette;
 use crate::ui::BOLD_FONT_HANDLE;
@@ -44,8 +42,6 @@ pub struct TitleScreenConfig {
     title_font_size: Val,
 
     button_width: Val,
-    button_border_color: Color,
-    button_border_width: Val,
     button_normal_color: Color,
     button_hovered_color: Color,
     button_pressed_color: Color,
@@ -54,7 +50,12 @@ pub struct TitleScreenConfig {
 }
 
 const TITLE_TEXT: &str = "Bevy Jam #4 Simulator";
-const BODY_TEXT: &str = "Welcome to the fourth official Bevy Jam!\n \nIn this 9 day event, your goal is to make a game in Bevy Engine,\nthe free and open-source game engine built in Rust.\n \nThe theme is: That's a LOT of Entities!";
+const BODY_TEXT: &str = "Welcome to the fourth official Bevy Jam!
+ 
+In this 9 day event, your goal is to make a game in Bevy Engine,
+the free and open-source game engine built in Rust.
+ 
+The theme is: That's a LOT of Entities!";
 const THEME: &str = "That's a LOT of Entities!";
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
@@ -65,22 +66,6 @@ pub struct TitleScreenAssets {
 
 fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>) {
     let config = &config.title_screen;
-    let text_style = TextStyle {
-        font: FONT_HANDLE,
-        color: config.text_color,
-        ..default()
-    };
-    let bold_text_style = TextStyle {
-        font: BOLD_FONT_HANDLE,
-        color: config.text_color,
-        ..default()
-    };
-    let button_text_style = TextStyle {
-        font: BOLD_FONT_HANDLE,
-        color: config.button_text_color,
-        ..default()
-    };
-
     commands.insert_resource(ClearColor(config.background_color));
 
     let screen = commands
@@ -88,11 +73,11 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             Name::new("TitleScreen"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    padding: UiRect::all(vmin(4.5)),
+                    padding: UiRect::all(VMin(2.5)),
                     ..default()
                 },
                 background_color: config.background_color.into(),
@@ -107,8 +92,8 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             Name::new("Container"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
                     align_items: AlignItems::Center,
                     border: UiRect::all(config.border_width),
                     flex_direction: FlexDirection::Column,
@@ -127,10 +112,10 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             Name::new("TitleContainer"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
+                    width: Percent(100.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    padding: UiRect::vertical(vh(8.0)),
+                    padding: UiRect::vertical(Vh(4.4)),
                     border: UiRect::bottom(config.border_width),
                     flex_direction: FlexDirection::Column,
                     ..default()
@@ -146,8 +131,15 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
     commands
         .spawn((
             Name::new("TitleText"),
-            TextBundle::from_section(TITLE_TEXT, bold_text_style.clone())
-                .with_text_alignment(TextAlignment::Center),
+            TextBundle::from_section(
+                TITLE_TEXT,
+                TextStyle {
+                    font: BOLD_FONT_HANDLE,
+                    color: config.text_color,
+                    ..default()
+                },
+            )
+            .with_text_alignment(TextAlignment::Center),
             FontSize::new(config.title_font_size),
         ))
         .set_parent(title_container);
@@ -159,9 +151,9 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                 style: Style {
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    margin: UiRect::axes(vw(6.0), vh(9.0)),
+                    margin: UiRect::axes(Vw(1.9), Vh(5.0)),
                     flex_direction: FlexDirection::Column,
-                    row_gap: vh(2.5),
+                    row_gap: Vh(1.4),
                     ..default()
                 },
                 ..default()
@@ -175,9 +167,23 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
         // Ugly workaround to put the theme in bold
         let mut sections = vec![];
         for (j, section) in line.split(THEME).enumerate() {
-            sections.push(TextSection::new(section, text_style.clone()));
+            sections.push(TextSection::new(
+                section,
+                TextStyle {
+                    font: FONT_HANDLE,
+                    color: config.text_color,
+                    ..default()
+                },
+            ));
             if j > 0 {
-                sections.push(TextSection::new(THEME, bold_text_style.clone()));
+                sections.push(TextSection::new(
+                    THEME,
+                    TextStyle {
+                        font: BOLD_FONT_HANDLE,
+                        color: config.text_color,
+                        ..default()
+                    },
+                ));
             }
         }
 
@@ -196,15 +202,13 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             ButtonBundle {
                 style: Style {
                     width: config.button_width,
-                    margin: UiRect::top(vh(11.0)),
-                    padding: UiRect::all(vmin(6.0)),
-                    border: UiRect::all(config.button_border_width),
+                    margin: UiRect::top(Vh(6.1)),
+                    padding: UiRect::all(VMin(3.3)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
                 },
                 background_color: config.button_normal_color.into(),
-                border_color: config.button_border_color.into(),
                 ..default()
             },
             InteractionPalette {
@@ -230,7 +234,14 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
     commands
         .spawn((
             Name::new("JoinButtonText"),
-            TextBundle::from_section("Join", button_text_style),
+            TextBundle::from_section(
+                "Join",
+                TextStyle {
+                    font: BOLD_FONT_HANDLE,
+                    color: config.button_text_color,
+                    ..default()
+                },
+            ),
             FontSize::new(config.button_font_size),
         ))
         .set_parent(join_button);

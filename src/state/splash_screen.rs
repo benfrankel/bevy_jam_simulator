@@ -4,6 +4,7 @@ use bevy::asset::load_internal_binary_asset;
 use bevy::prelude::*;
 use bevy::render::texture::ImageSampler;
 use bevy::render::texture::ImageType;
+use bevy::ui::Val::*;
 use bevy_asset_loader::prelude::*;
 use iyes_progress::prelude::*;
 use serde::Deserialize;
@@ -71,7 +72,6 @@ fn enter_splash_screen(
     time: Res<Time>,
 ) {
     let config = &config.splash_screen;
-
     commands.insert_resource(ClearColor(config.background_color));
     commands.insert_resource(SplashScreenStartTime(time.elapsed_seconds_f64()));
 
@@ -80,8 +80,8 @@ fn enter_splash_screen(
             Name::new("SplashScreen"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
                     ..default()
                 },
                 ..default()
@@ -95,8 +95,8 @@ fn enter_splash_screen(
             Name::new("SplashImage"),
             ImageBundle {
                 style: Style {
-                    margin: UiRect::all(Val::Auto),
-                    width: Val::Percent(70.0),
+                    margin: UiRect::all(Auto),
+                    width: Percent(70.0),
                     ..default()
                 },
                 image: UiImage::new(SPLASH_SCREEN_IMAGE_HANDLE),

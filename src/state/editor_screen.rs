@@ -6,6 +6,7 @@ mod upgrade_panel;
 
 // Expose this for the upgrades.
 use bevy::prelude::*;
+use bevy::ui::Val::*;
 use bevy_asset_loader::prelude::*;
 pub use code_panel::spawn_code_panel;
 use serde::Deserialize;
@@ -109,9 +110,8 @@ fn enter_editor_screen(
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
 
-    let editor_screen =
-        spawn_editor_screen(&mut commands, config, &upgrade_list, &simulation, true);
-    commands.entity(editor_screen).set_parent(root.ui);
+    let screen = spawn_editor_screen(&mut commands, config, &upgrade_list, &simulation, true);
+    commands.entity(screen).set_parent(root.ui);
 }
 
 pub fn spawn_editor_screen(
@@ -131,8 +131,8 @@ pub fn spawn_editor_screen(
             Name::new("EditorScreen"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
@@ -149,8 +149,8 @@ pub fn spawn_editor_screen(
             Name::new("HBox"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
                     ..default()
                 },
                 ..default()

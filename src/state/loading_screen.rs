@@ -1,5 +1,6 @@
 use bevy::core::FrameCount;
 use bevy::prelude::*;
+use bevy::ui::Val::*;
 use bevy_asset_loader::prelude::*;
 use iyes_progress::prelude::*;
 use serde::Deserialize;
@@ -8,7 +9,6 @@ use serde::Serialize;
 use crate::config::Config;
 use crate::state::editor_screen::EditorScreenAssets;
 use crate::state::AppState::*;
-use crate::ui::vmin;
 use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::AppRoot;
@@ -53,8 +53,8 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
             Name::new("LoadingScreen"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
                     ..default()
                 },
                 ..default()
@@ -71,8 +71,8 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
                     flex_direction: FlexDirection::Column,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    width: Val::Percent(100.0),
-                    height: Val::Percent(100.0),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
                     ..default()
                 },
                 ..default()
@@ -84,7 +84,7 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
                 Name::new("LoadingHeader"),
                 TextBundle {
                     style: Style {
-                        margin: UiRect::all(vmin(8.0)),
+                        margin: UiRect::all(VMin(4.5)),
                         ..default()
                     },
                     text: Text::from_section(
@@ -105,8 +105,8 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
                     Name::new("LoadingBarContainer"),
                     NodeBundle {
                         style: Style {
-                            width: Val::Percent(60.0),
-                            height: Val::Percent(7.5),
+                            width: Percent(60.0),
+                            height: Percent(7.5),
                             border: UiRect::all(config.border_width),
                             ..default()
                         },
@@ -120,8 +120,8 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
                         NodeBundle {
                             background_color: BackgroundColor(config.foreground_color),
                             style: Style {
-                                width: Val::Percent(0.0),
-                                height: Val::Percent(100.0),
+                                width: Percent(0.0),
+                                height: Percent(100.0),
                                 ..default()
                             },
                             ..default()
@@ -149,7 +149,7 @@ fn update_loading(
     *last_done = done;
 
     for mut style in &mut loading_bar_query {
-        style.width = Val::Percent(100.0 * done as f32 / total as f32);
+        style.width = Percent(100.0 * done as f32 / total as f32);
     }
 
     info!("[Frame {}] Loading: {done} / {total}", frame.0);

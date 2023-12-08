@@ -26,8 +26,6 @@
         title_font_size: Vw(4.5),
 
         button_width: Vw(40.0),
-        button_border_color: Rgba(red: 0.118, green: 0.306, blue: 0.820, alpha: 1.000),
-        button_border_width: Px(2.0),
         button_normal_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
         button_hovered_color: Rgba(red: 0.039, green: 0.227, blue: 0.741, alpha: 1.000),
         button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
@@ -131,6 +129,7 @@
         background_color: Rgba(red: 0.067, green: 0.067, blue: 0.067, alpha: 1.000),
         border_color: Rgba(red: 0.161, green: 0.161, blue: 0.161, alpha: 1.000),
         border_width: VMin(0.9),
+        font_size: Vw(2.5),
 
         title_text_color: Rgba(red: 0.737, green: 0.737, blue: 0.737, alpha: 1.000),
         title_font_size: Vw(5.0),
@@ -138,6 +137,11 @@
         table_header_background_color: Rgba(red: 0.106, green: 0.106, blue: 0.106, alpha: 1.000),
         table_header_text_color: Rgba(red: 0.624, green: 0.624, blue: 0.624, alpha: 1.000),
         table_text_color: Rgba(red: 0.737, green: 0.737, blue: 0.737, alpha: 1.000),
-        table_font_size: Vw(2.5),
+
+        return_button_normal_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
+        return_button_hovered_color: Rgba(red: 0.039, green: 0.227, blue: 0.741, alpha: 1.000),
+        return_button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
+        return_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
+        return_button_font_size: Px(32.0),
     ),
 )

@@ -1,5 +1,6 @@
 use bevy::math::vec2;
 use bevy::prelude::*;
+use bevy::ui::Val::*;
 use bevy_mod_picking::prelude::*;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
@@ -55,9 +56,9 @@ pub fn spawn_upgrade_panel(
             NodeBundle {
                 style: Style {
                     min_width: theme.upgrade_panel_width,
-                    height: Val::Percent(100.0),
+                    height: Percent(100.0),
                     align_items: AlignItems::Center,
-                    padding: UiRect::all(Val::Px(12.0)),
+                    padding: UiRect::all(Px(12.0)),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
@@ -79,7 +80,7 @@ pub fn spawn_upgrade_panel(
                 },
             )
             .with_style(Style {
-                margin: UiRect::bottom(Val::Px(15.0)),
+                margin: UiRect::bottom(Px(15.0)),
                 ..default()
             }),
             FontSize::new(theme.upgrade_panel_header_font_size),
@@ -91,7 +92,7 @@ pub fn spawn_upgrade_panel(
             Name::new("UpgradeContainer"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
+                    width: Percent(100.0),
                     flex_direction: FlexDirection::Column,
                     flex_grow: 1.0,
                     ..default()
@@ -119,8 +120,8 @@ pub fn spawn_upgrade_panel(
             Name::new("SubmitContainer"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
-                    height: Val::Px(130.0),
+                    width: Percent(100.0),
+                    height: Px(130.0),
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     ..default()
@@ -152,14 +153,14 @@ fn spawn_upgrade_button(
             Name::new("UpgradeButton"),
             ButtonBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
+                    width: Percent(100.0),
                     height: theme.upgrade_button_height,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
-                    margin: UiRect::bottom(Val::Px(10.0)),
-                    padding: UiRect::vertical(Val::Px(4.0)),
+                    margin: UiRect::bottom(Px(10.0)),
+                    padding: UiRect::vertical(Px(4.0)),
                     flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(4.0),
+                    row_gap: Px(4.0),
                     ..default()
                 },
                 background_color: theme.upgrade_button_normal_color.into(),
@@ -249,9 +250,9 @@ fn spawn_submit_button(commands: &mut Commands, theme: &EditorScreenTheme) -> En
             Name::new("SubmitButton"),
             ButtonBundle {
                 style: Style {
-                    width: Val::Percent(80.0),
+                    width: Percent(80.0),
                     height: theme.submit_button_height,
-                    padding: UiRect::all(Val::Px(10.0)),
+                    padding: UiRect::all(Px(10.0)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()

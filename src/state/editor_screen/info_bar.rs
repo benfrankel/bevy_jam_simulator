@@ -1,7 +1,8 @@
 use bevy::prelude::*;
+use bevy::ui::Val::*;
 
-use super::EditorScreenTheme;
 use crate::simulation::Simulation;
+use crate::state::editor_screen::EditorScreenTheme;
 use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::util::pretty_num;
@@ -22,9 +23,9 @@ pub fn spawn_info_bar(commands: &mut Commands, theme: &EditorScreenTheme) -> Ent
             Name::new("InfoBar"),
             NodeBundle {
                 style: Style {
-                    width: Val::Percent(100.0),
+                    width: Percent(100.0),
                     min_height: theme.info_bar_height,
-                    padding: UiRect::horizontal(Val::Px(16.0)),
+                    padding: UiRect::horizontal(Px(16.0)),
                     align_items: AlignItems::Center,
                     ..default()
                 },
