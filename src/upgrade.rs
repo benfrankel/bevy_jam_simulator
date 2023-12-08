@@ -4,6 +4,8 @@ use std::ops::IndexMut;
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
+use rand::seq::SliceRandom;
+use rand::thread_rng;
 use rand::Rng;
 use strum::EnumCount;
 
@@ -17,7 +19,6 @@ use crate::simulation::SpawnEvent;
 use crate::state::editor_screen::spawn_editor_screen;
 use crate::state::editor_screen::SceneView;
 use crate::state::editor_screen::SceneViewBounds;
-use crate::state::editor_screen::UpgradeContainer;
 use crate::state::editor_screen::UpgradeOutline;
 use crate::state::AppState;
 use crate::ui::CodeTyper;
@@ -30,10 +31,14 @@ pub struct UpgradePlugin;
 impl Plugin for UpgradePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<UpgradeEvent>()
+            .register_type::<UpgradeSequence>()
             .add_event::<UpgradeEvent>()
             .init_resource::<UpgradeList>()
             .init_resource::<UpgradeUpdateSystems>()
-            .add_systems(OnEnter(AppState::EditorScreen), load_upgrade_list)
+            .add_systems(
+                OnEnter(AppState::EditorScreen),
+                (load_upgrade_list, load_upgrade_sequence),
+            )
             .add_systems(
                 Update,
                 (
@@ -219,24 +224,79 @@ impl IndexMut<UpgradeKind> for UpgradeList {
     }
 }
 
-/// The initial sequence of upgrades.
-pub const INITIAL_UPGRADES: [UpgradeKind; 8] = [
-    UpgradeKind::DarkMode,
-    UpgradeKind::TouchOfLifePlugin,
-    UpgradeKind::Inspiration,
-    UpgradeKind::VelocityPlugin,
-    UpgradeKind::ImportLibrary,
-    UpgradeKind::Coffee,
-    UpgradeKind::SplashOfLifePlugin,
-    UpgradeKind::Brainstorm,
-];
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
+pub struct UpgradeSequence {
+    sequence: Vec<Vec<UpgradeKind>>,
+    next_idx: usize,
+    slots: usize,
+}
+
+impl UpgradeSequence {
+    fn new(sequence: Vec<Vec<UpgradeKind>>) -> Self {
+        Self {
+            sequence,
+            next_idx: 0,
+            slots: 1,
+        }
+    }
+
+    pub fn next(
+        &mut self,
+        upgrade_list: &UpgradeList,
+        simulation: &Simulation,
+        outline: &UpgradeOutline,
+    ) -> Vec<UpgradeKind> {
+        // Use the initial sequence of upgrades first
+        while self.next_idx < self.sequence.len() {
+            self.next_idx += 1;
+            let upgrades = self.sequence[self.next_idx - 1]
+                .iter()
+                .copied()
+                .filter(|&kind| upgrade_list[kind].is_unlocked(simulation, outline))
+                .collect::<Vec<_>>();
+
+            if !upgrades.is_empty() {
+                return upgrades;
+            }
+        }
+
+        // Filter the list of all upgrade kinds into just the ones that are unlocked
+        // Then, (weighted) randomly choose from those upgrades for the available slots
+        ALL_UPGRADE_KINDS
+            .into_iter()
+            .filter(|&kind| upgrade_list[kind].is_unlocked(simulation, outline))
+            .collect::<Vec<_>>()
+            .choose_multiple_weighted(&mut thread_rng(), self.slots, |&kind| {
+                upgrade_list[kind].weight
+            })
+            .unwrap()
+            .copied()
+            .collect::<Vec<_>>()
+    }
+}
+
+/// Loads the sequence of upgrades offered.
+fn load_upgrade_sequence(mut commands: Commands) {
+    use UpgradeKind::*;
+
+    commands.insert_resource(UpgradeSequence::new(vec![
+        vec![DarkMode],
+        vec![TouchOfLifePlugin],
+        vec![Inspiration],
+        vec![VelocityPlugin],
+        vec![ImportLibrary, SplashOfLifePlugin],
+        vec![Coffee],
+        vec![Brainstorm],
+    ]));
+}
 
 /// A macro that generates UpgradeKind enum and load_upgrade_list system from the given
 /// UpgradeKind: Upgrade pairs.
 macro_rules! generate_upgrade_list {
     (|$world:ident| $($enumname:ident: $upgrade:expr),+ $(,)?) => {
         /// Enum containing all upgrade types.
-        #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumCount)]
+        #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumCount, Debug)]
         pub enum UpgradeKind {
             $($enumname),+
         }
@@ -482,11 +542,9 @@ generate_upgrade_list!(
             mut commands: Commands,
             root: Res<AppRoot>,
             config: Res<Config>,
-            upgrade_list: Res<UpgradeList>,
-            simulation: Res<Simulation>,
         | {
             commands.entity(root.ui).despawn_descendants();
-            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, &simulation, false);
+            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, false);
             commands.entity(editor_screen).set_parent(root.ui);
         })),
         ..default()
@@ -611,10 +669,8 @@ generate_upgrade_list!(
         desc: "Adds 1 extra upgrade slot.".to_string(),
         tech_debt: 0.0,
         install: Some(
-            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
-                for mut container in &mut query {
-                    container.slots += 1;
-                }
+            world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
+                sequence.slots += 1;
             }),
         ),
         ..default()
@@ -627,10 +683,8 @@ generate_upgrade_list!(
         base_cost: 20.0,
         tech_debt: 0.0,
         install: Some(
-            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
-                for mut container in &mut query {
-                    container.slots += 1;
-                }
+            world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
+                sequence.slots += 1;
             }),
         ),
         ..default()

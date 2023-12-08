@@ -25,10 +25,7 @@ pub use crate::state::editor_screen::scene_view::SceneView;
 pub use crate::state::editor_screen::scene_view::SceneViewBounds;
 pub use crate::state::editor_screen::scene_view::WrapWithinSceneView;
 use crate::state::editor_screen::upgrade_panel::spawn_upgrade_panel;
-pub use crate::state::editor_screen::upgrade_panel::UpgradeContainer;
-use crate::state::editor_screen::upgrade_panel::UpgradeSequence;
 use crate::state::AppState::*;
-use crate::upgrade::UpgradeList;
 use crate::AppRoot;
 
 pub struct EditorScreenStatePlugin;
@@ -112,8 +109,6 @@ fn enter_editor_screen(
     mut commands: Commands,
     root: Res<AppRoot>,
     config: Res<Config>,
-    upgrade_list: Res<UpgradeList>,
-    simulation: Res<Simulation>,
     time: Res<Time>,
 ) {
     let config = &config.editor_screen;
@@ -125,17 +120,14 @@ fn enter_editor_screen(
     commands.insert_resource(PassiveCodeTyper::default());
     commands.insert_resource(PassiveEntitySpawner::default());
     commands.insert_resource(UpgradeOutline::default());
-    commands.insert_resource(UpgradeSequence::default());
 
-    let screen = spawn_editor_screen(&mut commands, config, &upgrade_list, &simulation, true);
+    let screen = spawn_editor_screen(&mut commands, config, true);
     commands.entity(screen).set_parent(root.ui);
 }
 
 pub fn spawn_editor_screen(
     commands: &mut Commands,
     config: &EditorScreenConfig,
-    upgrade_list: &UpgradeList,
-    simulation: &Simulation,
     light_theme: bool,
 ) -> Entity {
     let theme = if light_theme {
@@ -205,7 +197,7 @@ pub fn spawn_editor_screen(
     };
     commands.entity(code_panel).set_parent(vbox);
 
-    let upgrade_panel = spawn_upgrade_panel(commands, theme, upgrade_list, simulation);
+    let upgrade_panel = spawn_upgrade_panel(commands, theme);
     commands.entity(upgrade_panel).set_parent(hbox);
 
     editor_screen

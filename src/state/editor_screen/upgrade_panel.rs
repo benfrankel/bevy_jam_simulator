@@ -2,8 +2,6 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy_mod_picking::prelude::*;
-use rand::seq::SliceRandom;
-use rand::thread_rng;
 
 use crate::config::Config;
 use crate::simulation::Simulation;
@@ -20,8 +18,7 @@ use crate::ui::FONT_HANDLE;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
-use crate::upgrade::ALL_UPGRADE_KINDS;
-use crate::upgrade::INITIAL_UPGRADES;
+use crate::upgrade::UpgradeSequence;
 use crate::util::pretty_num;
 use crate::util::DespawnSet;
 use crate::AppSet;
@@ -30,26 +27,21 @@ pub struct UpgradePanelPlugin;
 
 impl Plugin for UpgradePanelPlugin {
     fn build(&self, app: &mut App) {
-        app.register_type::<UpgradeContainer>()
+        app.register_type::<IsUpgradeContainer>()
             .register_type::<UpgradeButton>()
-            .register_type::<UpgradeSequence>()
-            .init_resource::<UpgradeSequence>()
             .add_systems(
                 Update,
-                offer_new_upgrades
-                    .in_set(AppSet::Update)
-                    .run_if(on_event::<UpgradeEvent>()),
+                offer_next_upgrades.in_set(AppSet::Update).run_if(
+                    on_event::<UpgradeEvent>().or_else(
+                        state_changed::<AppState>().and_then(in_state(AppState::EditorScreen)),
+                    ),
+                ),
             )
             .add_systems(Update, update_upgrade_button_disabled.in_set(AppSet::End));
     }
 }
 
-pub fn spawn_upgrade_panel(
-    commands: &mut Commands,
-    theme: &EditorScreenTheme,
-    upgrade_list: &UpgradeList,
-    simulation: &Simulation,
-) -> Entity {
+pub fn spawn_upgrade_panel(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
     let upgrade_panel = commands
         .spawn((
             Name::new("UpgradePanel"),
@@ -87,7 +79,7 @@ pub fn spawn_upgrade_panel(
         ))
         .set_parent(upgrade_panel);
 
-    let upgrade_container = commands
+    commands
         .spawn((
             Name::new("UpgradeContainer"),
             NodeBundle {
@@ -99,21 +91,9 @@ pub fn spawn_upgrade_panel(
                 },
                 ..default()
             },
-            UpgradeContainer { slots: 1 },
+            IsUpgradeContainer,
         ))
-        .set_parent(upgrade_panel)
-        .id();
-
-    let upgrade_button = spawn_upgrade_button(
-        commands,
-        theme,
-        upgrade_list,
-        INITIAL_UPGRADES[0],
-        simulation,
-    );
-    commands
-        .entity(upgrade_button)
-        .set_parent(upgrade_container);
+        .set_parent(upgrade_panel);
 
     let submit_container = commands
         .spawn((
@@ -304,92 +284,28 @@ fn update_upgrade_button_disabled(
 }
 
 #[derive(Component, Reflect)]
-pub struct UpgradeContainer {
-    pub slots: usize,
-}
+struct IsUpgradeContainer;
 
-#[derive(Resource, Reflect)]
-#[reflect(Resource)]
-pub struct UpgradeSequence {
-    sequence: Vec<UpgradeKind>,
-    next_idx: usize,
-}
-
-impl Default for UpgradeSequence {
-    fn default() -> Self {
-        Self {
-            sequence: INITIAL_UPGRADES[1..].to_vec(),
-            next_idx: 0,
-        }
-    }
-}
-
-impl UpgradeSequence {
-    fn next(
-        &mut self,
-        upgrade_list: &UpgradeList,
-        simulation: &Simulation,
-        outline: &UpgradeOutline,
-    ) -> Option<UpgradeKind> {
-        while self.next_idx < self.sequence.len() {
-            self.next_idx += 1;
-            let kind = self.sequence[self.next_idx - 1];
-            if upgrade_list[kind].is_unlocked(simulation, outline) {
-                return Some(kind);
-            }
-        }
-        None
-    }
-}
-
-fn offer_new_upgrades(
+fn offer_next_upgrades(
     mut commands: Commands,
     mut despawn: ResMut<DespawnSet>,
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
-    mut upgrade_sequence: ResMut<UpgradeSequence>,
+    mut sequence: ResMut<UpgradeSequence>,
     simulation: Res<Simulation>,
     outline: Res<UpgradeOutline>,
-    container_query: Query<(Entity, &Children, &UpgradeContainer)>,
+    container_query: Query<(Entity, Option<&Children>), With<IsUpgradeContainer>>,
 ) {
     let theme = &config.editor_screen.dark_theme;
-    for (entity, buttons, container) in &container_query {
+    for (entity, buttons) in &container_query {
         // Despawn old upgrade options
-        for &button in buttons {
+        for &button in buttons.into_iter().flatten() {
             despawn.recursive(button);
         }
 
-        // Try to fill slots from the initial sequence of upgrades first
-        let mut slots = container.slots;
-        let mut next_upgrades = vec![];
-        while slots > 0 {
-            let Some(kind) = upgrade_sequence.next(&upgrade_list, &simulation, &outline) else {
-                break;
-            };
-            next_upgrades.push(kind);
-            slots -= 1;
-        }
-
-        // Filter the list of all upgrade kinds into just the ones that are unlocked
-        let unlocked_upgrades = ALL_UPGRADE_KINDS
-            .into_iter()
-            .filter(|&kind| {
-                !next_upgrades.contains(&kind)
-                    && upgrade_list[kind].is_unlocked(&simulation, &outline)
-            })
-            .collect::<Vec<_>>();
-
-        // Randomly choose the next upgrades for the remaining slots (weighted)
-        next_upgrades.extend(
-            unlocked_upgrades
-                .choose_multiple_weighted(&mut thread_rng(), slots, |&kind| {
-                    upgrade_list[kind].weight
-                })
-                .unwrap(),
-        );
-
-        // Sort by name
+        // Sort next upgrades by name
         // TODO: Sort some other way? Don't sort?
+        let mut next_upgrades = sequence.next(&upgrade_list, &simulation, &outline);
         next_upgrades.sort_by_key(|&kind| &upgrade_list[kind].name);
 
         for kind in next_upgrades {
