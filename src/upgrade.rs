@@ -303,6 +303,8 @@ impl UpgradeSequence {
             .copied()
             .collect::<Vec<_>>();
 
+        upgrades.sort();
+
         // Add an upgrade that refreshes the upgrade list to reduce the dependency on luck.
         upgrades.push(UpgradeKind::BrainstormAgain);
 
@@ -346,7 +348,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
 macro_rules! generate_upgrade_list {
     (|$world:ident| $($enumname:ident: $upgrade:expr),+ $(,)?) => {
         /// Enum containing all upgrade types.
-        #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumCount, Debug)]
+        #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumCount, Debug, PartialOrd, Ord)]
         pub enum UpgradeKind {
             $($enumname),+
         }
