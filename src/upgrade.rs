@@ -62,17 +62,13 @@ pub struct Upgrade {
     pub presentation_score: f64,
     /// How much this upgrade contributes to the Fun score of your submission.
     pub fun_score: f64,
-
+    /// The amount of technical debt this upgrade adds when you install it.
+    pub tech_debt: f64,
     /// How many lines of code this upgrade costs without tech debt scaling.
     pub base_cost: f64,
     /// The multiplier to the cost of this upgrade per unit of technical debt.
     pub cost_scale_factor: f64,
-    /// The amount of technical debt this upgrade adds when you install it.
-    pub tech_debt: f64,
-    /// The relative odds of this upgrade being offered.
-    pub weight: f32,
-    /// How many more copies of this upgrade can be installed.
-    pub remaining: usize,
+
     /// The minimum number of entities required for this upgrade to be offered.
     pub entity_min: f64,
     /// The maximum number of entities allowed for this upgrade to be offered.
@@ -89,8 +85,14 @@ pub struct Upgrade {
     pub tech_debt_min: f64,
     /// The maximum amount of technical debt allowed for this upgrade to be offered.
     pub tech_debt_max: f64,
-    /// A list of (upgrade, count) that must be installed for this upgrade to be offered.
-    pub requirements: Vec<(UpgradeKind, usize)>,
+    /// A list of (upgrade, minimum) that must be installed for this upgrade to be offered.
+    pub installed_min: Vec<(UpgradeKind, usize)>,
+    /// A list of (upgrade, maximum) allowed to be installed for this upgrade to be offered.
+    pub installed_max: Vec<(UpgradeKind, usize)>,
+    /// The relative odds of this upgrade being offered.
+    pub weight: f32,
+    /// How many more copies of this upgrade can be installed.
+    pub remaining: usize,
 
     /// An updatable value to be used by the upgrade for some purpose.
     pub value: f64,
@@ -109,12 +111,10 @@ impl Default for Upgrade {
             desc: "Undefined.".to_string(),
             presentation_score: 0.0,
             fun_score: 0.0,
-
+            tech_debt: 1.0,
             base_cost: 0.0,
             cost_scale_factor: 1.0,
-            tech_debt: 1.0,
-            weight: 0.0,
-            remaining: 1,
+
             entity_min: 0.0,
             entity_max: f64::INFINITY,
             line_min: 0.0,
@@ -123,7 +123,10 @@ impl Default for Upgrade {
             upgrade_max: usize::MAX,
             tech_debt_min: f64::NEG_INFINITY,
             tech_debt_max: f64::INFINITY,
-            requirements: vec![],
+            installed_min: vec![],
+            installed_max: vec![],
+            weight: 0.0,
+            remaining: 1,
 
             value: 0.0,
             update: None,
@@ -142,9 +145,13 @@ impl Upgrade {
             && (self.tech_debt_min <= simulation.tech_debt
                 && simulation.tech_debt <= self.tech_debt_max)
             && self
-                .requirements
+                .installed_min
                 .iter()
-                .all(|(kind, count)| outline.0.get(kind).is_some_and(|x| x >= count))
+                .all(|(kind, min)| outline.0.get(kind).unwrap_or(&0) >= min)
+            && self
+                .installed_max
+                .iter()
+                .all(|(kind, max)| outline.0.get(kind).unwrap_or(&0) <= max)
     }
 
     pub fn cost(&self, simulation: &Simulation) -> f64 {
@@ -335,7 +342,7 @@ generate_upgrade_list!(
     EntitySkinPlugin: Upgrade {
         name: "EntitySkinPlugin".to_string(),
         desc: "Introduces a new entity skin with a random color. Makes your game prettier.".to_string(),
-        presentation_score: 10.0,
+        presentation_score: 5.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
@@ -358,7 +365,7 @@ generate_upgrade_list!(
     EntitySizePlugin: Upgrade {
         name: "EntitySizePlugin".to_string(),
         desc: "Increases the maximum entity size. Makes your game prettier.".to_string(),
-        presentation_score: 10.0,
+        presentation_score: 2.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
@@ -453,8 +460,8 @@ generate_upgrade_list!(
         name: "Coffee".to_string(),
         desc: "Doubles the number of entities spawned per click.".to_string(),
         base_cost: 25.0,
-        remaining: 3,
         weight: 1.0,
+        remaining: 3,
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
                 for mut scene_view in &mut scene_view_query {
@@ -472,7 +479,6 @@ generate_upgrade_list!(
         desc: "Spawns 1 entity every 2 seconds.".to_string(),
         base_cost: 100.0,
         weight: 1.0,
-        remaining: 1,
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
             entity_spawner.amount += 1.0;
         })),
@@ -481,9 +487,9 @@ generate_upgrade_list!(
     BatchSpawnerPlugin: Upgrade {
         name: "BatchSpawnerPlugin".to_string(),
         desc: "Doubles the number of entities spawned by EntitySpawnerPlugin.".to_string(),
-        requirements: vec![(EntitySpawnerPlugin, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
+        installed_min: vec![(EntitySpawnerPlugin, 1)],
         weight: 0.5,
         remaining: 6,
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
@@ -494,10 +500,10 @@ generate_upgrade_list!(
     OptimizeSpawner: Upgrade {
         name: "Optimize Spawner".to_string(),
         desc: "Halves the cooldown of EntitySpawnerPlugin with some clever optimizations.".to_string(),
-        requirements: vec![(EntitySpawnerPlugin, 1)],
+        tech_debt: 2.0,
         base_cost: 100.0,
         cost_scale_factor: 1.2,
-        tech_debt: 2.0,
+        installed_min: vec![(EntitySpawnerPlugin, 1)],
         weight: 0.5,
         remaining: 8,
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
@@ -552,8 +558,8 @@ generate_upgrade_list!(
     MechanicalKeyboard: Upgrade {
         name: "Mechanical Keyboard".to_string(),
         desc: "Doubles the number of characters typed per key press.".to_string(),
-        base_cost: 50.0,
         tech_debt: 0.0,
+        base_cost: 50.0,
         weight: 0.5,
         install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
             for mut typer in &mut typer_query {
@@ -565,8 +571,8 @@ generate_upgrade_list!(
     TenXDev: Upgrade {
         name: "10x Dev".to_string(),
         desc: "Multiplies the number of characters typed per key press by 10.".to_string(),
-        base_cost: 100.0,
         tech_debt: 0.0,
+        base_cost: 100.0,
         weight: 0.5,
         install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
             for mut typer in &mut typer_query {
@@ -592,9 +598,9 @@ generate_upgrade_list!(
     MetaMacro: Upgrade {
         name: "Meta Macro".to_string(),
         desc: "Doubles the output of Procedural Macro.".to_string(),
-        requirements: vec![(ProceduralMacro, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
+        installed_min: vec![(ProceduralMacro, 1)],
         weight: 0.5,
         remaining: 6,
         install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
@@ -605,10 +611,10 @@ generate_upgrade_list!(
     OptimizeBuild: Upgrade {
         name: "Optimize Build".to_string(),
         desc: "Halves the cooldown of Procedural Macro by optimizing the build process.".to_string(),
-        requirements: vec![(ProceduralMacro, 1)],
+        tech_debt: 0.0,
         base_cost: 50.0,
         cost_scale_factor: 1.2,
-        tech_debt: 0.0,
+        installed_min: vec![(ProceduralMacro, 1)],
         weight: 0.5,
         remaining: 8,
         install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
@@ -620,11 +626,11 @@ generate_upgrade_list!(
     LlmPlugin: Upgrade {
         name: "LlmPlugin".to_string(),
         desc: "Inserts an LlmComponent on all existing and future entities. Each LlmComponent writes 1 character every 2 seconds.".to_string(),
+        tech_debt: 2.0,
         base_cost: 200.0,
         cost_scale_factor: 1.2,
-        tech_debt: 2.0,
-        weight: 0.1,
         entity_min: 1000.0,
+        weight: 0.1,
         install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
             typer.chars_per_entity += 1.0;
         })),
@@ -636,22 +642,22 @@ generate_upgrade_list!(
     Refactor: Upgrade {
         name: "Refactor".to_string(),
         desc: "Improves the quality of the codebase.".to_string(),
+        tech_debt: -5.0,
         base_cost: 10.0,
         cost_scale_factor: 1.3,
-        tech_debt: -5.0,
+        tech_debt_min: 15.0,
         weight: 2.0,
         remaining: usize::MAX,
-        tech_debt_min: 15.0,
         ..default()
     },
     Rtfm: Upgrade {
         name: "RTFM".to_string(),
         desc: "Reduces all future technical debt increases by 10%.".to_string(),
-        base_cost: 20.0,
         tech_debt: 0.0,
+        base_cost: 20.0,
+        tech_debt_min: 5.0,
         weight: 1.0,
         remaining: 4,
-        tech_debt_min: 5.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             for upgrade in &mut upgrade_list.0 {
                 if upgrade.tech_debt > 0.0 {
@@ -678,10 +684,10 @@ generate_upgrade_list!(
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
+        tech_debt: 0.0,
+        base_cost: 20.0,
         upgrade_min: 7,
         weight: 2.5,
-        base_cost: 20.0,
-        tech_debt: 0.0,
         install: Some(
             world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
                 sequence.slots += 1;
