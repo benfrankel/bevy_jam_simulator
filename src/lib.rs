@@ -13,6 +13,7 @@ mod ui;
 mod upgrade;
 mod util;
 
+use bevy::asset::AssetMetaCheck;
 use bevy::log::LogPlugin;
 use bevy::prelude::*;
 
@@ -22,6 +23,7 @@ impl Plugin for AppPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<AppRoot>()
             .init_resource::<AppRoot>()
+            .insert_resource(AssetMetaCheck::Never)
             .add_systems(Startup, spawn_logical_entities);
 
         // System ordering
