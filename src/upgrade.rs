@@ -246,23 +246,24 @@ impl IndexMut<UpgradeKind> for UpgradeList {
 #[derive(Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct UpgradeSequence {
-    sequence: Vec<(Vec<UpgradeKind>, String)>,
-    next_idx: usize,
+    /// A stack of upcoming upgrades. If this is non-empty, the next set of upgrades will
+    /// be the given list and the refresh button won't be offered. The given string will
+    /// be rendered beneath the list.
+    stack: Vec<(Vec<UpgradeKind>, String)>,
     slots: usize,
-    /// This field can be set by upgrades. If not None, the next set of upgrades will be
-    /// the given list and the refresh button won't be offered. The given string will be
-    /// rendered beneath the list.
-    forced_list: Option<(Vec<UpgradeKind>, String)>,
 }
 
 impl UpgradeSequence {
-    fn new(sequence: Vec<(Vec<UpgradeKind>, String)>) -> Self {
+    fn new(mut sequence: Vec<(Vec<UpgradeKind>, String)>) -> Self {
+        sequence.reverse();
         Self {
-            sequence,
-            next_idx: 0,
+            stack: sequence,
             slots: 1,
-            forced_list: None,
         }
+    }
+
+    pub fn push(&mut self, options: Vec<UpgradeKind>, desc: String) {
+        self.stack.push((options, desc));
     }
 
     /// Get the next upgrade list, with optional description.
@@ -272,10 +273,8 @@ impl UpgradeSequence {
         simulation: &Simulation,
         outline: &UpgradeOutline,
     ) -> (Vec<UpgradeKind>, String) {
-        // Use the initial sequence of upgrades first
-        while self.next_idx < self.sequence.len() {
-            self.next_idx += 1;
-            let (upgrades, desc) = &self.sequence[self.next_idx - 1];
+        // Check the stack of upgrades first
+        while let Some((upgrades, desc)) = self.stack.pop() {
             let upgrades = upgrades
                 .iter()
                 .copied()
@@ -283,13 +282,8 @@ impl UpgradeSequence {
                 .collect::<Vec<_>>();
 
             if !upgrades.is_empty() {
-                return (upgrades, desc.clone());
+                return (upgrades, desc);
             }
-        }
-
-        // Check if there's a forced list.
-        if let Some(output) = self.forced_list.take() {
-            return output;
         }
 
         // Filter the list of all upgrade kinds into just the ones that are unlocked
@@ -310,6 +304,7 @@ impl UpgradeSequence {
             .copied()
             .collect::<Vec<_>>();
 
+        // Sort by UpgradeKind order
         upgrades.sort();
 
         // Add an upgrade that refreshes the upgrade list to reduce the dependency on luck.
@@ -827,12 +822,12 @@ generate_upgrade_list!(
         weight: 2.5,
         no_outline: true,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
-            sequence.forced_list = Some((
+            sequence.push(
                 vec![TenXDev, RockstarDev],
                 "This is a specialization upgrade. \
                  You can only select one. \
                  The rejected options will never appear again.".to_string(),
-            ));
+            );
         })),
         ..default()
     },
