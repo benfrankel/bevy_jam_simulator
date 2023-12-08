@@ -4,10 +4,12 @@ use std::ops::IndexMut;
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
 use bevy::prelude::*;
+use bevy_kira_audio::prelude::*;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use strum::EnumCount;
 
+use crate::audio::AudioAssets;
 use crate::config::Config;
 use crate::physics::PhysicsSettings;
 use crate::physics::UNIT_SPEED;
@@ -167,6 +169,8 @@ fn process_new_installed_upgrades(
     mut events: EventReader<UpgradeEvent>,
     mut upgrade_list: ResMut<UpgradeList>,
     mut simulation: ResMut<Simulation>,
+    audio: Res<Audio>,
+    audio_assets: Res<AudioAssets>,
 ) {
     for event in events.read() {
         let upgrade = &mut upgrade_list[event.0];
@@ -175,6 +179,7 @@ fn process_new_installed_upgrades(
         simulation.tech_debt += upgrade.tech_debt;
         simulation.presentation_score += upgrade.presentation_score;
         simulation.fun_score += upgrade.fun_score;
+        audio.play(audio_assets.random_upgrade());
     }
 }
 
