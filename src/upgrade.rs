@@ -288,7 +288,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
     use UpgradeKind::*;
 
     commands.insert_resource(UpgradeSequence::new(vec![
-        vec![DarkMode],
+        vec![DarkModeDracula, DarkModeBamboo],
         vec![TouchOfLifePlugin],
         vec![Inspiration],
         vec![VelocityPlugin],
@@ -539,10 +539,10 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Lines (manual)
+    // Themes
 
-    DarkMode: Upgrade {
-        name: "Dark Mode".to_string(),
+    DarkModeDracula: Upgrade {
+        name: "Dark Mode (Dracula)".to_string(),
         desc: "Rite of passage for all developers. Required to write code.".to_string(),
         tech_debt: 0.0,
         install: Some(world.register_system(|
@@ -553,13 +553,35 @@ generate_upgrade_list!(
             commands.entity(root.ui).despawn_descendants();
             let editor_screen = spawn_editor_screen(
                 &mut commands,
-                config.editor_screen.dark_theme.clone(),
+                config.editor_screen.dracula_theme.clone(),
                 false,
             );
             commands.entity(editor_screen).set_parent(root.ui);
         })),
         ..default()
     },
+    DarkModeBamboo: Upgrade {
+        name: "Dark Mode (Bamboo)".to_string(),
+        desc: "Rite of passage for all developers. Required to write code.".to_string(),
+        tech_debt: 0.0,
+        install: Some(world.register_system(|
+            mut commands: Commands,
+            root: Res<AppRoot>,
+            config: Res<Config>,
+        | {
+            commands.entity(root.ui).despawn_descendants();
+            let editor_screen = spawn_editor_screen(
+                &mut commands,
+                config.editor_screen.bamboo_theme.clone(),
+                false,
+            );
+            commands.entity(editor_screen).set_parent(root.ui);
+        })),
+        ..default()
+    },
+
+    // Lines (manual)
+
     MechanicalKeyboard: Upgrade {
         name: "Mechanical Keyboard".to_string(),
         desc: "Doubles the number of characters typed per key press.".to_string(),

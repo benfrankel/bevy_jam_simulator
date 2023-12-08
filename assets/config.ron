@@ -85,7 +85,7 @@
             submit_button_font_size: Px(32.0),
         ),
 
-        dark_theme: EditorScreenTheme(
+        dracula_theme: EditorScreenTheme(
             info_bar_height: Px(60.0),
             info_bar_background_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
             info_bar_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
@@ -114,6 +114,46 @@
             upgrade_button_hovered_color: Rgba(red: 0.471, green: 0.506, blue: 0.529, alpha: 1.000),
             upgrade_button_pressed_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
             upgrade_button_disabled_color: Rgba(red: 0.086, green: 0.082, blue: 0.133, alpha: 1.000),
+            upgrade_button_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
+            upgrade_button_font_size: Px(16.0),
+
+            submit_button_height: Px(76.0),
+            submit_button_normal_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
+            submit_button_hovered_color: Rgba(red: 0.039, green: 0.227, blue: 0.741, alpha: 1.000),
+            submit_button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
+            submit_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
+            submit_button_font_size: Px(32.0),
+        ),
+
+        bamboo_theme: EditorScreenTheme(
+            info_bar_height: Px(60.0),
+            info_bar_background_color: Rgba(red: 0.10, green: 0.11, blue: 0.12, alpha: 1.000),
+            info_bar_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
+            info_bar_font_size: Px(32.0),
+
+            outline_panel_width: Px(280.0),
+            outline_panel_background_color: Rgba(red: 0.165, green: 0.18, blue: 0.184, alpha: 1.000),
+            outline_panel_highlight_color: Rgba(red: 0.265, green: 0.28, blue: 0.284, alpha: 1.000),
+            outline_panel_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
+            outline_panel_font_size: Px(16.0),
+            outline_panel_header_font_size: Px(24.0),
+
+            code_panel_height: Px(200.0),
+            code_panel_background_color: Rgba(red: 0.10, green: 0.11, blue: 0.12, alpha: 1.000),
+            code_panel_text_color: Rgba(red: 0.300, green: 0.900, blue: 0.000, alpha: 1.000),
+            code_panel_font_size: Px(16.0),
+            code_panel_lines_max: 10,
+
+            upgrade_panel_width: Px(280.0),
+            upgrade_panel_background_color: Rgba(red: 0.165, green: 0.18, blue: 0.184, alpha: 1.000),
+            upgrade_panel_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
+            upgrade_panel_header_font_size: Px(24.0),
+
+            upgrade_button_height: Px(56.0),
+            upgrade_button_normal_color: Rgba(red: 0.265, green: 0.28, blue: 0.284, alpha: 1.000),
+            upgrade_button_hovered_color: Rgba(red: 0.365, green: 0.38, blue: 0.384, alpha: 1.000),
+            upgrade_button_pressed_color: Rgba(red: 0.165, green: 0.18, blue: 0.184, alpha: 1.000),
+            upgrade_button_disabled_color: Rgba(red: 0.065, green: 0.08, blue: 0.084, alpha: 1.000),
             upgrade_button_text_color: Rgba(red: 0.800, green: 0.800, blue: 0.800, alpha: 1.000),
             upgrade_button_font_size: Px(16.0),
 

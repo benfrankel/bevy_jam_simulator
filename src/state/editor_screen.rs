@@ -92,7 +92,8 @@ pub struct EditorScreenConfig {
     scene_view_background_color: Color,
 
     pub light_theme: EditorScreenTheme,
-    pub dark_theme: EditorScreenTheme,
+    pub dracula_theme: EditorScreenTheme,
+    pub bamboo_theme: EditorScreenTheme,
 }
 
 #[derive(Resource, Clone)]
