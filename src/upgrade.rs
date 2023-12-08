@@ -327,25 +327,25 @@ fn load_upgrade_sequence(mut commands: Commands) {
         (vec![DarkModeDracula, DarkModeBamboo], String::new()),
         (
             vec![TouchOfLifePlugin],
-            "\"Now that a dark theme is installed, I can start working on the game.\"".to_string(),
+            "\"Much better. Now I can get started.\"".to_string(),
         ),
         (
             vec![Inspiration],
-            "\"I should maximize the number of entities to abide by the jam theme.\"".to_string(),
+            "\"I don't know what I'm going to make yet, but I should start spawning entities to fit the jam theme.\"".to_string(),
         ),
         (
             vec![VelocityPlugin],
-            "\"I need to make the game fun if I want receive good ratings.\"".to_string(),
+            "\"I should make the game more interesting for a higher Fun score.\"".to_string(),
         ),
         (vec![ImportLibrary, SplashOfLifePlugin], String::new()),
         (
             vec![Coffee, OneBitSpritePack],
-            "\"Also I should make the game look pretty if I want a good presentation score.\""
+            "\"I should also make the game look pretty for a higher Presentation score.\""
                 .to_string(),
         ),
         (
             vec![Brainstorm],
-            "\"Hmm... How can I make further progress?\"".to_string(),
+            "\"Hmm... where should I go from here?\"".to_string(),
         ),
     ]));
 }
