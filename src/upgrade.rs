@@ -70,7 +70,6 @@ pub struct Upgrade {
     pub base_cost: f64,
     /// The multiplier to the cost of this upgrade per unit of technical debt.
     pub cost_scale_factor: f64,
-
     /// If true, this upgrade won't be added to the outline and won't count as an upgrade.
     pub no_outline: bool,
 
@@ -119,7 +118,6 @@ impl Default for Upgrade {
             tech_debt: 1.0,
             base_cost: 0.0,
             cost_scale_factor: 1.0,
-
             no_outline: false,
 
             entity_min: 0.0,
@@ -396,6 +394,7 @@ generate_upgrade_list!(
             mut simulation: ResMut<Simulation>
         | {
             simulation.sprite_pack = SpritePack::OneBit(vec![]);
+            simulation.sprite_pack.add_skin(&mut thread_rng());
             simulation.sprite_pack.add_skin(&mut thread_rng());
         })),
         ..default()
@@ -818,9 +817,9 @@ generate_upgrade_list!(
         desc: "Select this upgrade when you are ready to specialize.".to_string(),
         tech_debt: 0.0,
         base_cost: 0.0,
+        no_outline: true,
         upgrade_min: 20,
         weight: 2.5,
-        no_outline: true,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.push(
                 vec![TenXDev, RockstarDev],
@@ -895,34 +894,39 @@ generate_upgrade_list!(
     // Misc
 
     RefreshUpgradeList: {
-        let mut names: [&str; 3] = [
+        let mut names: [&str; 8] = [
             "Brainstorm Again",
-            "Go for a Walk",
             "Think Twice",
+            "Drink Water",
+            "Sleep on it",
+            "Talk to a Friend",
+            "Order a Pizza",
+            "Go for a Walk",
+            "Take a Shower",
         ];
         names.shuffle(&mut thread_rng());
-        let mut name_i: usize = 0;
+        let mut name_idx = 0usize;
 
         Upgrade {
-            name: names[name_i].to_string(),
+            name: names[name_idx].to_string(),
             desc: "\
                 Refreshes the list of upgrades in exchange for lines of code. \
                 The cost doubles each time you use this.".to_string(),
             tech_debt: 0.0,
             base_cost: 1.0,
-            remaining: usize::MAX,
             no_outline: true,
+            remaining: usize::MAX,
             install: Some(world.register_system(move |mut list: ResMut<UpgradeList>| {
                 let this = &mut list[RefreshUpgradeList];
                 // Increase base cost
                 this.base_cost *= 2.0;
                 // Update name
-                name_i += 1;
-                if name_i >= names.len() {
+                name_idx += 1;
+                if name_idx >= names.len() {
                     names.shuffle(&mut thread_rng());
-                    name_i = 0;
+                    name_idx = 0;
                 }
-                this.name = names[name_i].to_string();
+                this.name = names[name_idx].to_string();
             })),
             ..default()
         }
