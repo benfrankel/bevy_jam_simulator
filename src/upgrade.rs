@@ -272,7 +272,12 @@ impl UpgradeSequence {
         // Then, (weighted) randomly choose from those upgrades for the available slots
         ALL_UPGRADE_KINDS
             .into_iter()
-            .filter(|&kind| upgrade_list[kind].is_unlocked(simulation, outline))
+            .filter(|&kind| {
+                let upgrade = &upgrade_list[kind];
+                // This prevents the tutorial upgrades from being offered when
+                // all other upgrades are exhausted.
+                upgrade.weight > 0.0 && upgrade.is_unlocked(simulation, outline)
+            })
             .collect::<Vec<_>>()
             .choose_multiple_weighted(&mut thread_rng(), self.slots, |&kind| {
                 upgrade_list[kind].weight
