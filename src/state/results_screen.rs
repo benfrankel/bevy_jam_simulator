@@ -5,6 +5,7 @@ use bevy_mod_picking::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 
+use super::editor_screen::EditorScreenStartTime;
 use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::AppState;
@@ -64,9 +65,13 @@ fn enter_results_screen(
     root: Res<AppRoot>,
     config: Res<Config>,
     simulation: Res<Simulation>,
+    start_time: Res<EditorScreenStartTime>,
+    time: Res<Time>,
 ) {
     let config = &config.results_screen;
     commands.insert_resource(ClearColor(config.background_color));
+
+    let elapsed = time.elapsed_seconds_f64() - start_time.0;
 
     let screen = commands
         .spawn((
@@ -228,8 +233,10 @@ fn enter_results_screen(
         .spawn((
             Name::new("RankedText"),
             TextBundle::from_section(
-                // TODO: Set number of rankings from time spent in the editor before submitting.
-                format!("Ranked from {} ratings.", 34),
+                format!(
+                    "Ranked from {} ratings.",
+                    ((elapsed / 60.0) as usize).clamp(5, 120),
+                ),
                 TextStyle {
                     font: FONT_HANDLE,
                     color: config.table_text_color,

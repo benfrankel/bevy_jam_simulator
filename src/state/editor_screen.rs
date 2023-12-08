@@ -36,6 +36,7 @@ pub struct EditorScreenStatePlugin;
 impl Plugin for EditorScreenStatePlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<EditorScreenAssets>()
+            .register_type::<EditorScreenStartTime>()
             .init_collection::<EditorScreenAssets>()
             .add_systems(OnEnter(EditorScreen), enter_editor_screen)
             .add_systems(OnExit(EditorScreen), exit_editor_screen)
@@ -103,15 +104,21 @@ pub struct EditorScreenAssets {
     // TODO: Music / SFX, sprites
 }
 
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
+pub struct EditorScreenStartTime(pub f64);
+
 fn enter_editor_screen(
     mut commands: Commands,
     root: Res<AppRoot>,
     config: Res<Config>,
     upgrade_list: Res<UpgradeList>,
     simulation: Res<Simulation>,
+    time: Res<Time>,
 ) {
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
+    commands.insert_resource(EditorScreenStartTime(time.elapsed_seconds_f64()));
 
     // Reset resources so replaying works
     commands.insert_resource(Simulation::default());
