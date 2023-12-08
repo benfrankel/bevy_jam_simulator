@@ -21,6 +21,8 @@ pub struct AudioAssets {
     pub upgrade0: Handle<AudioSource>,
     #[asset(path = "audio/upgrade1.ogg")]
     pub upgrade1: Handle<AudioSource>,
+    #[asset(path = "music/ingame.ogg")]
+    pub music: Handle<AudioSource>,
 }
 
 impl AudioAssets {

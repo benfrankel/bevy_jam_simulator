@@ -8,9 +8,11 @@ mod upgrade_panel;
 use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy_asset_loader::prelude::*;
+use bevy_kira_audio::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::audio::AudioAssets;
 use crate::config::Config;
 pub use crate::state::editor_screen::code_panel::spawn_code_panel;
 use crate::state::editor_screen::code_panel::spawn_light_code_panel;
@@ -114,6 +116,8 @@ fn enter_editor_screen(
     root: Res<AppRoot>,
     config: Res<Config>,
     time: Res<Time>,
+    audio: Res<Audio>,
+    audio_assets: Res<AudioAssets>,
 ) {
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
@@ -121,6 +125,8 @@ fn enter_editor_screen(
 
     let screen = spawn_editor_screen(&mut commands, config.light_theme.clone(), true);
     commands.entity(screen).set_parent(root.ui);
+
+    audio.play(audio_assets.music.clone()).looped();
 }
 
 pub fn spawn_editor_screen(
