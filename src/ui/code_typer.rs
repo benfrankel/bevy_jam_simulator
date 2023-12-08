@@ -58,7 +58,7 @@ impl Default for CodeTyper {
 
 impl CodeTyper {
     pub fn enter(&mut self, simulation: &mut Simulation, text: &mut String, count: usize) {
-        for _ in 0..count * self.chars_per_key {
+        for _ in 0..count {
             loop {
                 // Push a character
                 let c = self.code.0.next().unwrap();
@@ -88,15 +88,16 @@ pub fn type_code(
     mut simulation: ResMut<Simulation>,
     mut typer_query: Query<(&mut CodeTyper, &mut Text)>,
 ) {
-    let count = char_events
+    let keys = char_events
         .read()
         .count()
         .min(keyboard_input.get_just_pressed().count());
-    if count == 0 {
+    if keys == 0 {
         return;
     }
 
     for (mut typer, mut text) in &mut typer_query {
+        let count = keys * typer.chars_per_key;
         typer.enter(&mut simulation, &mut text.sections[0].value, count);
     }
 }

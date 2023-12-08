@@ -188,7 +188,7 @@ fn spawn_upgrade_button(
                             } else {
                                 "Decreases"
                             },
-                            pretty_num(upgrade.tech_debt.abs()),
+                            (upgrade.tech_debt.abs() * 1000.0).round() / 1000.0,
                         )
                     }
                 ),

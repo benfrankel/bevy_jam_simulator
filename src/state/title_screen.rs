@@ -164,7 +164,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                     justify_content: JustifyContent::Center,
                     margin: UiRect::axes(Vw(1.9), Vh(5.0)),
                     flex_direction: FlexDirection::Column,
-                    row_gap: Vh(3.0),
+                    row_gap: Vh(4.0),
                     ..default()
                 },
                 ..default()

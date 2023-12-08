@@ -220,13 +220,14 @@ impl IndexMut<UpgradeKind> for UpgradeList {
 }
 
 /// The initial sequence of upgrades.
-pub const INITIAL_UPGRADES: [UpgradeKind; 6] = [
+pub const INITIAL_UPGRADES: [UpgradeKind; 7] = [
     UpgradeKind::DarkMode,
     UpgradeKind::TouchOfLifePlugin,
-    UpgradeKind::MovementPlugin,
+    UpgradeKind::VelocityPlugin,
+    UpgradeKind::ImportLibrary,
+    UpgradeKind::Coffee,
     UpgradeKind::SplashOfLifePlugin,
     UpgradeKind::Brainstorm,
-    UpgradeKind::ImportLibrary,
 ];
 
 /// A macro that generates UpgradeKind enum and load_upgrade_list system from the given
@@ -263,7 +264,7 @@ generate_upgrade_list!(
 
     EntitySkinPlugin: Upgrade {
         name: "EntitySkinPlugin".to_string(),
-        desc: "Adds a new entity skin with a random color. Makes your game prettier.".to_string(),
+        desc: "Introduces a new entity skin with a random color. Makes your game prettier.".to_string(),
         presentation_score: 10.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
@@ -302,8 +303,8 @@ generate_upgrade_list!(
 
     // Fun score
 
-    MovementPlugin: Upgrade {
-        name: "MovementPlugin".to_string(),
+    VelocityPlugin: Upgrade {
+        name: "VelocityPlugin".to_string(),
         desc: "Allows entities to move. Makes your game more fun.".to_string(),
         fun_score: 5.0,
         base_cost: 5.0,
@@ -378,6 +379,21 @@ generate_upgrade_list!(
         ),
         ..default()
     },
+    Coffee: Upgrade {
+        name: "Coffee".to_string(),
+        desc: "Doubles the number of entities spawned per click.".to_string(),
+        base_cost: 25.0,
+        remaining: 4,
+        weight: 1.0,
+        install: Some(
+            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+                for mut scene_view in &mut scene_view_query {
+                    scene_view.spawns_per_click *= 2;
+                }
+            }),
+        ),
+        ..default()
+    },
 
     // Entities (automatic)
 
@@ -394,7 +410,7 @@ generate_upgrade_list!(
     },
     BatchSpawnerPlugin: Upgrade {
         name: "BatchSpawnerPlugin".to_string(),
-        desc: "Doubles the amount of entities spawned by EntitySpawnerPlugin.".to_string(),
+        desc: "Doubles the number of entities spawned by EntitySpawnerPlugin.".to_string(),
         requirements: vec![(EntitySpawnerPlugin, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,

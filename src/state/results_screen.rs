@@ -180,7 +180,7 @@ fn enter_results_screen(
 
         let entries = [
             criterion,
-            &format!("#{}", rank),
+            &format!("#{:.0}", rank),
             &format!("{:.3}", score),
             &format!("{:.3}", score),
         ];
