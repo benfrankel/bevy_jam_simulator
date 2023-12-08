@@ -224,6 +224,30 @@ fn spawn_upgrade_button(
     upgrade_button
 }
 
+fn spawn_separator(commands: &mut Commands, theme: &EditorScreenTheme, parent: Entity) {
+    commands
+        .spawn((
+            Name::new("Separator"),
+            NodeBundle {
+                style: Style {
+                    max_height: Px(0.0),
+                    border: UiRect::top(theme.separator_width),
+                    margin: UiRect {
+                        left: Px(0.0),
+                        right: Px(0.0),
+                        // 16 vertical margin, compensates for buttons
+                        top: Px(6.0),
+                        bottom: Px(16.0),
+                    },
+                    ..default()
+                },
+                border_color: theme.separator_color.into(),
+                ..default()
+            },
+        ))
+        .set_parent(parent);
+}
+
 fn spawn_submit_button(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
     let submit_button = commands
         .spawn((
@@ -303,12 +327,16 @@ fn offer_next_upgrades(
             despawn.recursive(button);
         }
 
+        let next_upgrades = sequence.next(&upgrade_list, &simulation, &outline);
         // Sort next upgrades by name
         // TODO: Sort some other way? Don't sort?
-        let mut next_upgrades = sequence.next(&upgrade_list, &simulation, &outline);
-        next_upgrades.sort_by_key(|&kind| &upgrade_list[kind].name);
+        // next_upgrades.sort_by_key(|&kind| &upgrade_list[kind].name);
 
         for kind in next_upgrades {
+            if kind == UpgradeKind::BrainstormAgain {
+                // Add a separator.
+                spawn_separator(&mut commands, theme, entity);
+            }
             let upgrade_button =
                 spawn_upgrade_button(&mut commands, theme, &upgrade_list, kind, &simulation);
             commands.entity(upgrade_button).set_parent(entity);

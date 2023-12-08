@@ -83,6 +83,9 @@
             submit_button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
             submit_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
             submit_button_font_size: Px(32.0),
+
+            separator_width: Px(4.0),
+            separator_color: Rgba(red: 0.9, green: 0.9, blue: 0.9, alpha: 1.000),
         ),
 
         dracula_theme: EditorScreenTheme(
@@ -123,6 +126,9 @@
             submit_button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
             submit_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
             submit_button_font_size: Px(32.0),
+
+            separator_width: Px(2.0),
+            separator_color: Rgba(red: 0.353, green: 0.373, blue: 0.416, alpha: 1.000),
         ),
 
         bamboo_theme: EditorScreenTheme(
@@ -163,6 +169,9 @@
             submit_button_pressed_color: Rgba(red: 0.000, green: 0.176, blue: 0.690, alpha: 1.000),
             submit_button_text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
             submit_button_font_size: Px(32.0),
+
+            separator_width: Px(2.0),
+            separator_color: Rgba(red: 0.265, green: 0.28, blue: 0.284, alpha: 1.000),
         ),
     ),
     

@@ -85,6 +85,9 @@ pub struct EditorScreenTheme {
     submit_button_pressed_color: Color,
     submit_button_text_color: Color,
     submit_button_font_size: Val,
+
+    separator_width: Val,
+    separator_color: Color,
 }
 
 #[derive(Default, Reflect, Serialize, Deserialize)]

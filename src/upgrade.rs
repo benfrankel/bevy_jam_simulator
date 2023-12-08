@@ -270,7 +270,7 @@ impl UpgradeSequence {
 
         // Filter the list of all upgrade kinds into just the ones that are unlocked
         // Then, (weighted) randomly choose from those upgrades for the available slots
-        ALL_UPGRADE_KINDS
+        let mut upgrades = ALL_UPGRADE_KINDS
             .into_iter()
             .filter(|&kind| {
                 let upgrade = &upgrade_list[kind];
@@ -284,7 +284,12 @@ impl UpgradeSequence {
             })
             .unwrap()
             .copied()
-            .collect::<Vec<_>>()
+            .collect::<Vec<_>>();
+
+        // Add an upgrade that refreshes the upgrade list to reduce the dependency on luck.
+        upgrades.push(UpgradeKind::BrainstormAgain);
+
+        upgrades
     }
 }
 
@@ -760,6 +765,20 @@ generate_upgrade_list!(
         weight: 2.5,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.slots += 1;
+        })),
+        ..default()
+    },
+
+    // Misc
+
+    BrainstormAgain: Upgrade {
+        name: "Brainstorm Again".to_string(),
+        desc: "Refreshes the list of upgrades in exchange for lines of code. The cost doubles each time you use this.".to_string(),
+        tech_debt: 0.0,
+        base_cost: 1.0,
+        remaining: usize::MAX,
+        install: Some(world.register_system(|mut list: ResMut<UpgradeList>| {
+            list[BrainstormAgain].base_cost *= 2.0;
         })),
         ..default()
     },
