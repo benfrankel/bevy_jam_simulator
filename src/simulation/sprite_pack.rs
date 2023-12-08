@@ -49,31 +49,30 @@ impl SpritePack {
         size: Vec2,
         mut rng: impl Rng,
     ) {
-        let (color, index) = match self {
+        match self {
             Self::None(colors) => {
-                commands.entity(entity).insert(Sprite {
-                    color: *colors.choose(&mut rng).unwrap(),
-                    custom_size: Some(size),
-                    ..default()
-                });
-                return;
+                commands.entity(entity).insert((
+                    Sprite {
+                        color: *colors.choose(&mut rng).unwrap(),
+                        custom_size: Some(size),
+                        ..default()
+                    },
+                    SpriteBundle::default().texture,
+                ));
             },
-            Self::OneBit(tiles) => *tiles.choose(&mut rng).unwrap(),
-        };
-        let handle = match self {
-            Self::None(..) => unreachable!(),
-            Self::OneBit(..) => assets.one_bit_food.clone(),
-        };
-
-        commands.entity(entity).insert((
-            TextureAtlasSprite {
-                color,
-                index,
-                custom_size: Some(size),
-                ..default()
+            Self::OneBit(tiles) => {
+                let (color, index) = *tiles.choose(&mut rng).unwrap();
+                commands.entity(entity).insert((
+                    TextureAtlasSprite {
+                        color,
+                        index,
+                        custom_size: Some(size),
+                        ..default()
+                    },
+                    assets.one_bit_food.clone(),
+                ));
             },
-            handle,
-        ));
+        };
     }
 }
 
