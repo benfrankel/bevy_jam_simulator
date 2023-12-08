@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy::utils::HashMap;
 
-use crate::config::Config;
+use super::ActiveEditorTheme;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenTheme;
 use crate::ui::FontSize;
@@ -150,12 +150,12 @@ struct IsOutlineContainer;
 fn update_outline_container(
     mut commands: Commands,
     mut events: EventReader<UpgradeEvent>,
-    config: Res<Config>,
+    theme: Res<ActiveEditorTheme>,
     upgrade_list: Res<UpgradeList>,
     mut outline: ResMut<UpgradeOutline>,
     container_query: Query<Entity, With<IsOutlineContainer>>,
 ) {
-    let theme = &config.editor_screen.dark_theme;
+    let theme = &theme.0;
     for event in events.read() {
         let upgrade_kind = event.0;
         let count = outline.0.entry(upgrade_kind).or_insert(0);

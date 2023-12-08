@@ -551,7 +551,11 @@ generate_upgrade_list!(
             config: Res<Config>,
         | {
             commands.entity(root.ui).despawn_descendants();
-            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, false);
+            let editor_screen = spawn_editor_screen(
+                &mut commands,
+                config.editor_screen.dark_theme.clone(),
+                false,
+            );
             commands.entity(editor_screen).set_parent(root.ui);
         })),
         ..default()

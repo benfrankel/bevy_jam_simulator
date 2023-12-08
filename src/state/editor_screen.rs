@@ -46,7 +46,7 @@ impl Plugin for EditorScreenStatePlugin {
     }
 }
 
-#[derive(Default, Reflect, Serialize, Deserialize)]
+#[derive(Default, Reflect, Serialize, Deserialize, Clone)]
 pub struct EditorScreenTheme {
     info_bar_height: Val,
     info_bar_background_color: Color,
@@ -91,9 +91,12 @@ pub struct EditorScreenTheme {
 pub struct EditorScreenConfig {
     scene_view_background_color: Color,
 
-    light_theme: EditorScreenTheme,
-    dark_theme: EditorScreenTheme,
+    pub light_theme: EditorScreenTheme,
+    pub dark_theme: EditorScreenTheme,
 }
+
+#[derive(Resource, Clone)]
+pub struct ActiveEditorTheme(EditorScreenTheme);
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
@@ -121,20 +124,15 @@ fn enter_editor_screen(
     commands.insert_resource(PassiveEntitySpawner::default());
     commands.insert_resource(UpgradeOutline::default());
 
-    let screen = spawn_editor_screen(&mut commands, config, true);
+    let screen = spawn_editor_screen(&mut commands, config.light_theme.clone(), true);
     commands.entity(screen).set_parent(root.ui);
 }
 
 pub fn spawn_editor_screen(
     commands: &mut Commands,
-    config: &EditorScreenConfig,
-    light_theme: bool,
+    theme: EditorScreenTheme,
+    light_mode: bool,
 ) -> Entity {
-    let theme = if light_theme {
-        &config.light_theme
-    } else {
-        &config.dark_theme
-    };
     let editor_screen = commands
         .spawn((
             Name::new("EditorScreen"),
@@ -150,7 +148,7 @@ pub fn spawn_editor_screen(
         ))
         .id();
 
-    let info_bar = spawn_info_bar(commands, theme);
+    let info_bar = spawn_info_bar(commands, &theme);
     commands.entity(info_bar).set_parent(editor_screen);
 
     let hbox = commands
@@ -168,7 +166,7 @@ pub fn spawn_editor_screen(
         .set_parent(editor_screen)
         .id();
 
-    let outline_panel = spawn_outline_panel(commands, theme);
+    let outline_panel = spawn_outline_panel(commands, &theme);
     commands.entity(outline_panel).set_parent(hbox);
 
     let vbox = commands
@@ -190,15 +188,17 @@ pub fn spawn_editor_screen(
     let scene_view = spawn_scene_view(commands);
     commands.entity(scene_view).set_parent(vbox);
 
-    let code_panel = if light_theme {
-        spawn_light_code_panel(commands, theme)
+    let code_panel = if light_mode {
+        spawn_light_code_panel(commands, &theme)
     } else {
-        spawn_code_panel(commands, theme)
+        spawn_code_panel(commands, &theme)
     };
     commands.entity(code_panel).set_parent(vbox);
 
-    let upgrade_panel = spawn_upgrade_panel(commands, theme);
+    let upgrade_panel = spawn_upgrade_panel(commands, &theme);
     commands.entity(upgrade_panel).set_parent(hbox);
+
+    commands.insert_resource(ActiveEditorTheme(theme));
 
     editor_screen
 }

@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy_mod_picking::prelude::*;
 
-use crate::config::Config;
+use super::ActiveEditorTheme;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::EditorScreenTheme;
 use crate::state::editor_screen::UpgradeOutline;
@@ -289,14 +289,14 @@ struct IsUpgradeContainer;
 fn offer_next_upgrades(
     mut commands: Commands,
     mut despawn: ResMut<DespawnSet>,
-    config: Res<Config>,
+    theme: Res<ActiveEditorTheme>,
     upgrade_list: Res<UpgradeList>,
     mut sequence: ResMut<UpgradeSequence>,
     simulation: Res<Simulation>,
     outline: Res<UpgradeOutline>,
     container_query: Query<(Entity, Option<&Children>), With<IsUpgradeContainer>>,
 ) {
-    let theme = &config.editor_screen.dark_theme;
+    let theme = &theme.0;
     for (entity, buttons) in &container_query {
         // Despawn old upgrade options
         for &button in buttons.into_iter().flatten() {
