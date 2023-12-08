@@ -234,7 +234,7 @@ impl IndexMut<UpgradeKind> for UpgradeList {
 #[derive(Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct UpgradeSequence {
-    sequence: Vec<Vec<UpgradeKind>>,
+    sequence: Vec<(Vec<UpgradeKind>, String)>,
     next_idx: usize,
     slots: usize,
     /// This field can be set by upgrades. If not None, the next set of upgrades will be
@@ -244,7 +244,7 @@ pub struct UpgradeSequence {
 }
 
 impl UpgradeSequence {
-    fn new(sequence: Vec<Vec<UpgradeKind>>) -> Self {
+    fn new(sequence: Vec<(Vec<UpgradeKind>, String)>) -> Self {
         Self {
             sequence,
             next_idx: 0,
@@ -263,14 +263,15 @@ impl UpgradeSequence {
         // Use the initial sequence of upgrades first
         while self.next_idx < self.sequence.len() {
             self.next_idx += 1;
-            let upgrades = self.sequence[self.next_idx - 1]
+            let (upgrades, desc) = &self.sequence[self.next_idx - 1];
+            let upgrades = upgrades
                 .iter()
                 .copied()
                 .filter(|&kind| upgrade_list[kind].is_unlocked(simulation, outline))
                 .collect::<Vec<_>>();
 
             if !upgrades.is_empty() {
-                return (upgrades, String::new());
+                return (upgrades, desc.clone());
             }
         }
 
@@ -309,13 +310,29 @@ fn load_upgrade_sequence(mut commands: Commands) {
     use UpgradeKind::*;
 
     commands.insert_resource(UpgradeSequence::new(vec![
-        vec![DarkModeDracula, DarkModeBamboo],
-        vec![TouchOfLifePlugin],
-        vec![Inspiration],
-        vec![VelocityPlugin],
-        vec![ImportLibrary, SplashOfLifePlugin],
-        vec![Coffee, OneBitSpritePack],
-        vec![Brainstorm],
+        (vec![DarkModeDracula, DarkModeBamboo], String::new()),
+        (
+            vec![TouchOfLifePlugin],
+            "\"Now that a dark theme is installed, I can start working on the game.\"".to_string(),
+        ),
+        (
+            vec![Inspiration],
+            "\"I should maximize the number of entities to abide by the jam theme.\"".to_string(),
+        ),
+        (
+            vec![VelocityPlugin],
+            "\"I need to make the game fun if I want receive good ratings.\"".to_string(),
+        ),
+        (vec![ImportLibrary, SplashOfLifePlugin], String::new()),
+        (
+            vec![Coffee, OneBitSpritePack],
+            "\"Also I should make the game look pretty if I want a good presentation score.\""
+                .to_string(),
+        ),
+        (
+            vec![Brainstorm],
+            "\"Hmm... How can I make further progress?\"".to_string(),
+        ),
     ]));
 }
 
