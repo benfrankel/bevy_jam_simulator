@@ -161,8 +161,9 @@ fn update_outline_container(
         let count = outline.0.entry(upgrade_kind).or_insert(0);
         *count += 1;
 
+        // Don't spawn if marked as no_outline
         // Don't spawn a new outline entry if it's a duplicate
-        if *count >= 2 {
+        if upgrade_list[upgrade_kind].no_outline || *count >= 2 {
             continue;
         }
 

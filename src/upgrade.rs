@@ -71,6 +71,9 @@ pub struct Upgrade {
     /// The multiplier to the cost of this upgrade per unit of technical debt.
     pub cost_scale_factor: f64,
 
+    /// If true, this upgrade won't be added to the outline and won't count as an upgrade.
+    pub no_outline: bool,
+
     /// The minimum number of entities required for this upgrade to be offered.
     pub entity_min: f64,
     /// The maximum number of entities allowed for this upgrade to be offered.
@@ -116,6 +119,8 @@ impl Default for Upgrade {
             tech_debt: 1.0,
             base_cost: 0.0,
             cost_scale_factor: 1.0,
+
+            no_outline: false,
 
             entity_min: 0.0,
             entity_max: f64::INFINITY,
@@ -175,11 +180,13 @@ fn process_new_installed_upgrades(
     for event in events.read() {
         let upgrade = &mut upgrade_list[event.0];
         upgrade.remaining -= 1;
-        simulation.upgrades += 1;
         simulation.tech_debt += upgrade.tech_debt;
         simulation.presentation_score += upgrade.presentation_score;
         simulation.fun_score += upgrade.fun_score;
-        audio.play(audio_assets.random_upgrade());
+        if !upgrade.no_outline {
+            simulation.upgrades += 1;
+            audio.play(audio_assets.random_upgrade());
+        }
     }
 }
 
@@ -379,6 +386,7 @@ generate_upgrade_list!(
         name: "Inspiration".to_string(),
         desc: "Allows new types of upgrades to unlock when you have enough entities.".to_string(),
         tech_debt: 0.0,
+        no_outline: true,
         ..default()
     },
 
@@ -817,6 +825,7 @@ generate_upgrade_list!(
         base_cost: 0.0,
         upgrade_min: 20,
         weight: 2.5,
+        no_outline: true,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.forced_list = Some((
                 vec![TenXDev, RockstarDev],
@@ -896,6 +905,7 @@ generate_upgrade_list!(
         tech_debt: 0.0,
         base_cost: 1.0,
         remaining: usize::MAX,
+        no_outline: true,
         install: Some(world.register_system(|mut list: ResMut<UpgradeList>| {
             list[BrainstormAgain].base_cost *= 2.0;
         })),
