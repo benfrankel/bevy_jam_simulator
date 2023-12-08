@@ -163,6 +163,10 @@ fn spawn_entity_caps(mut commands: Commands) {
 pub struct PassiveCodeTyper {
     pub timer: Timer,
     pub chars: f64,
+
+    pub llm_timer: Timer,
+    pub chars_per_entity: f64,
+
     pub max_chars_entered: f64,
     pub overflow_chars_per_line: f64,
 }
@@ -172,6 +176,10 @@ impl Default for PassiveCodeTyper {
         Self {
             timer: Timer::from_seconds(2.0, TimerMode::Repeating),
             chars: 0.0,
+
+            llm_timer: Timer::from_seconds(2.0, TimerMode::Repeating),
+            chars_per_entity: 0.0,
+
             max_chars_entered: 90.0,
             overflow_chars_per_line: 30.0,
         }
@@ -185,13 +193,23 @@ fn type_code_passively(
     mut simulation: ResMut<Simulation>,
     mut code_query: Query<(&mut CodeTyper, &mut Text)>,
 ) {
-    if !typer.timer.tick(time.delta()).just_finished() {
+    let mut chars = 0.0;
+    if typer.timer.tick(time.delta()).just_finished() {
+        typer.timer.reset();
+        chars += typer.chars;
+    }
+
+    if typer.llm_timer.tick(time.delta()).just_finished() {
+        typer.llm_timer.reset();
+        chars += typer.chars_per_entity * simulation.entities;
+    }
+
+    if chars == 0.0 {
         return;
     }
-    typer.timer.reset();
 
-    let count = typer.chars.min(typer.max_chars_entered);
-    let overflow = typer.chars - count;
+    let count = chars.min(typer.max_chars_entered);
+    let overflow = chars - count;
     let overflow_lines = overflow / typer.overflow_chars_per_line;
     simulation.lines += overflow_lines;
 

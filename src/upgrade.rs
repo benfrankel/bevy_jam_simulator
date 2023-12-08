@@ -220,9 +220,10 @@ impl IndexMut<UpgradeKind> for UpgradeList {
 }
 
 /// The initial sequence of upgrades.
-pub const INITIAL_UPGRADES: [UpgradeKind; 7] = [
+pub const INITIAL_UPGRADES: [UpgradeKind; 8] = [
     UpgradeKind::DarkMode,
     UpgradeKind::TouchOfLifePlugin,
+    UpgradeKind::Inspiration,
     UpgradeKind::VelocityPlugin,
     UpgradeKind::ImportLibrary,
     UpgradeKind::Coffee,
@@ -259,6 +260,15 @@ macro_rules! generate_upgrade_list {
 
 generate_upgrade_list!(
     |world|
+
+    // Exposition
+
+    Inspiration: Upgrade {
+        name: "Inspiration".to_string(),
+        desc: "Allows new types of upgrades to unlock when you have enough entities.".to_string(),
+        tech_debt: 0.0,
+        ..default()
+    },
 
     // Presentation score
 
@@ -383,7 +393,7 @@ generate_upgrade_list!(
         name: "Coffee".to_string(),
         desc: "Doubles the number of entities spawned per click.".to_string(),
         base_cost: 25.0,
-        remaining: 4,
+        remaining: 3,
         weight: 1.0,
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
@@ -512,12 +522,12 @@ generate_upgrade_list!(
 
     ProceduralMacro: Upgrade {
         name: "Procedural Macro".to_string(),
-        desc: "Types 30 characters every 2 seconds.".to_string(),
+        desc: "Writes 30 characters every 2 seconds.".to_string(),
         base_cost: 50.0,
         weight: 1.0,
         remaining: 1,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
-            passive_code_gen.chars += 30.0;
+        install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
+            typer.chars += 30.0;
         })),
         ..default()
     },
@@ -529,8 +539,8 @@ generate_upgrade_list!(
         cost_scale_factor: 1.2,
         weight: 0.5,
         remaining: 6,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
-            passive_code_gen.chars *= 2.0;
+        install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
+            typer.chars *= 2.0;
         })),
         ..default()
     },
@@ -543,9 +553,22 @@ generate_upgrade_list!(
         tech_debt: 0.0,
         weight: 0.5,
         remaining: 8,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
-            let new_duration = passive_code_gen.timer.duration().div_f64(2.0);
-            passive_code_gen.timer.set_duration(new_duration);
+        install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
+            let new_duration = typer.timer.duration().div_f64(2.0);
+            typer.timer.set_duration(new_duration);
+        })),
+        ..default()
+    },
+    LlmPlugin: Upgrade {
+        name: "LlmPlugin".to_string(),
+        desc: "Inserts an LlmComponent on all existing and future entities. Each LlmComponent writes 1 character every 2 seconds.".to_string(),
+        base_cost: 200.0,
+        cost_scale_factor: 1.2,
+        tech_debt: 2.0,
+        weight: 0.1,
+        entity_min: 1000.0,
+        install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
+            typer.chars_per_entity += 1.0;
         })),
         ..default()
     },
