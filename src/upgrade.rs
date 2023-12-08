@@ -397,6 +397,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     EntitySkinPlugin: Upgrade {
         name: "EntitySkinPlugin".to_string(),
         desc: "Introduces a new entity skin with a random color. Makes your game prettier.".to_string(),
@@ -410,6 +411,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     EntitySizePlugin: Upgrade {
         name: "EntitySizePlugin".to_string(),
         desc: "Increases the maximum entity size. Makes your game prettier.".to_string(),
@@ -502,6 +504,7 @@ generate_upgrade_list!(
         ),
         ..default()
     },
+
     Coffee: Upgrade {
         name: "Coffee".to_string(),
         desc: "Doubles the number of entities spawned per click.".to_string(),
@@ -530,6 +533,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     BatchSpawnerPlugin: Upgrade {
         name: "BatchSpawnerPlugin".to_string(),
         desc: "Doubles the number of entities spawned by EntitySpawnerPlugin.".to_string(),
@@ -543,6 +547,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     OptimizeSpawner: Upgrade {
         name: "Optimize Spawner".to_string(),
         desc: "Halves the cooldown of EntitySpawnerPlugin with some clever optimizations.".to_string(),
@@ -606,6 +611,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     DarkModeBamboo: Upgrade {
         name: "Dark Mode (Bamboo)".to_string(),
         desc: "Rite of passage for all developers. Required to write code.".to_string(),
@@ -655,6 +661,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     MetaMacro: Upgrade {
         name: "Meta Macro".to_string(),
         desc: "Doubles the output of Procedural Macro.".to_string(),
@@ -668,6 +675,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     OptimizeBuild: Upgrade {
         name: "Optimize Build".to_string(),
         desc: "Halves the cooldown of Procedural Macro by optimizing the build process.".to_string(),
@@ -683,6 +691,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     LlmPlugin: Upgrade {
         name: "LlmPlugin".to_string(),
         desc: "Inserts an LlmComponent on all existing and future entities. Each LlmComponent writes 1 character every 2 seconds.".to_string(),
@@ -704,12 +713,16 @@ generate_upgrade_list!(
         desc: "Improves the quality of the codebase.".to_string(),
         tech_debt: -5.0,
         base_cost: 10.0,
-        cost_scale_factor: 1.3,
-        tech_debt_min: 15.0,
+        cost_scale_factor: 1.5,
+        tech_debt_min: 10.0,
         weight: 2.0,
         remaining: usize::MAX,
+        install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
+            upgrade_list[Refactor].tech_debt_min += 5.0;
+        })),
         ..default()
     },
+
     // Unit test reduces both the technical debt and its multiplier slightly.
     UnitTests: Upgrade {
         name: "Unit Tests".to_string(),
@@ -749,7 +762,8 @@ generate_upgrade_list!(
         })),
         ..default()
     },
-    Cicd: Upgrade {
+
+    CiCd: Upgrade {
         name: "CI/CD".to_string(),
         desc: "Reduces all future technical debt increases by 10%.".to_string(),
         installed_min: vec![(Rtfm, 2), (UnitTests, 1)],
@@ -779,6 +793,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
@@ -812,6 +827,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     // 10x Dev
     TenXDev: Upgrade {
         name: "10x Dev".to_string(),
@@ -841,6 +857,7 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     // Rockstar Dev
     RockstarDev: Upgrade {
         name: "Rockstar Dev".to_string(),
