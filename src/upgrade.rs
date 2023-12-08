@@ -10,7 +10,7 @@ use strum::EnumCount;
 use crate::config::Config;
 use crate::physics::PhysicsSettings;
 use crate::physics::UNIT_SPEED;
-use crate::simulation::PassiveCodeGen;
+use crate::simulation::PassiveCodeTyper;
 use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
 use crate::simulation::SpawnEvent;
@@ -410,11 +410,10 @@ generate_upgrade_list!(
         name: "EntitySpawnerPlugin".to_string(),
         desc: "Spawns 1 entity every 2 seconds.".to_string(),
         base_cost: 100.0,
-        tech_debt: 1.0,
         weight: 1.0,
         remaining: 1,
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
-            entity_spawner.amount = 1.0;
+            entity_spawner.amount += 1.0;
         })),
         ..default()
     },
@@ -424,7 +423,6 @@ generate_upgrade_list!(
         requirements: vec![(EntitySpawner, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
-        tech_debt: 1.0,
         weight: 0.5,
         remaining: 6,
         install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
@@ -434,7 +432,7 @@ generate_upgrade_list!(
     },
     OptimizeSpawner: Upgrade {
         name: "Optimize Spawner".to_string(),
-        desc: "Halves the cooldown of EntitySpawnerPlugin by optimizing its code.".to_string(),
+        desc: "Halves the cooldown of EntitySpawnerPlugin with some clever optimizations.".to_string(),
         requirements: vec![(EntitySpawner, 1)],
         base_cost: 100.0,
         cost_scale_factor: 1.2,
@@ -454,7 +452,6 @@ generate_upgrade_list!(
         name: "Import Library".to_string(),
         desc: "Writes VALUE lines of code immediately.".to_string(),
         base_cost: 1.0,
-        tech_debt: 1.0,
         weight: 1.0,
         remaining: usize::MAX,
         update: Some(
@@ -512,31 +509,29 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Passive code generation
+    // Passive code typing
 
     ProceduralMacro: Upgrade {
         name: "ProceduralMacroPlugin".to_string(),
-        desc: "Writes 1 line of code every 2 seconds.".to_string(),
+        desc: "Types 30 characters every 2 seconds.".to_string(),
         base_cost: 50.0,
-        tech_debt: 1.0,
         weight: 1.0,
         remaining: 1,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeGen>| {
-            passive_code_gen.increase = 1.0;
+        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
+            passive_code_gen.chars += 30.0;
         })),
         ..default()
     },
     MetaMacro: Upgrade {
         name: "Meta Macro".to_string(),
-        desc: "Doubles the amount of code written by ProceduralMacroPlugin.".to_string(),
+        desc: "Doubles the output of ProceduralMacroPlugin.".to_string(),
         requirements: vec![(ProceduralMacro, 1)],
         base_cost: 50.0,
         cost_scale_factor: 1.2,
-        tech_debt: 1.0,
         weight: 0.5,
         remaining: 6,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeGen>| {
-            passive_code_gen.increase *= 2.0;
+        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
+            passive_code_gen.chars *= 2.0;
         })),
         ..default()
     },
@@ -549,7 +544,7 @@ generate_upgrade_list!(
         tech_debt: 0.0,
         weight: 0.5,
         remaining: 8,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeGen>| {
+        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
             let new_duration = passive_code_gen.timer.duration().div_f64(2.0);
             passive_code_gen.timer.set_duration(new_duration);
         })),

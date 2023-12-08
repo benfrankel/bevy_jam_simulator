@@ -8,12 +8,14 @@ mod upgrade_panel;
 use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy_asset_loader::prelude::*;
-pub use code_panel::spawn_code_panel;
 use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
+use crate::simulation::PassiveCodeTyper;
+use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
+pub use crate::state::editor_screen::code_panel::spawn_code_panel;
 use crate::state::editor_screen::code_panel::spawn_light_code_panel;
 use crate::state::editor_screen::info_bar::spawn_info_bar;
 use crate::state::editor_screen::outline_panel::spawn_outline_panel;
@@ -24,6 +26,7 @@ pub use crate::state::editor_screen::scene_view::SceneViewBounds;
 pub use crate::state::editor_screen::scene_view::WrapWithinSceneView;
 use crate::state::editor_screen::upgrade_panel::spawn_upgrade_panel;
 pub use crate::state::editor_screen::upgrade_panel::UpgradeContainer;
+use crate::state::editor_screen::upgrade_panel::UpgradeSequence;
 use crate::state::AppState::*;
 use crate::upgrade::UpgradeList;
 use crate::AppRoot;
@@ -109,6 +112,13 @@ fn enter_editor_screen(
 ) {
     let config = &config.editor_screen;
     commands.insert_resource(ClearColor(config.scene_view_background_color));
+
+    // Reset resources so replaying works
+    commands.insert_resource(Simulation::default());
+    commands.insert_resource(PassiveCodeTyper::default());
+    commands.insert_resource(PassiveEntitySpawner::default());
+    commands.insert_resource(UpgradeOutline::default());
+    commands.insert_resource(UpgradeSequence::default());
 
     let screen = spawn_editor_screen(&mut commands, config, &upgrade_list, &simulation, true);
     commands.entity(screen).set_parent(root.ui);

@@ -310,7 +310,7 @@ pub struct UpgradeContainer {
 
 #[derive(Resource, Reflect)]
 #[reflect(Resource)]
-struct UpgradeSequence {
+pub struct UpgradeSequence {
     sequence: Vec<UpgradeKind>,
     next_idx: usize,
 }

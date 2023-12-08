@@ -56,6 +56,32 @@ impl Default for CodeTyper {
     }
 }
 
+impl CodeTyper {
+    pub fn enter(&mut self, simulation: &mut Simulation, text: &mut String, count: usize) {
+        for _ in 0..count * self.chars_per_key {
+            loop {
+                // Push a character
+                let c = self.code.0.next().unwrap();
+                text.push(c);
+
+                // If it was a newline, update typer's lines
+                if c == '\n' {
+                    simulation.lines += 1.0;
+                    self.lines_count += 1;
+                    if self.lines_count > self.lines_max {
+                        self.lines_count -= 1;
+                        // Remove the first line
+                        *text = text.split_off(text.find('\n').unwrap() + 1)
+                    }
+                } else if !c.is_whitespace() {
+                    // Stop when a visible character is reached
+                    break;
+                }
+            }
+        }
+    }
+}
+
 pub fn type_code(
     mut char_events: EventReader<ReceivedCharacter>,
     keyboard_input: Res<Input<ScanCode>>,
@@ -71,27 +97,6 @@ pub fn type_code(
     }
 
     for (mut typer, mut text) in &mut typer_query {
-        let text = &mut text.sections[0].value;
-        for _ in 0..count * typer.chars_per_key {
-            loop {
-                // Push a character
-                let c = typer.code.0.next().unwrap();
-                text.push(c);
-
-                // If it was a newline, update typer's lines
-                if c == '\n' {
-                    simulation.lines += 1.0;
-                    typer.lines_count += 1;
-                    if typer.lines_count > typer.lines_max {
-                        typer.lines_count -= 1;
-                        // Remove the first line
-                        *text = text.split_off(text.find('\n').unwrap() + 1)
-                    }
-                } else if !c.is_whitespace() {
-                    // Stop when a visible character is reached
-                    break;
-                }
-            }
-        }
+        typer.enter(&mut simulation, &mut text.sections[0].value, count);
     }
 }

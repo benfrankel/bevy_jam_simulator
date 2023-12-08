@@ -8,6 +8,8 @@ use rand::Rng;
 use crate::physics::Velocity;
 use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::WrapWithinSceneView;
+use crate::state::AppState;
+use crate::ui::CodeTyper;
 use crate::util::OverflowDespawnQueue;
 use crate::AppRoot;
 use crate::AppSet;
@@ -22,16 +24,17 @@ impl Plugin for SimulationPlugin {
             .register_type::<IsEntityCap>()
             .add_event::<SpawnEvent>()
             .init_resource::<Simulation>()
-            .init_resource::<PassiveCodeGen>()
+            .init_resource::<PassiveCodeTyper>()
             .init_resource::<PassiveEntitySpawner>()
             .add_systems(Startup, spawn_entity_caps)
             .add_systems(
                 Update,
                 (
                     spawn_entities,
-                    generate_passive_code,
+                    type_code_passively,
                     spawn_entities_passively,
                 )
+                    .run_if(in_state(AppState::EditorScreen))
                     .in_set(AppSet::Simulate),
             );
     }
@@ -157,29 +160,44 @@ fn spawn_entity_caps(mut commands: Commands) {
 
 /// Resource for handling passive code generation.
 #[derive(Resource)]
-pub struct PassiveCodeGen {
+pub struct PassiveCodeTyper {
     pub timer: Timer,
-    pub increase: f64,
+    pub chars: f64,
+    pub max_chars_entered: f64,
+    pub overflow_chars_per_line: f64,
 }
 
-impl Default for PassiveCodeGen {
+impl Default for PassiveCodeTyper {
     fn default() -> Self {
         Self {
             timer: Timer::from_seconds(2.0, TimerMode::Repeating),
-            increase: 0.0,
+            chars: 0.0,
+            max_chars_entered: 90.0,
+            overflow_chars_per_line: 30.0,
         }
     }
 }
 
 /// System for handling passive code generation.
-fn generate_passive_code(
+fn type_code_passively(
     time: Res<Time>,
-    mut passive_code_gen: ResMut<PassiveCodeGen>,
+    mut typer: ResMut<PassiveCodeTyper>,
     mut simulation: ResMut<Simulation>,
+    mut code_query: Query<(&mut CodeTyper, &mut Text)>,
 ) {
-    if passive_code_gen.timer.tick(time.delta()).just_finished() {
-        passive_code_gen.timer.reset();
-        simulation.lines += passive_code_gen.increase;
+    if !typer.timer.tick(time.delta()).just_finished() {
+        return;
+    }
+    typer.timer.reset();
+
+    let count = typer.chars.min(typer.max_chars_entered);
+    let overflow = typer.chars - count;
+    let overflow_lines = overflow / typer.overflow_chars_per_line;
+    simulation.lines += overflow_lines;
+
+    let count = count as usize;
+    for (mut code, mut text) in &mut code_query {
+        code.enter(&mut simulation, &mut text.sections[0].value, count);
     }
 }
 
@@ -202,15 +220,17 @@ impl Default for PassiveEntitySpawner {
 /// System for handling passive entity spawning.
 fn spawn_entities_passively(
     time: Res<Time>,
-    mut entity_spawner: ResMut<PassiveEntitySpawner>,
+    mut spawner: ResMut<PassiveEntitySpawner>,
     mut events: EventWriter<SpawnEvent>,
     bounds: Res<SceneViewBounds>,
 ) {
-    if entity_spawner.timer.tick(time.delta()).just_finished() {
-        entity_spawner.timer.reset();
-        events.send(SpawnEvent {
-            position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
-            count: entity_spawner.amount,
-        });
+    if !spawner.timer.tick(time.delta()).just_finished() {
+        return;
     }
+    spawner.timer.reset();
+
+    events.send(SpawnEvent {
+        position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+        count: spawner.amount,
+    });
 }
