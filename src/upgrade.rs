@@ -19,6 +19,7 @@ use crate::state::editor_screen::SceneView;
 use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::UpgradeContainer;
 use crate::state::editor_screen::UpgradeOutline;
+use crate::state::AppState;
 use crate::ui::CodeTyper;
 use crate::util::pretty_num;
 use crate::AppRoot;
@@ -32,7 +33,7 @@ impl Plugin for UpgradePlugin {
             .add_event::<UpgradeEvent>()
             .init_resource::<UpgradeList>()
             .init_resource::<UpgradeUpdateSystems>()
-            .add_systems(Startup, load_upgrade_list)
+            .add_systems(OnEnter(AppState::EditorScreen), load_upgrade_list)
             .add_systems(
                 Update,
                 (
@@ -258,7 +259,7 @@ macro_rules! generate_upgrade_list {
 generate_upgrade_list!(
     |world|
 
-    // Upgrades that make your game prettier
+    // Presentation score
 
     EntitySkinPlugin: Upgrade {
         name: "EntitySkinPlugin".to_string(),
@@ -299,7 +300,7 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Upgrades that make your game more fun
+    // Fun score
 
     MovementPlugin: Upgrade {
         name: "MovementPlugin".to_string(),
@@ -330,186 +331,7 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Manual entity spawning
-
-    TouchOfLifePlugin: Upgrade {
-        name: "TouchOfLifePlugin".to_string(),
-        desc: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
-        base_cost: 5.0,
-        install: Some(
-            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
-                for mut scene_view in &mut scene_view_query {
-                    scene_view.spawns_per_click += 1;
-                }
-            }),
-        ),
-        ..default()
-    },
-
-    // Automatic entity spawning
-
-    EntitySpawner: Upgrade {
-        name: "EntitySpawnerPlugin".to_string(),
-        desc: "Spawns 1 entity every 2 seconds.".to_string(),
-        base_cost: 100.0,
-        weight: 1.0,
-        remaining: 1,
-        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
-            entity_spawner.amount += 1.0;
-        })),
-        ..default()
-    },
-    BatchSpawner: Upgrade {
-        name: "BatchSpawnerPlugin".to_string(),
-        desc: "Doubles the amount of entities spawned by EntitySpawnerPlugin.".to_string(),
-        requirements: vec![(EntitySpawner, 1)],
-        base_cost: 50.0,
-        cost_scale_factor: 1.2,
-        weight: 0.5,
-        remaining: 6,
-        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
-            entity_spawner.amount *= 2.0;
-        })),
-        ..default()
-    },
-    OptimizeSpawner: Upgrade {
-        name: "Optimize Spawner".to_string(),
-        desc: "Halves the cooldown of EntitySpawnerPlugin with some clever optimizations.".to_string(),
-        requirements: vec![(EntitySpawner, 1)],
-        base_cost: 100.0,
-        cost_scale_factor: 1.2,
-        tech_debt: 2.0,
-        weight: 0.5,
-        remaining: 8,
-        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
-            let new_duration = entity_spawner.timer.duration().div_f64(2.0);
-            entity_spawner.timer.set_duration(new_duration);
-        })),
-        ..default()
-    },
-
-    // Manual code entry
-
-    DarkMode: Upgrade {
-        name: "Dark Mode".to_string(),
-        desc: "Rite of passage for all developers. Required to write code.".to_string(),
-        tech_debt: 0.0,
-        install: Some(world.register_system(|
-            mut commands: Commands,
-            root: Res<AppRoot>,
-            config: Res<Config>,
-            upgrade_list: Res<UpgradeList>,
-            simulation: Res<Simulation>,
-        | {
-            commands.entity(root.ui).despawn_descendants();
-            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, &simulation, false);
-            commands.entity(editor_screen).set_parent(root.ui);
-        })),
-        ..default()
-    },
-    TenXDev: Upgrade {
-        name: "10x Dev".to_string(),
-        desc: "Multiplies the number of characters typed per key press by 10.".to_string(),
-        base_cost: 100.0,
-        tech_debt: 0.0,
-        weight: 0.5,
-        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
-            for mut typer in &mut typer_query {
-                typer.chars_per_key *= 10;
-            }
-        })),
-        ..default()
-    },
-    Rtfm: Upgrade {
-        name: "RTFM".to_string(),
-        desc: "Doubles the number of characters typed per key press.".to_string(),
-        base_cost: 50.0,
-        tech_debt: -1.0,
-        weight: 0.5,
-        remaining: 4,
-        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
-            for mut typer in &mut typer_query {
-                typer.chars_per_key *= 2;
-            }
-        })),
-        ..default()
-    },
-
-    // Automatic code entry
-
-    ProceduralMacro: Upgrade {
-        name: "ProceduralMacroPlugin".to_string(),
-        desc: "Types 30 characters every 2 seconds.".to_string(),
-        base_cost: 50.0,
-        weight: 1.0,
-        remaining: 1,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
-            passive_code_gen.chars += 30.0;
-        })),
-        ..default()
-    },
-    MetaMacro: Upgrade {
-        name: "Meta Macro".to_string(),
-        desc: "Doubles the output of ProceduralMacroPlugin.".to_string(),
-        requirements: vec![(ProceduralMacro, 1)],
-        base_cost: 50.0,
-        cost_scale_factor: 1.2,
-        weight: 0.5,
-        remaining: 6,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
-            passive_code_gen.chars *= 2.0;
-        })),
-        ..default()
-    },
-    OptimizeBuild: Upgrade {
-        name: "Optimize Build".to_string(),
-        desc: "Halves the cooldown of ProceduralMacroPlugin by optimizing the build process.".to_string(),
-        requirements: vec![(ProceduralMacro, 1)],
-        base_cost: 50.0,
-        cost_scale_factor: 1.2,
-        tech_debt: 0.0,
-        weight: 0.5,
-        remaining: 8,
-        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
-            let new_duration = passive_code_gen.timer.duration().div_f64(2.0);
-            passive_code_gen.timer.set_duration(new_duration);
-        })),
-        ..default()
-    },
-
-    // Upgrade slots
-
-    Brainstorm: Upgrade {
-        name: "Brainstorm".to_string(),
-        desc: "Adds 1 extra upgrade slot.".to_string(),
-        tech_debt: 0.0,
-        install: Some(
-            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
-                for mut container in &mut query {
-                    container.slots += 1;
-                }
-            }),
-        ),
-        ..default()
-    },
-    DesignDocument: Upgrade {
-        name: "Design Document".to_string(),
-        desc: "Adds 1 extra upgrade slot.".to_string(),
-        upgrade_min: 7,
-        weight: 2.5,
-        base_cost: 20.0,
-        tech_debt: 0.0,
-        install: Some(
-            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
-                for mut container in &mut query {
-                    container.slots += 1;
-                }
-            }),
-        ),
-        ..default()
-    },
-
-    // Infinitely repeatable
+    // Entities (immediate)
 
     SplashOfLifePlugin: Upgrade {
         name: "SplashOfLifePlugin".to_string(),
@@ -540,6 +362,67 @@ generate_upgrade_list!(
         ),
         ..default()
     },
+
+    // Entities (manual)
+
+    TouchOfLifePlugin: Upgrade {
+        name: "TouchOfLifePlugin".to_string(),
+        desc: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
+        base_cost: 5.0,
+        install: Some(
+            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+                for mut scene_view in &mut scene_view_query {
+                    scene_view.spawns_per_click += 1;
+                }
+            }),
+        ),
+        ..default()
+    },
+
+    // Entities (automatic)
+
+    EntitySpawnerPlugin: Upgrade {
+        name: "EntitySpawnerPlugin".to_string(),
+        desc: "Spawns 1 entity every 2 seconds.".to_string(),
+        base_cost: 100.0,
+        weight: 1.0,
+        remaining: 1,
+        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
+            entity_spawner.amount += 1.0;
+        })),
+        ..default()
+    },
+    BatchSpawnerPlugin: Upgrade {
+        name: "BatchSpawnerPlugin".to_string(),
+        desc: "Doubles the amount of entities spawned by EntitySpawnerPlugin.".to_string(),
+        requirements: vec![(EntitySpawnerPlugin, 1)],
+        base_cost: 50.0,
+        cost_scale_factor: 1.2,
+        weight: 0.5,
+        remaining: 6,
+        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
+            entity_spawner.amount *= 2.0;
+        })),
+        ..default()
+    },
+    OptimizeSpawner: Upgrade {
+        name: "Optimize Spawner".to_string(),
+        desc: "Halves the cooldown of EntitySpawnerPlugin with some clever optimizations.".to_string(),
+        requirements: vec![(EntitySpawnerPlugin, 1)],
+        base_cost: 100.0,
+        cost_scale_factor: 1.2,
+        tech_debt: 2.0,
+        weight: 0.5,
+        remaining: 8,
+        install: Some(world.register_system(|mut entity_spawner: ResMut<PassiveEntitySpawner>| {
+            let new_duration = entity_spawner.timer.duration().div_f64(2.0);
+            entity_spawner.timer.set_duration(new_duration);
+        })),
+        ..default()
+    },
+
+    // Lines (immediate)
+
     ImportLibrary: Upgrade {
         name: "Import Library".to_string(),
         desc: "Writes VALUE lines of code immediately.".to_string(),
@@ -562,6 +445,97 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
+    // Lines (manual)
+
+    DarkMode: Upgrade {
+        name: "Dark Mode".to_string(),
+        desc: "Rite of passage for all developers. Required to write code.".to_string(),
+        tech_debt: 0.0,
+        install: Some(world.register_system(|
+            mut commands: Commands,
+            root: Res<AppRoot>,
+            config: Res<Config>,
+            upgrade_list: Res<UpgradeList>,
+            simulation: Res<Simulation>,
+        | {
+            commands.entity(root.ui).despawn_descendants();
+            let editor_screen = spawn_editor_screen(&mut commands, &config.editor_screen, &upgrade_list, &simulation, false);
+            commands.entity(editor_screen).set_parent(root.ui);
+        })),
+        ..default()
+    },
+    MechanicalKeyboard: Upgrade {
+        name: "Mechanical Keyboard".to_string(),
+        desc: "Doubles the number of characters typed per key press.".to_string(),
+        base_cost: 50.0,
+        tech_debt: 0.0,
+        weight: 0.5,
+        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
+            for mut typer in &mut typer_query {
+                typer.chars_per_key *= 2;
+            }
+        })),
+        ..default()
+    },
+    TenXDev: Upgrade {
+        name: "10x Dev".to_string(),
+        desc: "Multiplies the number of characters typed per key press by 10.".to_string(),
+        base_cost: 100.0,
+        tech_debt: 0.0,
+        weight: 0.5,
+        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
+            for mut typer in &mut typer_query {
+                typer.chars_per_key *= 10;
+            }
+        })),
+        ..default()
+    },
+
+    // Lines (automatic)
+
+    ProceduralMacro: Upgrade {
+        name: "Procedural Macro".to_string(),
+        desc: "Types 30 characters every 2 seconds.".to_string(),
+        base_cost: 50.0,
+        weight: 1.0,
+        remaining: 1,
+        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
+            passive_code_gen.chars += 30.0;
+        })),
+        ..default()
+    },
+    MetaMacro: Upgrade {
+        name: "Meta Macro".to_string(),
+        desc: "Doubles the output of Procedural Macro.".to_string(),
+        requirements: vec![(ProceduralMacro, 1)],
+        base_cost: 50.0,
+        cost_scale_factor: 1.2,
+        weight: 0.5,
+        remaining: 6,
+        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
+            passive_code_gen.chars *= 2.0;
+        })),
+        ..default()
+    },
+    OptimizeBuild: Upgrade {
+        name: "Optimize Build".to_string(),
+        desc: "Halves the cooldown of Procedural Macro by optimizing the build process.".to_string(),
+        requirements: vec![(ProceduralMacro, 1)],
+        base_cost: 50.0,
+        cost_scale_factor: 1.2,
+        tech_debt: 0.0,
+        weight: 0.5,
+        remaining: 8,
+        install: Some(world.register_system(|mut passive_code_gen: ResMut<PassiveCodeTyper>| {
+            let new_duration = passive_code_gen.timer.duration().div_f64(2.0);
+            passive_code_gen.timer.set_duration(new_duration);
+        })),
+        ..default()
+    },
+
+    // Technical debt (immediate)
+
     Refactor: Upgrade {
         name: "Refactor".to_string(),
         desc: "Improves the quality of the codebase.".to_string(),
@@ -571,6 +545,55 @@ generate_upgrade_list!(
         weight: 2.0,
         remaining: usize::MAX,
         tech_debt_min: 15.0,
+        ..default()
+    },
+    Rtfm: Upgrade {
+        name: "RTFM".to_string(),
+        desc: "Reduces all future technical debt increases by 10%.".to_string(),
+        base_cost: 20.0,
+        tech_debt: 0.0,
+        weight: 1.0,
+        remaining: 4,
+        tech_debt_min: 5.0,
+        install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
+            for upgrade in &mut upgrade_list.0 {
+                if upgrade.tech_debt > 0.0 {
+                    upgrade.tech_debt *= 0.9;
+                }
+            }
+        })),
+        ..default()
+    },
+
+    // Slots (immediate)
+
+    Brainstorm: Upgrade {
+        name: "Brainstorm".to_string(),
+        desc: "Adds 1 extra upgrade slot.".to_string(),
+        tech_debt: 0.0,
+        install: Some(
+            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
+                for mut container in &mut query {
+                    container.slots += 1;
+                }
+            }),
+        ),
+        ..default()
+    },
+    DesignDocument: Upgrade {
+        name: "Design Document".to_string(),
+        desc: "Adds 1 extra upgrade slot.".to_string(),
+        upgrade_min: 7,
+        weight: 2.5,
+        base_cost: 20.0,
+        tech_debt: 0.0,
+        install: Some(
+            world.register_system(|mut query: Query<&mut UpgradeContainer>| {
+                for mut container in &mut query {
+                    container.slots += 1;
+                }
+            }),
+        ),
         ..default()
     },
 );
