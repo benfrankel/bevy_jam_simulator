@@ -3,9 +3,10 @@ use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy::utils::HashMap;
 
-use super::ActiveEditorTheme;
 use crate::simulation::Simulation;
+use crate::state::editor_screen::ActiveEditorTheme;
 use crate::state::editor_screen::EditorScreenTheme;
+use crate::state::AppState;
 use crate::ui::FontSize;
 use crate::ui::InteractionPalette;
 use crate::ui::Tooltip;
@@ -28,7 +29,7 @@ impl Plugin for OutlinePanelPlugin {
             .add_systems(
                 Update,
                 (
-                    update_outline_container,
+                    update_outline_container.run_if(in_state(AppState::EditorScreen)),
                     update_outline_header,
                     update_outline_entry_text.run_if(on_event::<UpgradeEvent>()),
                 )

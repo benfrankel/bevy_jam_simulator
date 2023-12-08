@@ -3,8 +3,8 @@ use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy_mod_picking::prelude::*;
 
-use super::ActiveEditorTheme;
 use crate::simulation::Simulation;
+use crate::state::editor_screen::ActiveEditorTheme;
 use crate::state::editor_screen::EditorScreenTheme;
 use crate::state::editor_screen::UpgradeOutline;
 use crate::state::AppState;
@@ -32,9 +32,8 @@ impl Plugin for UpgradePanelPlugin {
             .add_systems(
                 Update,
                 offer_next_upgrades.in_set(AppSet::Update).run_if(
-                    on_event::<UpgradeEvent>().or_else(
-                        state_changed::<AppState>().and_then(in_state(AppState::EditorScreen)),
-                    ),
+                    in_state(AppState::EditorScreen)
+                        .and_then(state_changed::<AppState>().or_else(on_event::<UpgradeEvent>())),
                 ),
             )
             .add_systems(Update, update_upgrade_button_disabled.in_set(AppSet::End));
