@@ -3,7 +3,7 @@ use std::str::Chars;
 
 use bevy::prelude::*;
 
-use crate::simulation::Simulation;
+use crate::simulation::LinesAddedEvent;
 use crate::AppSet;
 
 pub struct CodeTyperPlugin;
@@ -87,8 +87,8 @@ impl CodeTyper {
 pub fn type_code(
     mut char_events: EventReader<ReceivedCharacter>,
     keyboard_input: Res<Input<ScanCode>>,
-    mut simulation: ResMut<Simulation>,
     mut typer_query: Query<(&mut CodeTyper, &mut Text)>,
+    mut events: EventWriter<LinesAddedEvent>,
 ) {
     let keys = char_events
         .read()
@@ -101,6 +101,6 @@ pub fn type_code(
     for (mut typer, mut text) in &mut typer_query {
         let count = keys * typer.chars_per_key;
         let lines = typer.enter(&mut text.sections[0].value, count);
-        simulation.lines += lines;
+        events.send(LinesAddedEvent { count: lines });
     }
 }

@@ -26,6 +26,7 @@ impl Plugin for SimulationPlugin {
             .register_type::<IsEntityCap>()
             .add_plugins(sprite_pack::SpritePackPlugin)
             .add_event::<SpawnEvent>()
+            .add_event::<LinesAddedEvent>()
             .init_resource::<Simulation>()
             .init_resource::<PassiveCodeTyper>()
             .init_resource::<PassiveEntitySpawner>()
@@ -36,6 +37,7 @@ impl Plugin for SimulationPlugin {
                     spawn_entities,
                     type_code_passively,
                     spawn_entities_passively,
+                    handle_line_added_events,
                 )
                     .run_if(in_state(AppState::EditorScreen))
                     .in_set(AppSet::Simulate),
@@ -53,6 +55,9 @@ pub struct Simulation {
     pub fun_score: f64,
     /// Presentation factor, affects the submissions' results.
     pub presentation_score: f64,
+
+    /// Newly added line count will be multiplied by this.
+    pub line_multiplier: f64,
 
     /// Minimum size for new entities.
     pub entity_size_min: f32,
@@ -78,6 +83,8 @@ impl Default for Simulation {
             tech_debt: 0.0,
             fun_score: 0.0,
             presentation_score: 0.0,
+
+            line_multiplier: 1.0,
 
             entity_size_min: 8.0,
             entity_size_max: 8.0,
@@ -198,7 +205,8 @@ impl Default for PassiveCodeTyper {
 fn type_code_passively(
     time: Res<Time>,
     mut typer: ResMut<PassiveCodeTyper>,
-    mut simulation: ResMut<Simulation>,
+    simulation: Res<Simulation>,
+    mut events: EventWriter<LinesAddedEvent>,
     mut code_query: Query<(&mut CodeTyper, &mut Text)>,
 ) {
     let mut chars = 0.0;
@@ -218,14 +226,15 @@ fn type_code_passively(
 
     let count = chars.min(typer.max_chars_entered);
     let overflow = chars - count;
-    let overflow_lines = overflow / typer.overflow_chars_per_line;
-    simulation.lines += overflow_lines;
+    let mut new_lines = overflow / typer.overflow_chars_per_line;
 
     let count = count as usize;
     for (mut code, mut text) in &mut code_query {
         let lines = code.enter(&mut text.sections[0].value, count);
-        simulation.lines += lines;
+        new_lines += lines;
     }
+
+    events.send(LinesAddedEvent { count: new_lines });
 }
 
 /// Resource for handling passive entity spawning.
@@ -260,4 +269,20 @@ fn spawn_entities_passively(
         position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
         count: spawner.amount,
     });
+}
+
+#[derive(Event, Reflect)]
+pub struct LinesAddedEvent {
+    pub count: f64,
+}
+
+fn handle_line_added_events(
+    mut events: EventReader<LinesAddedEvent>,
+    mut simulation: ResMut<Simulation>,
+) {
+    let mut total: f64 = 0.0;
+    for event in events.read() {
+        total += event.count;
+    }
+    simulation.lines += total * simulation.line_multiplier;
 }
