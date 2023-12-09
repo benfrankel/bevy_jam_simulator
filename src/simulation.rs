@@ -4,8 +4,9 @@ use std::f32::consts::TAU;
 
 use bevy::ecs::event::ManualEventReader;
 use bevy::prelude::*;
-use rand::thread_rng;
+use rand::rngs::SmallRng;
 use rand::Rng;
+use rand::SeedableRng;
 
 use crate::physics::Velocity;
 pub use crate::simulation::sprite_pack::SkinSet;
@@ -179,7 +180,7 @@ fn spawn_entities(
         }
     }
 
-    let mut rng = thread_rng();
+    let mut rng = SmallRng::from_entropy();
     for event in reader
         .read(world.resource::<Events<_>>())
         .copied()
