@@ -341,7 +341,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
         ),
         (vec![ImportLibrary, SplashOfLifePlugin], String::new()),
         (
-            vec![Coffee, OneBitSpritePack],
+            vec![SpritePackOneBit, SpritePackRpg, Coffee],
             "\"I should also make the game look pretty for a higher Presentation score.\""
                 .to_string(),
         ),
@@ -394,7 +394,7 @@ generate_upgrade_list!(
 
     // Presentation score
 
-    OneBitSpritePack: Upgrade {
+    SpritePackOneBit: Upgrade {
         name: "Sprite Pack (1-bit)".to_string(),
         desc: "Downloads a 1-bit sprite pack for your entities. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
@@ -405,6 +405,22 @@ generate_upgrade_list!(
             mut simulation: ResMut<Simulation>,
         | {
             simulation.sprite_pack.replace_skin_set(SkinSet::OneBit, &mut thread_rng());
+            events.send(SpritePackEvent);
+        })),
+        ..default()
+    },
+
+    SpritePackRpg: Upgrade {
+        name: "Sprite Pack (RPG)".to_string(),
+        desc: "Downloads an RPG sprite pack for your entities. Makes your game prettier.".to_string(),
+        tech_debt: 1.0,
+        presentation_score: 10.0,
+        base_cost: 25.0,
+        install: Some(world.register_system(|
+            mut events: EventWriter<SpritePackEvent>,
+            mut simulation: ResMut<Simulation>,
+        | {
+            simulation.sprite_pack.replace_skin_set(SkinSet::Rpg, &mut thread_rng());
             events.send(SpritePackEvent);
         })),
         ..default()

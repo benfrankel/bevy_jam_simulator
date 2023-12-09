@@ -32,12 +32,26 @@ pub struct SpritePackAssets {
     #[asset(texture_atlas(tile_size_x = 1.0, tile_size_y = 1.0, rows = 1, columns = 1))]
     #[asset(path = "image/entity/none.png")]
     pub none: Handle<TextureAtlas>,
+
     #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 5, columns = 17))]
     #[asset(path = "image/entity/1-bit/Food.png")]
     pub one_bit_food: Handle<TextureAtlas>,
     #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 11, columns = 13))]
     #[asset(path = "image/entity/1-bit/Weapons.png")]
     pub one_bit_weapons: Handle<TextureAtlas>,
+
+    #[asset(path = "image/entity/rpg/weapons.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 9, columns = 8))]
+    pub rpg_weapons: Handle<TextureAtlas>,
+}
+
+#[derive(Default, Copy, Clone)]
+#[allow(dead_code)]
+pub enum SkinSet {
+    #[default]
+    None,
+    OneBit,
+    Rpg,
 }
 
 #[derive(Default, PartialEq, Eq, Clone, Copy)]
@@ -47,6 +61,7 @@ pub enum Atlas {
     None,
     OneBitFood,
     OneBitWeapons,
+    RpgWeapons,
 }
 
 impl Atlas {
@@ -55,6 +70,7 @@ impl Atlas {
             Self::None => &assets.none,
             Self::OneBitFood => &assets.one_bit_food,
             Self::OneBitWeapons => &assets.one_bit_weapons,
+            Self::RpgWeapons => &assets.rpg_weapons,
         }
         .clone()
     }
@@ -83,13 +99,6 @@ impl Skin {
             self.atlas.handle(assets),
         )
     }
-}
-
-#[derive(Default, Copy, Clone)]
-pub enum SkinSet {
-    #[default]
-    None,
-    OneBit,
 }
 
 pub struct SpritePack {
@@ -128,6 +137,14 @@ impl SpritePack {
                 return;
             },
             SkinSet::OneBit => &ONE_BIT_SKIN_SET,
+            SkinSet::Rpg => {
+                self.skins.push(Skin {
+                    atlas: Atlas::RpgWeapons,
+                    index: rng.gen_range(0..8 * 9 - 1),
+                    ..default()
+                });
+                return;
+            },
         };
 
         if let Some(&skin) = skins
