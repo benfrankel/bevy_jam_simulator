@@ -6,6 +6,7 @@ use bevy::prelude::*;
 use rand::Rng;
 
 use crate::physics::Velocity;
+pub use crate::simulation::sprite_pack::SkinSet;
 pub use crate::simulation::sprite_pack::SpritePack;
 pub use crate::simulation::sprite_pack::SpritePackAssets;
 use crate::state::editor_screen::SceneViewBounds;

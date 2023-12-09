@@ -16,6 +16,7 @@ use crate::physics::UNIT_SPEED;
 use crate::simulation::PassiveCodeTyper;
 use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
+use crate::simulation::SkinSet;
 use crate::simulation::SpawnEvent;
 use crate::simulation::SpritePack;
 use crate::state::editor_screen::spawn_editor_screen;
@@ -394,7 +395,7 @@ generate_upgrade_list!(
     // Presentation score
 
     OneBitSpritePack: Upgrade {
-        name: "1-bit Sprite Pack".to_string(),
+        name: "Sprite Pack (1-bit)".to_string(),
         desc: "Downloads a 1-bit sprite pack for your entities. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
         presentation_score: 10.0,
@@ -402,9 +403,8 @@ generate_upgrade_list!(
         install: Some(world.register_system(|
             mut simulation: ResMut<Simulation>
         | {
-            simulation.sprite_pack = SpritePack::OneBit(vec![]);
-            simulation.sprite_pack.add_skin(&mut thread_rng());
-            simulation.sprite_pack.add_skin(&mut thread_rng());
+            let num_skins = simulation.sprite_pack.skins.len();
+            simulation.sprite_pack = SpritePack::new(SkinSet::OneBit, num_skins, &mut thread_rng());
         })),
         ..default()
     },
