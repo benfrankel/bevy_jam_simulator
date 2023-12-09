@@ -1,6 +1,7 @@
+use std::ops::Range;
+
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use rand::Rng;
@@ -17,6 +18,8 @@ impl Plugin for SpritePackPlugin {
             .register_type::<SpritePackEvent>()
             .add_event::<SpritePackEvent>()
             .init_collection::<SpritePackAssets>()
+            .init_resource::<AtlasList>()
+            .add_systems(Startup, load_atlas_list)
             .add_systems(
                 Update,
                 apply_sprite_pack
@@ -43,42 +46,99 @@ pub struct SpritePackAssets {
     #[asset(path = "image/entity/rpg/weapons.png")]
     #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 9, columns = 8))]
     pub rpg_weapons: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/rpg/armours.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 19, columns = 9))]
+    pub rpg_armours: Handle<TextureAtlas>,
 }
 
+fn random_color(mut rng: impl Rng) -> Color {
+    Color::rgb(
+        rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
+    )
+}
+
+/// An atlas with metadata for generating skins
+pub struct Atlas {
+    path: &'static str,
+    // TODO: Include Option<Color> per tile (None => any color chosen randomly)
+    tiles: Vec<usize>,
+}
+
+impl Atlas {
+    fn random_with_color(&self, color: Color, mut rng: impl Rng) -> Skin {
+        Skin {
+            atlas_path: self.path,
+            index: *self.tiles.choose(&mut rng).unwrap(),
+            color,
+        }
+    }
+
+    fn random(&self, mut rng: impl Rng) -> Skin {
+        self.random_with_color(random_color(&mut rng), rng)
+    }
+
+    fn random_white(&self, rng: impl Rng) -> Skin {
+        self.random_with_color(Color::WHITE, rng)
+    }
+}
+
+/// A list of all available atlas metadata
+#[derive(Resource, Default)]
+pub struct AtlasList(Vec<Atlas>);
+
+fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
+    atlas_list.0.extend([
+        Atlas {
+            path: "none",
+            tiles: vec![0],
+        },
+        // 1-bit
+        Atlas {
+            path: "one_bit_food",
+            tiles: (0..5 * 17).collect(),
+        },
+        Atlas {
+            path: "one_bit_weapons",
+            tiles: (0..11 * 13).collect(),
+        },
+        // RPG
+        Atlas {
+            path: "rpg_weapons",
+            tiles: (0..9 * 8).collect(),
+        },
+        Atlas {
+            path: "rpg_armours",
+            tiles: (0..19 * 9).collect(),
+        },
+    ]);
+}
+
+/// A thematically-consistent skin-generating space
 #[derive(Default, Copy, Clone)]
 #[allow(dead_code)]
-pub enum SkinSet {
+pub enum SpritePack {
     #[default]
     None,
     OneBit,
     Rpg,
 }
 
-#[derive(Default, PartialEq, Eq, Clone, Copy)]
-#[allow(dead_code)]
-pub enum Atlas {
-    #[default]
-    None,
-    OneBitFood,
-    OneBitWeapons,
-    RpgWeapons,
-}
-
-impl Atlas {
-    fn handle(&self, assets: &SpritePackAssets) -> Handle<TextureAtlas> {
+impl SpritePack {
+    fn atlases(&self) -> Range<usize> {
         match self {
-            Self::None => &assets.none,
-            Self::OneBitFood => &assets.one_bit_food,
-            Self::OneBitWeapons => &assets.one_bit_weapons,
-            Self::RpgWeapons => &assets.rpg_weapons,
+            Self::None => 0..1,
+            Self::OneBit => 1..3,
+            Self::Rpg => 3..5,
         }
-        .clone()
     }
 }
 
+/// A single entity skin
 #[derive(Default, PartialEq, Clone, Copy)]
 pub struct Skin {
-    atlas: Atlas,
+    atlas_path: &'static str,
     index: usize,
     color: Color,
 }
@@ -96,63 +156,79 @@ impl Skin {
                 custom_size: Some(size),
                 ..default()
             },
-            self.atlas.handle(assets),
+            assets
+                .field(self.atlas_path)
+                .unwrap()
+                .as_any()
+                .downcast_ref::<Handle<TextureAtlas>>()
+                .unwrap()
+                .clone(),
         )
     }
 }
 
-pub struct SpritePack {
-    pub skin_set: SkinSet,
+/// A set of entity skins
+pub struct SkinSet {
+    pub asset_pack: SpritePack,
     pub skins: Vec<Skin>,
 }
 
-impl Default for SpritePack {
+impl Default for SkinSet {
     fn default() -> Self {
         Self {
-            skin_set: default(),
-            skins: DEFAULT_SKINS.to_vec(),
+            asset_pack: default(),
+            skins: vec![
+                Skin {
+                    atlas_path: "none",
+                    index: 0,
+                    color: Color::WHITE,
+                },
+                Skin {
+                    atlas_path: "none",
+                    index: 0,
+                    color: Color::BLACK,
+                },
+            ],
         }
     }
 }
 
-impl SpritePack {
-    pub fn new(skin_set: SkinSet, count: usize, mut rng: impl Rng) -> Self {
+impl SkinSet {
+    pub fn new(
+        atlas_list: &AtlasList,
+        atlas_pack: SpritePack,
+        count: usize,
+        mut rng: impl Rng,
+    ) -> Self {
         let mut this = Self {
-            skin_set,
+            asset_pack: atlas_pack,
             skins: Vec::with_capacity(count),
         };
         for _ in 0..count {
-            this.add_skin(&mut rng);
+            this.add_skin(atlas_list, &mut rng);
         }
         this
     }
 
-    pub fn add_skin(&mut self, mut rng: impl Rng) {
-        let skins = match self.skin_set {
-            SkinSet::None => {
-                self.skins.push(Skin {
-                    color: random_color(&mut rng),
-                    ..default()
-                });
-                return;
-            },
-            SkinSet::OneBit => &ONE_BIT_SKIN_SET,
-            SkinSet::Rpg => {
-                self.skins.push(Skin {
-                    atlas: Atlas::RpgWeapons,
-                    index: rng.gen_range(0..8 * 9 - 1),
-                    ..default()
-                });
-                return;
-            },
-        };
+    pub fn add_skin(&mut self, atlas_list: &AtlasList, mut rng: impl Rng) {
+        let atlases = self
+            .asset_pack
+            .atlases()
+            .map(|idx| &atlas_list.0[idx])
+            .collect::<Vec<_>>();
+        let atlas = atlases.choose(&mut rng).unwrap();
 
-        if let Some(&skin) = skins
-            .iter()
-            .filter(|skin| !self.skins.contains(skin))
-            .choose(&mut rng)
-        {
-            self.skins.push(skin);
+        // TODO: Prevent duplicates
+        match self.asset_pack {
+            SpritePack::None => {
+                self.skins.push(atlas.random(&mut rng));
+            },
+            SpritePack::OneBit => {
+                self.skins.push(atlas.random_white(&mut rng));
+            },
+            SpritePack::Rpg => {
+                self.skins.push(atlas.random_white(&mut rng));
+            },
         };
     }
 
@@ -168,20 +244,17 @@ impl SpritePack {
             .unwrap_or_default()
     }
 
-    pub fn replace_skin_set(&mut self, skin_set: SkinSet, rng: impl Rng) {
-        *self = SpritePack::new(skin_set, self.skins.len(), rng);
+    pub fn replace_sprite_pack(
+        &mut self,
+        atlas_list: &AtlasList,
+        atlas_pack: SpritePack,
+        rng: impl Rng,
+    ) {
+        *self = SkinSet::new(atlas_list, atlas_pack, self.skins.len(), rng);
     }
 }
 
-fn random_color(mut rng: impl Rng) -> Color {
-    Color::rgb(
-        rng.gen_range(0.0..=1.0),
-        rng.gen_range(0.0..=1.0),
-        rng.gen_range(0.0..=1.0),
-    )
-}
-
-/// Sent when the sprite pack changes and should be re-applied
+/// Sent when the skin set has changed and should be re-applied
 #[derive(Event, Reflect)]
 pub struct SpritePackEvent;
 
@@ -206,47 +279,6 @@ fn apply_sprite_pack(
 
         commands
             .entity(entity)
-            .insert(simulation.sprite_pack.bundle(&assets, size, &mut rng));
+            .insert(simulation.skin_set.bundle(&assets, size, &mut rng));
     }
 }
-
-const DEFAULT_SKINS: [Skin; 2] = [
-    Skin {
-        atlas: Atlas::None,
-        index: 0,
-        color: Color::WHITE,
-    },
-    Skin {
-        atlas: Atlas::None,
-        index: 0,
-        color: Color::BLACK,
-    },
-];
-
-pub const ONE_BIT_SKIN_SET: [Skin; 5] = [
-    Skin {
-        atlas: Atlas::OneBitFood,
-        index: 0,
-        color: Color::WHITE,
-    },
-    Skin {
-        atlas: Atlas::OneBitFood,
-        index: 1,
-        color: Color::WHITE,
-    },
-    Skin {
-        atlas: Atlas::OneBitFood,
-        index: 2,
-        color: Color::WHITE,
-    },
-    Skin {
-        atlas: Atlas::OneBitFood,
-        index: 3,
-        color: Color::WHITE,
-    },
-    Skin {
-        atlas: Atlas::OneBitFood,
-        index: 4,
-        color: Color::WHITE,
-    },
-];

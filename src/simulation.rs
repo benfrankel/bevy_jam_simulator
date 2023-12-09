@@ -9,6 +9,7 @@ use rand::Rng;
 use rand::SeedableRng;
 
 use crate::physics::Velocity;
+pub use crate::simulation::sprite_pack::AtlasList;
 pub use crate::simulation::sprite_pack::SkinSet;
 pub use crate::simulation::sprite_pack::SpritePack;
 pub use crate::simulation::sprite_pack::SpritePackAssets;
@@ -78,8 +79,8 @@ pub struct Simulation {
     pub entity_size_max: f32,
     /// List of colors that the new entities can have.
     pub entity_colors: Vec<Color>,
-    /// The sprite pack to use.
-    pub sprite_pack: SpritePack,
+    /// The set of entity skins to choose from.
+    pub skin_set: SkinSet,
 
     /// Minimum offset distance for entities on spawn.
     pub spawn_offset_min: f32,
@@ -109,7 +110,7 @@ impl Default for Simulation {
                 Color::rgba(0.0, 0.0, 0.0, 1.0),
                 Color::rgba(1.0, 1.0, 1.0, 1.0),
             ],
-            sprite_pack: default(),
+            skin_set: default(),
 
             spawn_offset_min: 0.0,
             spawn_offset_max: 2.0,
@@ -222,7 +223,7 @@ fn spawn_entities(world: &mut World, mut reader: Local<ManualEventReader<SpawnEv
 
             let (sprite, texture) =
                 simulation
-                    .sprite_pack
+                    .skin_set
                     .bundle(world.resource::<SpritePackAssets>(), size, &mut rng);
 
             bundles.push((

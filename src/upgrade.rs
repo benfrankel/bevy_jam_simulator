@@ -14,11 +14,12 @@ use crate::audio::BackgroundMusic;
 use crate::config::Config;
 use crate::physics::PhysicsSettings;
 use crate::physics::UNIT_SPEED;
+use crate::simulation::AtlasList;
 use crate::simulation::PassiveCodeTyper;
 use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
-use crate::simulation::SkinSet;
 use crate::simulation::SpawnEvent;
+use crate::simulation::SpritePack;
 use crate::simulation::SpritePackEvent;
 use crate::state::editor_screen::spawn_editor_screen;
 use crate::state::editor_screen::SceneView;
@@ -409,8 +410,9 @@ generate_upgrade_list!(
         install: Some(world.register_system(|
             mut events: EventWriter<SpritePackEvent>,
             mut simulation: ResMut<Simulation>,
+            atlas_list: Res<AtlasList>,
         | {
-            simulation.sprite_pack.replace_skin_set(SkinSet::OneBit, &mut thread_rng());
+            simulation.skin_set.replace_sprite_pack(&atlas_list, SpritePack::OneBit, &mut thread_rng());
             events.send(SpritePackEvent);
         })),
         ..default()
@@ -425,8 +427,9 @@ generate_upgrade_list!(
         install: Some(world.register_system(|
             mut events: EventWriter<SpritePackEvent>,
             mut simulation: ResMut<Simulation>,
+            atlas_list: Res<AtlasList>,
         | {
-            simulation.sprite_pack.replace_skin_set(SkinSet::Rpg, &mut thread_rng());
+            simulation.skin_set.replace_sprite_pack(&atlas_list, SpritePack::Rpg, &mut thread_rng());
             events.send(SpritePackEvent);
         })),
         ..default()
@@ -434,15 +437,18 @@ generate_upgrade_list!(
 
     SkinPlugin: Upgrade {
         name: "SkinPlugin".to_string(),
-        desc: "Introduces a new entity skin with a random color. Makes your game prettier.".to_string(),
+        desc: "Introduces a new entity skin. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
         presentation_score: 4.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: 5,
-        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-            simulation.sprite_pack.add_skin(&mut thread_rng());
+        install: Some(world.register_system(|
+            mut simulation: ResMut<Simulation>,
+            atlas_list: Res<AtlasList>,
+        | {
+            simulation.skin_set.add_skin(&atlas_list, &mut thread_rng());
         })),
         ..default()
     },
