@@ -2,7 +2,9 @@ mod sprite_pack;
 
 use std::f32::consts::TAU;
 
+use bevy::ecs::event::ManualEventReader;
 use bevy::prelude::*;
+use rand::thread_rng;
 use rand::Rng;
 
 use crate::physics::Velocity;
@@ -14,7 +16,6 @@ use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::WrapWithinSceneView;
 use crate::state::AppState;
 use crate::ui::CodeTyper;
-use crate::util::OverflowDespawnQueue;
 use crate::AppRoot;
 use crate::AppSet;
 
@@ -25,14 +26,12 @@ pub struct SimulationPlugin;
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SpawnEvent>()
-            .register_type::<IsEntityCap>()
             .add_plugins(sprite_pack::SpritePackPlugin)
             .add_event::<SpawnEvent>()
             .add_event::<LinesAddedEvent>()
             .init_resource::<Simulation>()
             .init_resource::<PassiveCodeTyper>()
             .init_resource::<PassiveEntitySpawner>()
-            .add_systems(Startup, spawn_entity_caps)
             .add_systems(
                 Update,
                 (
@@ -112,28 +111,85 @@ impl Default for Simulation {
     }
 }
 
-/// Maximum number of entities that can be spawned in the scene view for a single SpawnEvent.
-const MAX_SPAWN_PER_EVENT: usize = 32;
+struct EntityPool {
+    entities: Vec<Entity>,
+    old_idx: usize,
+}
 
-#[derive(Event, Reflect)]
+impl Default for EntityPool {
+    fn default() -> Self {
+        Self {
+            entities: Vec::with_capacity(20_000),
+            old_idx: 0,
+        }
+    }
+}
+
+impl EntityPool {
+    fn recycle(&mut self) -> Entity {
+        self.old_idx += 1;
+        if self.old_idx > self.entities.len() {
+            self.old_idx -= self.entities.len();
+        }
+        self.entities[self.old_idx - 1]
+    }
+}
+
+/// Maximum number of entities that can be spawned in the scene view in a single SpawnEvent.
+const MAX_SPAWN_PER_EVENT: usize = 20;
+
+#[derive(Event, Reflect, Clone, Copy)]
 pub struct SpawnEvent {
     pub position: Vec2,
     pub count: f64,
 }
 
 fn spawn_entities(
-    mut commands: Commands,
-    mut events: EventReader<SpawnEvent>,
-    root: Res<AppRoot>,
-    mut simulation: ResMut<Simulation>,
-    sprite_pack_assets: Res<SpritePackAssets>,
-    mut entity_cap_query: Query<&mut OverflowDespawnQueue, With<IsEntityCap>>,
+    world: &mut World,
+    mut pool: Local<EntityPool>,
+    mut reader: Local<ManualEventReader<SpawnEvent>>,
 ) {
-    let mut rng = rand::thread_rng();
-    for event in events.read() {
-        simulation.entities += event.count;
+    // Fill entity pool initially
+    let capacity = pool.entities.capacity() - pool.entities.len();
+    if capacity > 0 {
+        pool.entities.extend(
+            world.spawn_batch(
+                std::iter::repeat((
+                    Name::new("Entity"),
+                    // NOTE: Workaround for SpatialBundle not impling Clone
+                    (
+                        Visibility::Hidden,
+                        InheritedVisibility::default(),
+                        ViewVisibility::default(),
+                        Transform::default(),
+                        GlobalTransform::default(),
+                    ),
+                    WrapWithinSceneView,
+                    Velocity::default(),
+                    TextureAtlasSprite::default(),
+                    Handle::<TextureAtlas>::default(),
+                ))
+                .take(capacity),
+            ),
+        );
 
+        let parent = world.resource::<AppRoot>().world;
+        for entity in pool.entities.iter().copied() {
+            world.entity_mut(entity).set_parent(parent);
+        }
+    }
+
+    let mut rng = thread_rng();
+    for event in reader
+        .read(world.resource::<Events<_>>())
+        .copied()
+        .collect::<Vec<_>>()
+    {
+        world.resource_mut::<Simulation>().entities += event.count;
+
+        let simulation = world.resource::<Simulation>();
         let spawn_count = MAX_SPAWN_PER_EVENT.min(event.count as usize);
+        let mut bundles = vec![];
         for _ in 0..spawn_count {
             let angle = rng.gen_range(0.0..=TAU);
             let direction = Vec2::from_angle(angle);
@@ -144,45 +200,34 @@ fn spawn_entities(
             let offset = rng.gen_range(simulation.spawn_offset_min..=simulation.spawn_offset_max)
                 * direction;
             let position = (event.position + offset).extend(0.0);
+            let transform = Transform::from_translation(position);
 
             let size = rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max);
             let size = Vec2::splat(size);
 
-            let entity = commands
-                .spawn((
-                    Name::new("Entity"),
-                    SpatialBundle::from_transform(Transform::from_translation(position)),
-                    Velocity(velocity),
-                    WrapWithinSceneView,
-                ))
-                .set_parent(root.world)
-                .id();
-            simulation.sprite_pack.apply(
-                &mut commands,
-                entity,
-                &sprite_pack_assets,
-                size,
-                &mut rng,
-            );
+            let (sprite, texture) =
+                simulation
+                    .sprite_pack
+                    .bundle(world.resource::<SpritePackAssets>(), size, &mut rng);
 
-            for mut despawn_queue in &mut entity_cap_query {
-                despawn_queue.push(entity);
-            }
+            bundles.push((
+                Visibility::Inherited,
+                transform,
+                Velocity(velocity),
+                sprite,
+                texture,
+            ));
+        }
+
+        for (visibility, transform, velocity, sprite, texture) in bundles {
+            let mut entity = world.entity_mut(pool.recycle());
+            *entity.get_mut::<Visibility>().unwrap() = visibility;
+            *entity.get_mut::<Transform>().unwrap() = transform;
+            *entity.get_mut::<Velocity>().unwrap() = velocity;
+            *entity.get_mut::<TextureAtlasSprite>().unwrap() = sprite;
+            *entity.get_mut::<Handle<TextureAtlas>>().unwrap() = texture;
         }
     }
-}
-
-#[derive(Component, Reflect)]
-struct IsEntityCap;
-
-const HARD_CAP: usize = 8000;
-
-fn spawn_entity_caps(mut commands: Commands) {
-    commands.spawn((
-        Name::new("HardEntityCap"),
-        OverflowDespawnQueue::new(HARD_CAP),
-        IsEntityCap,
-    ));
 }
 
 /// Resource for handling passive code generation.

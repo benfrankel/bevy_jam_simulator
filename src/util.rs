@@ -4,7 +4,6 @@ use bevy::prelude::*;
 use format_num::format_num;
 
 pub use crate::util::despawn::DespawnSet;
-pub use crate::util::despawn::OverflowDespawnQueue;
 
 pub struct UtilPlugin;
 

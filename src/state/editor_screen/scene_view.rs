@@ -113,7 +113,7 @@ fn update_scene_view_bounds(
     bounds.max = rect.max.extend(camera_z - proj.near);
 }
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Clone, Copy)]
 pub struct WrapWithinSceneView;
 
 fn wrap_sprites_within_scene_view(

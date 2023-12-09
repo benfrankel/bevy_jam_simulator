@@ -156,17 +156,16 @@ impl SpritePack {
         };
     }
 
-    pub fn apply(
+    pub fn bundle(
         &self,
-        commands: &mut Commands,
-        entity: Entity,
         assets: &SpritePackAssets,
         size: Vec2,
         mut rng: impl Rng,
-    ) {
-        if let Some(&skin) = self.skins.choose(&mut rng) {
-            commands.entity(entity).insert(skin.bundle(assets, size));
-        };
+    ) -> (TextureAtlasSprite, Handle<TextureAtlas>) {
+        self.skins
+            .choose(&mut rng)
+            .map(|skin| skin.bundle(assets, size))
+            .unwrap_or_default()
     }
 
     pub fn replace_skin_set(&mut self, skin_set: SkinSet, rng: impl Rng) {
@@ -205,9 +204,9 @@ fn apply_sprite_pack(
                 Vec2::splat(rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max))
             });
 
-        simulation
-            .sprite_pack
-            .apply(&mut commands, entity, &assets, size, &mut rng);
+        commands
+            .entity(entity)
+            .insert(simulation.sprite_pack.bundle(&assets, size, &mut rng));
     }
 }
 

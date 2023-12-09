@@ -7,6 +7,7 @@ pub struct PhysicsPlugin;
 impl Plugin for PhysicsPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Velocity>()
+            .register_type::<PhysicsSettings>()
             .init_resource::<PhysicsSettings>()
             .add_systems(Update, apply_velocity.in_set(AppSet::Simulate));
     }
@@ -14,12 +15,13 @@ impl Plugin for PhysicsPlugin {
 
 pub const UNIT_SPEED: f32 = 8.0;
 
-#[derive(Resource, Default)]
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
 pub struct PhysicsSettings {
     pub speed_multiplier: f32,
 }
 
-#[derive(Component, Reflect)]
+#[derive(Component, Reflect, Default, Clone, Copy)]
 pub struct Velocity(pub Vec3);
 
 fn apply_velocity(
