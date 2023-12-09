@@ -21,6 +21,7 @@ impl Plugin for AudioPlugin {
 pub enum SoundEffectKind {
     DefaultUpgrade,
     Keyboard,
+    Backspace,
 }
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
@@ -33,6 +34,8 @@ pub struct AudioAssets {
         collection(typed)
     )]
     pub keyboard_sounds: Vec<Handle<AudioSource>>,
+    #[asset(path = "audio/backspace0.ogg")]
+    pub backspace_sound: Handle<AudioSource>,
     #[asset(path = "music/ingame.ogg")]
     pub music: Handle<AudioSource>,
 }
@@ -40,11 +43,16 @@ pub struct AudioAssets {
 impl AudioAssets {
     pub fn get_sfx(&self, kind: SoundEffectKind) -> Handle<AudioSource> {
         use SoundEffectKind::*;
-        let options: &Vec<Handle<AudioSource>> = match kind {
-            DefaultUpgrade => &self.upgrade_sounds,
-            Keyboard => &self.keyboard_sounds,
-        };
-        options.choose(&mut thread_rng()).unwrap().clone()
+        macro_rules! select_from {
+            ($a:expr) => {
+                $a.choose(&mut thread_rng()).unwrap().clone()
+            };
+        }
+        match kind {
+            DefaultUpgrade => select_from!(self.upgrade_sounds),
+            Keyboard => select_from!(self.keyboard_sounds),
+            Backspace => self.backspace_sound.clone(),
+        }
     }
 }
 

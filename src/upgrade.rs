@@ -892,6 +892,7 @@ generate_upgrade_list!(
     Refactor: Upgrade {
         name: "Refactor".to_string(),
         desc: "Improves the quality of the codebase.".to_string(),
+        sound: Some(SoundEffectKind::Backspace),
         tech_debt: -5.0,
         base_cost: 10.0,
         cost_scale_factor: 1.5,
