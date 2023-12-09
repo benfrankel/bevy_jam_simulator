@@ -6,6 +6,7 @@ use iyes_progress::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::audio::AudioAssets;
 use crate::config::Config;
 use crate::simulation::SpritePackAssets;
 use crate::state::editor_screen::EditorScreenAssets;
@@ -26,6 +27,7 @@ impl Plugin for TitleScreenStatePlugin {
             .add_loading_state(LoadingState::new(TitleScreen))
             .add_collection_to_loading_state::<_, EditorScreenAssets>(TitleScreen)
             .add_collection_to_loading_state::<_, SpritePackAssets>(TitleScreen)
+            .add_collection_to_loading_state::<_, AudioAssets>(TitleScreen)
             .add_plugins(ProgressPlugin::new(TitleScreen))
             .add_systems(OnEnter(TitleScreen), enter_title_screen)
             .add_systems(OnExit(TitleScreen), exit_title_screen);

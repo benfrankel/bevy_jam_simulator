@@ -6,6 +6,7 @@ use iyes_progress::prelude::*;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::audio::AudioAssets;
 use crate::config::Config;
 use crate::simulation::SpritePackAssets;
 use crate::state::editor_screen::EditorScreenAssets;
@@ -22,6 +23,7 @@ impl Plugin for LoadingScreenStatePlugin {
             .add_loading_state(LoadingState::new(LoadingScreen))
             .add_collection_to_loading_state::<_, EditorScreenAssets>(LoadingScreen)
             .add_collection_to_loading_state::<_, SpritePackAssets>(LoadingScreen)
+            .add_collection_to_loading_state::<_, AudioAssets>(LoadingScreen)
             .add_plugins(ProgressPlugin::new(LoadingScreen).continue_to(EditorScreen))
             .add_systems(OnEnter(LoadingScreen), enter_loading)
             .add_systems(OnExit(LoadingScreen), exit_loading)

@@ -1,5 +1,6 @@
 use std::ops::Index;
 use std::ops::IndexMut;
+use std::time::Duration;
 
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
@@ -10,6 +11,7 @@ use rand::thread_rng;
 use strum::EnumCount;
 
 use crate::audio::AudioAssets;
+use crate::audio::BackgroundMusic;
 use crate::config::Config;
 use crate::physics::PhysicsSettings;
 use crate::physics::UNIT_SPEED;
@@ -632,6 +634,7 @@ generate_upgrade_list!(
         ..default()
     },
 
+    // TODO: These would be better implemented by sending e.g. a ChangeEditorTheme event
     // Editor themes
 
     DarkModeDracula: Upgrade {
@@ -641,6 +644,8 @@ generate_upgrade_list!(
             mut commands: Commands,
             root: Res<AppRoot>,
             config: Res<Config>,
+            music: Res<BackgroundMusic>,
+            mut audio_instances: ResMut<Assets<AudioInstance>>,
         | {
             commands.entity(root.ui).despawn_descendants();
             let editor_screen = spawn_editor_screen(
@@ -649,6 +654,13 @@ generate_upgrade_list!(
                 false,
             );
             commands.entity(editor_screen).set_parent(root.ui);
+
+            // Start background music
+            if let Some(instance) = audio_instances.get_mut(&music.0) {
+                instance.resume(AudioTween::new(Duration::from_secs_f32(0.15), AudioEasing::OutPowi(3)));
+            } else {
+                error!("Background music has not loaded yet");
+            }
         })),
         ..default()
     },
@@ -660,6 +672,8 @@ generate_upgrade_list!(
             mut commands: Commands,
             root: Res<AppRoot>,
             config: Res<Config>,
+            music: Res<BackgroundMusic>,
+            mut audio_instances: ResMut<Assets<AudioInstance>>,
         | {
             commands.entity(root.ui).despawn_descendants();
             let editor_screen = spawn_editor_screen(
@@ -668,6 +682,13 @@ generate_upgrade_list!(
                 false,
             );
             commands.entity(editor_screen).set_parent(root.ui);
+
+            // Start background music
+            if let Some(instance) = audio_instances.get_mut(&music.0) {
+                instance.resume(AudioTween::new(Duration::from_secs_f32(0.15), AudioEasing::OutPowi(3)));
+            } else {
+                error!("Background music has not loaded yet");
+            }
         })),
         ..default()
     },

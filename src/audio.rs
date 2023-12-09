@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use bevy_kira_audio::prelude::*;
 use bevy_kira_audio::AudioPlugin as KiraAudioPlugin;
-use bevy_kira_audio::AudioSource;
 use rand::thread_rng;
 use rand::Rng;
 
@@ -9,8 +9,11 @@ pub struct AudioPlugin;
 
 impl Plugin for AudioPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(KiraAudioPlugin)
-            .init_collection::<AudioAssets>();
+        app.register_type::<BackgroundMusic>()
+            .add_plugins(KiraAudioPlugin)
+            .init_collection::<AudioAssets>()
+            .init_resource::<BackgroundMusic>()
+            .add_systems(Startup, spawn_background_music);
     }
 }
 
@@ -35,4 +38,22 @@ impl AudioAssets {
             self.upgrade1.clone()
         }
     }
+}
+
+#[derive(Resource, Reflect, Default)]
+#[reflect(Resource)]
+pub struct BackgroundMusic(pub Handle<AudioInstance>);
+
+fn spawn_background_music(
+    mut commands: Commands,
+    audio: Res<Audio>,
+    audio_assets: Res<AudioAssets>,
+) {
+    let handle = audio
+        .play(audio_assets.music.clone())
+        .with_volume(0.8)
+        .looped()
+        .paused()
+        .handle();
+    commands.insert_resource(BackgroundMusic(handle));
 }
