@@ -45,12 +45,78 @@ pub struct SpritePackAssets {
     #[asset(path = "image/entity/1-bit/Weapons.png")]
     pub one_bit_weapons: Handle<TextureAtlas>,
 
-    #[asset(path = "image/entity/rpg/weapons.png")]
-    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 9, columns = 8))]
-    pub rpg_weapons: Handle<TextureAtlas>,
     #[asset(path = "image/entity/rpg/armours.png")]
     #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 19, columns = 9))]
     pub rpg_armours: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/rpg/books.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 12, columns = 16))]
+    pub rpg_books: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/rpg/chests.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 6, columns = 8))]
+    pub rpg_chests: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/rpg/consumables.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 17, columns = 44))]
+    pub rpg_consumables: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/rpg/potions.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 15, columns = 21))]
+    pub rpg_potions: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/rpg/weapons.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 9, columns = 8))]
+    pub rpg_weapons: Handle<TextureAtlas>,
+}
+
+/// A list of all available atlas metadata
+#[derive(Resource, Default)]
+pub struct AtlasList(Vec<Atlas>);
+
+fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
+    atlas_list.0.extend([
+        Atlas {
+            path: "none",
+            tiles: vec![Tile::any_color(0)],
+        },
+        // 1-bit
+        // TODO: Curate tiles and colors
+        Atlas {
+            path: "one_bit_food",
+            tiles: (0..5 * 17).map(Tile::any_color).collect(),
+        },
+        Atlas {
+            path: "one_bit_weapons",
+            tiles: (0..11 * 13).map(Tile::any_color).collect(),
+        },
+        // RPG
+        Atlas {
+            path: "rpg_armours",
+            tiles: (0..19 * 9).map(Tile::new).collect(),
+        },
+        Atlas {
+            path: "rpg_books",
+            tiles: (0..12 * 16).map(Tile::new).collect(),
+        },
+        Atlas {
+            path: "rpg_chests",
+            tiles: (0..6 * 8).map(Tile::new).collect(),
+        },
+        Atlas {
+            path: "rpg_consumables",
+            tiles: (0..12 * 44 + 22)
+                .chain(13 * 44..13 * 44 + 22)
+                .chain(14 * 44..14 * 44 + 22)
+                .chain(15 * 44..15 * 44 + 22)
+                .chain(16 * 44..16 * 44 + 22)
+                .map(Tile::new)
+                .collect(),
+        },
+        Atlas {
+            path: "rpg_potions",
+            tiles: (0..15 * 21).map(Tile::new).collect(),
+        },
+        Atlas {
+            path: "rpg_weapons",
+            tiles: (0..9 * 8).map(Tile::new).collect(),
+        },
+    ]);
 }
 
 /// An atlas tile that can be used for generating skins
@@ -90,37 +156,6 @@ impl Atlas {
     }
 }
 
-/// A list of all available atlas metadata
-#[derive(Resource, Default)]
-pub struct AtlasList(Vec<Atlas>);
-
-fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
-    atlas_list.0.extend([
-        Atlas {
-            path: "none",
-            tiles: vec![Tile::any_color(0)],
-        },
-        // 1-bit
-        Atlas {
-            path: "one_bit_food",
-            tiles: (0..5 * 17).map(Tile::any_color).collect(),
-        },
-        Atlas {
-            path: "one_bit_weapons",
-            tiles: (0..11 * 13).map(Tile::any_color).collect(),
-        },
-        // RPG
-        Atlas {
-            path: "rpg_weapons",
-            tiles: (0..9 * 8).map(Tile::new).collect(),
-        },
-        Atlas {
-            path: "rpg_armours",
-            tiles: (0..19 * 9).map(Tile::new).collect(),
-        },
-    ]);
-}
-
 /// A thematically-consistent skin-generating space
 #[derive(Default, Copy, Clone)]
 #[allow(dead_code)]
@@ -136,7 +171,7 @@ impl SpritePack {
         match self {
             Self::None => 0..1,
             Self::OneBit => 1..3,
-            Self::Rpg => 3..5,
+            Self::Rpg => 3..9,
         }
     }
 }
