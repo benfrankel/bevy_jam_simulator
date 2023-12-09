@@ -11,6 +11,7 @@ use strum::EnumCount;
 
 use crate::audio::AudioAssets;
 use crate::audio::BackgroundMusic;
+use crate::audio::SoundEffectKind;
 use crate::config::Config;
 use crate::physics::PhysicsSettings;
 use crate::physics::UNIT_SPEED;
@@ -65,12 +66,12 @@ pub struct Upgrade {
     pub desc: String,
     /// An updatable value to be used by the upgrade for some purpose.
     pub value: f64,
+    /// The sound effect this upgrade will emit upon install.
+    pub sound: Option<SoundEffectKind>,
     /// If true, this upgrade won't be added to the outline and won't count as an upgrade.
     pub no_outline: bool,
     /// If true, this upgrade's count will not be included in the outline.
     pub no_count: bool,
-    /// If true, this upgrade will not play a sound effect upon install.
-    pub no_sound: bool,
     /// The amount of technical debt this upgrade adds when you install it.
     pub tech_debt: f64,
     /// How much this upgrade contributes to the Presentation score of your submission.
@@ -121,9 +122,9 @@ impl Default for Upgrade {
             name: "Unnamed".to_string(),
             desc: "Undefined.".to_string(),
             value: 0.0,
+            sound: Some(SoundEffectKind::DefaultUpgrade),
             no_outline: false,
             no_count: false,
-            no_sound: false,
             tech_debt: 0.0,
             presentation_score: 0.0,
             fun_score: 0.0,
@@ -193,8 +194,8 @@ fn process_new_installed_upgrades(
         if !upgrade.no_outline {
             simulation.upgrades += 1;
         }
-        if !upgrade.no_sound {
-            audio.play(audio_assets.random_upgrade());
+        if let Some(sound) = upgrade.sound {
+            audio.play(audio_assets.get_sfx(sound));
         }
     }
 }
@@ -650,7 +651,7 @@ generate_upgrade_list!(
     DarkModeDracula: Upgrade {
         name: "Dark Mode (Dracula)".to_string(),
         desc: "Rite of passage for all developers. Required to write code.".to_string(),
-        no_sound: true,
+        sound: None,
         install: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
@@ -679,7 +680,7 @@ generate_upgrade_list!(
     DarkModeBamboo: Upgrade {
         name: "Dark Mode (Bamboo)".to_string(),
         desc: "Rite of passage for all developers. Required to write code.".to_string(),
-        no_sound: true,
+        sound: None,
         install: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
@@ -710,6 +711,7 @@ generate_upgrade_list!(
     MechanicalKeyboard: Upgrade {
         name: "Mechanical Keyboard".to_string(),
         desc: "Doubles the number of characters typed per key press.".to_string(),
+        sound: Some(SoundEffectKind::Keyboard),
         base_cost: 50.0,
         weight: 0.5,
         install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {

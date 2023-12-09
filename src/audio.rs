@@ -17,21 +17,34 @@ impl Plugin for AudioPlugin {
     }
 }
 
+#[derive(Clone, Copy)]
+pub enum SoundEffectKind {
+    DefaultUpgrade,
+    Keyboard,
+}
+
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct AudioAssets {
     #[asset(paths("audio/upgrade0.ogg", "audio/upgrade1.ogg"), collection(typed))]
     pub upgrade_sounds: Vec<Handle<AudioSource>>,
+    #[asset(
+        paths("audio/keyboard0.ogg", "audio/keyboard1.ogg", "audio/keyboard2.ogg"),
+        collection(typed)
+    )]
+    pub keyboard_sounds: Vec<Handle<AudioSource>>,
     #[asset(path = "music/ingame.ogg")]
     pub music: Handle<AudioSource>,
 }
 
 impl AudioAssets {
-    pub fn random_upgrade(&self) -> Handle<AudioSource> {
-        self.upgrade_sounds
-            .choose(&mut thread_rng())
-            .unwrap()
-            .clone()
+    pub fn get_sfx(&self, kind: SoundEffectKind) -> Handle<AudioSource> {
+        use SoundEffectKind::*;
+        let options: &Vec<Handle<AudioSource>> = match kind {
+            DefaultUpgrade => &self.upgrade_sounds,
+            Keyboard => &self.keyboard_sounds,
+        };
+        options.choose(&mut thread_rng()).unwrap().clone()
     }
 }
 
