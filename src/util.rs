@@ -2,6 +2,7 @@ mod despawn;
 
 use bevy::prelude::*;
 use format_num::format_num;
+use rand::Rng;
 
 pub use crate::util::despawn::DespawnSet;
 
@@ -44,4 +45,12 @@ pub fn pretty_num(x: f64) -> String {
     } else {
         "INFINITY".to_string()
     }
+}
+
+pub fn gen_color(mut rng: impl Rng) -> Color {
+    Color::rgb(
+        rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
+    )
 }

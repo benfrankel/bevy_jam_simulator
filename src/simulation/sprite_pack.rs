@@ -2,11 +2,13 @@ use std::ops::Range;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
+use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use rand::Rng;
 
 use crate::simulation::Simulation;
+use crate::util::gen_color;
 use crate::AppRoot;
 use crate::AppSet;
 
@@ -51,36 +53,40 @@ pub struct SpritePackAssets {
     pub rpg_armours: Handle<TextureAtlas>,
 }
 
-fn random_color(mut rng: impl Rng) -> Color {
-    Color::rgb(
-        rng.gen_range(0.0..=1.0),
-        rng.gen_range(0.0..=1.0),
-        rng.gen_range(0.0..=1.0),
-    )
+/// An atlas tile that can be used for generating skins
+struct Tile {
+    index: usize,
+    /// The color of the generated skin, or a random color if None
+    color: Option<Color>,
+}
+
+impl Tile {
+    fn new(index: usize) -> Self {
+        Self {
+            index,
+            color: Some(Color::WHITE),
+        }
+    }
+
+    fn any_color(index: usize) -> Self {
+        Self { index, color: None }
+    }
 }
 
 /// An atlas with metadata for generating skins
 pub struct Atlas {
     path: &'static str,
-    // TODO: Include Option<Color> per tile (None => any color chosen randomly)
-    tiles: Vec<usize>,
+    tiles: Vec<Tile>,
 }
 
 impl Atlas {
-    fn random_with_color(&self, color: Color, mut rng: impl Rng) -> Skin {
+    fn random(&self, mut rng: impl Rng) -> Skin {
+        let tile = self.tiles.choose(&mut rng).unwrap();
         Skin {
             atlas_path: self.path,
-            index: *self.tiles.choose(&mut rng).unwrap(),
-            color,
+            index: tile.index,
+            color: tile.color.unwrap_or_else(|| gen_color(&mut rng)),
         }
-    }
-
-    fn random(&self, mut rng: impl Rng) -> Skin {
-        self.random_with_color(random_color(&mut rng), rng)
-    }
-
-    fn random_white(&self, rng: impl Rng) -> Skin {
-        self.random_with_color(Color::WHITE, rng)
     }
 }
 
@@ -92,25 +98,25 @@ fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
     atlas_list.0.extend([
         Atlas {
             path: "none",
-            tiles: vec![0],
+            tiles: vec![Tile::any_color(0)],
         },
         // 1-bit
         Atlas {
             path: "one_bit_food",
-            tiles: (0..5 * 17).collect(),
+            tiles: (0..5 * 17).map(Tile::any_color).collect(),
         },
         Atlas {
             path: "one_bit_weapons",
-            tiles: (0..11 * 13).collect(),
+            tiles: (0..11 * 13).map(Tile::any_color).collect(),
         },
         // RPG
         Atlas {
             path: "rpg_weapons",
-            tiles: (0..9 * 8).collect(),
+            tiles: (0..9 * 8).map(Tile::new).collect(),
         },
         Atlas {
             path: "rpg_armours",
-            tiles: (0..19 * 9).collect(),
+            tiles: (0..19 * 9).map(Tile::new).collect(),
         },
     ]);
 }
@@ -126,7 +132,7 @@ pub enum SpritePack {
 }
 
 impl SpritePack {
-    fn atlases(&self) -> Range<usize> {
+    fn atlas_range(&self) -> Range<usize> {
         match self {
             Self::None => 0..1,
             Self::OneBit => 1..3,
@@ -211,25 +217,15 @@ impl SkinSet {
     }
 
     pub fn add_skin(&mut self, atlas_list: &AtlasList, mut rng: impl Rng) {
-        let atlases = self
+        let atlas = self
             .asset_pack
-            .atlases()
+            .atlas_range()
             .map(|idx| &atlas_list.0[idx])
-            .collect::<Vec<_>>();
-        let atlas = atlases.choose(&mut rng).unwrap();
+            .choose(&mut rng)
+            .unwrap();
 
         // TODO: Prevent duplicates
-        match self.asset_pack {
-            SpritePack::None => {
-                self.skins.push(atlas.random(&mut rng));
-            },
-            SpritePack::OneBit => {
-                self.skins.push(atlas.random_white(&mut rng));
-            },
-            SpritePack::Rpg => {
-                self.skins.push(atlas.random_white(&mut rng));
-            },
-        };
+        self.skins.push(atlas.random(&mut rng));
     }
 
     pub fn bundle(
