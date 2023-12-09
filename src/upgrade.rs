@@ -730,6 +730,7 @@ generate_upgrade_list!(
             let this = &mut upgrade_list[MechanicalKeyboard];
             // Cost scaling of this is independent of tech debt.
             this.base_cost *= 4.0;
+            this.weight = 0.5;
             this.installed_min.push((TouchTyping, 1));
             this.name = "Ergonomic Keyboard".to_string();
             this.desc = "\
@@ -757,7 +758,7 @@ generate_upgrade_list!(
         | {
             let this = &mut upgrade_list[TouchTyping];
             // Cost scaling of this is independent of tech debt.
-            this.base_cost *= 4.0;
+            this.base_cost *= 2.0;
             for mut typer in &mut typer_query {
                 typer.chars_per_key *= 2;
             }
@@ -779,17 +780,19 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Lines (automatic)
-
     ProceduralMacro: Upgrade {
         name: "Procedural Macro".to_string(),
-        desc: "Writes 30 characters every 2 seconds.".to_string(),
-        tech_debt: 1.0,
-        base_cost: 50.0,
+        desc: "\
+            Writes one line of code for each line you type. \
+            Simplifies the codebase slightly. \
+        ".to_string(),
+        tech_debt: -1.0,
+        base_cost: 100.0,
+        cost_scale_factor: 1.1,
         weight: 1.0,
         remaining: 1,
-        install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
-            typer.chars += 30.0;
+        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+            simulation.line_multiplier *= 2.0;
         })),
         ..default()
     },
@@ -798,25 +801,70 @@ generate_upgrade_list!(
         name: "Meta Macro".to_string(),
         desc: "Doubles the output of Procedural Macro.".to_string(),
         tech_debt: 1.0,
-        base_cost: 50.0,
+        base_cost: 200.0,
         cost_scale_factor: 1.2,
         weight: 0.5,
-        remaining: 6,
+        remaining: 5,
         installed_min: vec![(ProceduralMacro, 1)],
-        install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
-            typer.chars *= 2.0;
+        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+            simulation.line_multiplier *= 2.0;
         })),
         ..default()
     },
 
-    OptimizeBuild: Upgrade {
-        name: "Optimize Build".to_string(),
-        desc: "Halves the cooldown of Procedural Macro by optimizing the build process.".to_string(),
-        base_cost: 50.0,
+    // Lines (automatic)
+
+    CodingLlm: {
+        // format! expects a string literal. CONST &str doesn't work.
+        macro_rules! desc_template {
+            () => {"\
+                A {} billion parameter large language model that writes code. \
+                Types {} characters every 2 seconds. \
+            "}
+        }
+        const PARAMETERS: [u32; 4] = [7, 13, 33, 65];
+        const CHARS: [f64; 4] = [30.0, 100.0, 300.0, 1000.0];
+        const COSTS: [f64; 4] = [1000.0, 5000.0, 25_000.0, 500_000.0];
+
+        Upgrade {
+            name: format!("Coding LLM {}B", PARAMETERS[0]).to_string(),
+            desc: format!(desc_template!(), PARAMETERS[0], CHARS[0]).to_string(),
+            tech_debt: 1.0,
+            base_cost: 1000.0,
+            weight: 0.75,
+            remaining: 4,
+            no_count: true,
+            installed_min: vec![(MetaMacro, 1)],
+            install: Some(world.register_system(|
+                mut typer: ResMut<PassiveCodeTyper>,
+                mut upgrade_list: ResMut<UpgradeList>,
+            | {
+                let this = &mut upgrade_list[CodingLlm];
+
+                let current_idx = 3 - this.remaining;
+                typer.chars = CHARS[current_idx];
+
+                let next_idx = current_idx + 1;
+                if next_idx < 4 {
+                    this.base_cost = COSTS[next_idx];
+                    this.name = format!("Coding LLM {}B", PARAMETERS[next_idx]).to_string();
+                    this.desc = format!(
+                        desc_template!(), PARAMETERS[next_idx], CHARS[next_idx],
+                    ).to_string();
+                }
+            })),
+            ..default()
+        }
+    },
+
+    OptimizeLlm: Upgrade {
+        name: "Optimize LLM".to_string(),
+        desc: "Halves the cooldown of Coding LLM by optimizing inference.".to_string(),
+        base_cost: 1000.0,
         cost_scale_factor: 1.2,
-        weight: 0.5,
+        weight: 0.75,
         remaining: 8,
-        installed_min: vec![(ProceduralMacro, 1)],
+        installed_min: vec![(CodingLlm, 1)],
         install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
             let new_duration = typer.timer.duration().div_f64(2.0);
             typer.timer.set_duration(new_duration);
@@ -830,8 +878,9 @@ generate_upgrade_list!(
         tech_debt: 2.0,
         base_cost: 200.0,
         cost_scale_factor: 1.2,
-        weight: 0.1,
-        entity_min: 1000.0,
+        weight: 0.25,
+        entity_min: 10_000.0,
+        installed_min: vec![(CodingLlm, 1), (OptimizeLlm, 2)],
         install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
             typer.chars_per_entity += 1.0;
         })),
