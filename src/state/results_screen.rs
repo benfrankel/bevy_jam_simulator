@@ -6,6 +6,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::config::Config;
+use crate::physics::PhysicsSettings;
 use crate::simulation::PassiveCodeTyper;
 use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
@@ -266,6 +267,7 @@ fn exit_results_screen(mut commands: Commands, root: Res<AppRoot>) {
 
     // Reset resources so replaying works
     commands.insert_resource(Simulation::default());
+    commands.insert_resource(PhysicsSettings::default());
     commands.insert_resource(PassiveCodeTyper::default());
     commands.insert_resource(PassiveEntitySpawner::default());
     commands.insert_resource(UpgradeOutline::default());

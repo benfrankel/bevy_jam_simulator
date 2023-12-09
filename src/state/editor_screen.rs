@@ -210,7 +210,6 @@ fn exit_editor_screen(
     mut transform_query: Query<&mut Transform>,
 ) {
     commands.entity(root.ui).despawn_descendants();
-    commands.entity(root.world).despawn_descendants();
 
     // Reset camera
     let Ok(mut transform) = transform_query.get_mut(root.camera) else {

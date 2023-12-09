@@ -13,6 +13,7 @@ pub use crate::simulation::sprite_pack::SkinSet;
 pub use crate::simulation::sprite_pack::SpritePack;
 pub use crate::simulation::sprite_pack::SpritePackAssets;
 pub use crate::simulation::sprite_pack::SpritePackEvent;
+use crate::spawn_logical_entities;
 use crate::state::editor_screen::SceneViewBounds;
 use crate::state::editor_screen::WrapWithinSceneView;
 use crate::state::AppState;
@@ -27,12 +28,16 @@ pub struct SimulationPlugin;
 impl Plugin for SimulationPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SpawnEvent>()
+            .register_type::<EntityPool>()
             .add_plugins(sprite_pack::SpritePackPlugin)
             .add_event::<SpawnEvent>()
             .add_event::<LinesAddedEvent>()
+            .init_resource::<EntityPool>()
             .init_resource::<Simulation>()
             .init_resource::<PassiveCodeTyper>()
             .init_resource::<PassiveEntitySpawner>()
+            .add_systems(Startup, spawn_entity_pool.after(spawn_logical_entities))
+            .add_systems(OnExit(AppState::EditorScreen), reset_entity_pool)
             .add_systems(
                 Update,
                 (
@@ -112,6 +117,9 @@ impl Default for Simulation {
     }
 }
 
+const ENTITY_CAP: usize = 10_000;
+
+#[derive(Resource, Reflect)]
 struct EntityPool {
     entities: Vec<Entity>,
     old_idx: usize,
@@ -120,7 +128,7 @@ struct EntityPool {
 impl Default for EntityPool {
     fn default() -> Self {
         Self {
-            entities: Vec::with_capacity(20_000),
+            entities: Vec::with_capacity(ENTITY_CAP),
             old_idx: 0,
         }
     }
@@ -136,23 +144,9 @@ impl EntityPool {
     }
 }
 
-/// Maximum number of entities that can be spawned in the scene view in a single SpawnEvent.
-const MAX_SPAWN_PER_EVENT: usize = 20;
-
-#[derive(Event, Reflect, Clone, Copy)]
-pub struct SpawnEvent {
-    pub position: Vec2,
-    pub count: f64,
-}
-
-fn spawn_entities(
-    world: &mut World,
-    mut pool: Local<EntityPool>,
-    mut reader: Local<ManualEventReader<SpawnEvent>>,
-) {
-    // Fill entity pool initially
-    let capacity = pool.entities.capacity() - pool.entities.len();
-    if capacity > 0 {
+fn spawn_entity_pool(world: &mut World) {
+    world.resource_scope(|world: &mut World, mut pool: Mut<EntityPool>| {
+        let capacity = pool.entities.capacity() - pool.entities.len();
         pool.entities.extend(
             world.spawn_batch(
                 std::iter::repeat((
@@ -175,11 +169,31 @@ fn spawn_entities(
         );
 
         let parent = world.resource::<AppRoot>().world;
-        for entity in pool.entities.iter().copied() {
+        for &entity in &pool.entities {
             world.entity_mut(entity).set_parent(parent);
         }
-    }
+    });
+}
 
+fn reset_entity_pool(pool: Res<EntityPool>, mut visibility_query: Query<&mut Visibility>) {
+    for &entity in &pool.entities {
+        let Ok(mut visibility) = visibility_query.get_mut(entity) else {
+            continue;
+        };
+        *visibility = Visibility::Hidden;
+    }
+}
+
+/// Maximum number of entities that can be spawned in the scene view in a single SpawnEvent.
+const MAX_SPAWN_PER_EVENT: usize = 16;
+
+#[derive(Event, Reflect, Clone, Copy)]
+pub struct SpawnEvent {
+    pub position: Vec2,
+    pub count: f64,
+}
+
+fn spawn_entities(world: &mut World, mut reader: Local<ManualEventReader<SpawnEvent>>) {
     let mut rng = SmallRng::from_entropy();
     for event in reader
         .read(world.resource::<Events<_>>())
@@ -220,8 +234,10 @@ fn spawn_entities(
             ));
         }
 
+        // TODO: Technically, we don't need to set the velocity. We can assign random velocities in spawn_entity_pool
         for (visibility, transform, velocity, sprite, texture) in bundles {
-            let mut entity = world.entity_mut(pool.recycle());
+            let entity = world.resource_mut::<EntityPool>().recycle();
+            let mut entity = world.entity_mut(entity);
             *entity.get_mut::<Visibility>().unwrap() = visibility;
             *entity.get_mut::<Transform>().unwrap() = transform;
             *entity.get_mut::<Velocity>().unwrap() = velocity;

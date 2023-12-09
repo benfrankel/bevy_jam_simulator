@@ -3,7 +3,7 @@
 use bevy::app::MainScheduleOrder;
 use bevy::ecs::schedule::ScheduleLabel;
 use bevy::prelude::*;
-use bevy_jam4::AppPlugin;
+use bevy_jam_4_simulator::AppPlugin;
 use bevy_mod_debugdump::schedule_graph::Settings;
 use bevy_mod_debugdump::schedule_graph_dot;
 
