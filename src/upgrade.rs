@@ -710,14 +710,33 @@ generate_upgrade_list!(
 
     MechanicalKeyboard: Upgrade {
         name: "Mechanical Keyboard".to_string(),
-        desc: "Doubles the number of characters typed per key press.".to_string(),
+        desc: "\
+            A better keyboard that allows you to type faster. \
+            Doubles the number of characters typed per key press. \
+        ".to_string(),
         sound: Some(SoundEffectKind::Keyboard),
+        no_count: true,
         base_cost: 50.0,
         weight: 2.0,
-        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
+        remaining: 2,
+        install: Some(world.register_system(|
+            mut typer_query: Query<&mut CodeTyper>,
+            mut upgrade_list: ResMut<UpgradeList>,
+        | {
             for mut typer in &mut typer_query {
                 typer.chars_per_key *= 2;
             }
+            // Update this upgrade for the next iteration: Ergonomic Keyboard.
+            let this = &mut upgrade_list[MechanicalKeyboard];
+            // Cost scaling of this is independent of tech debt.
+            this.base_cost *= 4.0;
+            this.installed_min.push((TouchTyping, 1));
+            this.name = "Ergonomic Keyboard".to_string();
+            this.desc = "\
+                An even better keyboard that allows you to type faster. \
+                Quadruples the number of characters typed per key press. \
+                Replaces the mechanical keyboard. \
+            ".to_string();
         })),
         ..default()
     },
