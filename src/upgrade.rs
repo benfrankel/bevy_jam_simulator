@@ -7,7 +7,6 @@ use bevy::prelude::*;
 use bevy_kira_audio::prelude::*;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
-use rand::Rng;
 use strum::EnumCount;
 
 use crate::audio::AudioAssets;
@@ -19,8 +18,7 @@ use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
 use crate::simulation::SkinSet;
 use crate::simulation::SpawnEvent;
-use crate::simulation::SpritePack;
-use crate::simulation::SpritePackAssets;
+use crate::simulation::SpritePackEvent;
 use crate::state::editor_screen::spawn_editor_screen;
 use crate::state::editor_screen::SceneView;
 use crate::state::editor_screen::SceneViewBounds;
@@ -403,32 +401,17 @@ generate_upgrade_list!(
         presentation_score: 10.0,
         base_cost: 25.0,
         install: Some(world.register_system(|
-            mut commands: Commands,
+            mut events: EventWriter<SpritePackEvent>,
             mut simulation: ResMut<Simulation>,
-            root: Res<AppRoot>,
-            assets: Res<SpritePackAssets>,
-            children_query: Query<&Children>,
-            sprite_query: Query<&TextureAtlasSprite>,
         | {
-            // Set the new sprite pack
-            let num_skins = simulation.sprite_pack.skins.len();
-            simulation.sprite_pack = SpritePack::new(SkinSet::OneBit, num_skins, &mut thread_rng());
-
-            // Apply the new sprite pack to all existing entities
-            // TODO: Would be better to send an event and do this in a separate system
-            let mut rng = thread_rng();
-            for &entity in children_query.get(root.world).ok().into_iter().flatten() {
-                let size = sprite_query.get(entity).ok().and_then(|sprite| sprite.custom_size).unwrap_or_else(|| {
-                    Vec2::splat(rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max))
-                });
-                simulation.sprite_pack.apply(&mut commands, entity, &assets, size, &mut rng);
-            }
+            simulation.sprite_pack.replace_skin_set(SkinSet::OneBit, &mut thread_rng());
+            events.send(SpritePackEvent);
         })),
         ..default()
     },
 
-    EntitySkinPlugin: Upgrade {
-        name: "EntitySkinPlugin".to_string(),
+    SkinPlugin: Upgrade {
+        name: "SkinPlugin".to_string(),
         desc: "Introduces a new entity skin with a random color. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
         presentation_score: 4.0,
@@ -442,8 +425,8 @@ generate_upgrade_list!(
         ..default()
     },
 
-    EntitySizePlugin: Upgrade {
-        name: "EntitySizePlugin".to_string(),
+    ScalePlugin: Upgrade {
+        name: "ScalePlugin".to_string(),
         desc: "Increases the maximum entity size. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
         presentation_score: 2.0,
@@ -473,8 +456,8 @@ generate_upgrade_list!(
         ..default()
     },
 
-    SpeedupPlugin: Upgrade {
-        name: "SpeedupPlugin".to_string(),
+    SpeedPlugin: Upgrade {
+        name: "SpeedPlugin".to_string(),
         desc: "Increases the entity movement speed. Makes your game more fun.".to_string(),
         tech_debt: 1.0,
         fun_score: 10.0,
@@ -633,7 +616,7 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Themes
+    // Editor themes
 
     DarkModeDracula: Upgrade {
         name: "Dark Mode (Dracula)".to_string(),

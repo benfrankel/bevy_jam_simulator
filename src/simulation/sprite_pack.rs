@@ -2,23 +2,28 @@ use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
 use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
+use rand::thread_rng;
 use rand::Rng;
+
+use crate::simulation::Simulation;
+use crate::AppRoot;
+use crate::AppSet;
 
 pub struct SpritePackPlugin;
 
 impl Plugin for SpritePackPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<SpritePackAssets>()
-            .init_collection::<SpritePackAssets>();
+            .register_type::<SpritePackEvent>()
+            .add_event::<SpritePackEvent>()
+            .init_collection::<SpritePackAssets>()
+            .add_systems(
+                Update,
+                apply_sprite_pack
+                    .in_set(AppSet::End)
+                    .run_if(on_event::<SpritePackEvent>()),
+            );
     }
-}
-
-fn random_color(mut rng: impl Rng) -> Color {
-    Color::rgb(
-        rng.gen_range(0.0..=1.0),
-        rng.gen_range(0.0..=1.0),
-        rng.gen_range(0.0..=1.0),
-    )
 }
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
@@ -145,6 +150,47 @@ impl SpritePack {
         if let Some(&skin) = self.skins.choose(&mut rng) {
             commands.entity(entity).insert(skin.bundle(assets, size));
         };
+    }
+
+    pub fn replace_skin_set(&mut self, skin_set: SkinSet, rng: impl Rng) {
+        *self = SpritePack::new(skin_set, self.skins.len(), rng);
+    }
+}
+
+fn random_color(mut rng: impl Rng) -> Color {
+    Color::rgb(
+        rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
+        rng.gen_range(0.0..=1.0),
+    )
+}
+
+/// Sent when the sprite pack changes and should be re-applied
+#[derive(Event, Reflect)]
+pub struct SpritePackEvent;
+
+fn apply_sprite_pack(
+    mut commands: Commands,
+    root: Res<AppRoot>,
+    simulation: Res<Simulation>,
+    assets: Res<SpritePackAssets>,
+    children_query: Query<&Children>,
+    sprite_query: Query<&TextureAtlasSprite>,
+) {
+    let mut rng = thread_rng();
+
+    for &entity in children_query.get(root.world).ok().into_iter().flatten() {
+        let size = sprite_query
+            .get(entity)
+            .ok()
+            .and_then(|sprite| sprite.custom_size)
+            .unwrap_or_else(|| {
+                Vec2::splat(rng.gen_range(simulation.entity_size_min..=simulation.entity_size_max))
+            });
+
+        simulation
+            .sprite_pack
+            .apply(&mut commands, entity, &assets, size, &mut rng);
     }
 }
 
