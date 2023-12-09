@@ -1,6 +1,5 @@
 use std::ops::Index;
 use std::ops::IndexMut;
-use std::time::Duration;
 
 use bevy::ecs::event::ManualEventReader;
 use bevy::ecs::system::SystemId;
@@ -68,7 +67,9 @@ pub struct Upgrade {
     /// If true, this upgrade won't be added to the outline and won't count as an upgrade.
     pub no_outline: bool,
     /// If true, this upgrade's count will not be included in the outline.
-    pub hide_count: bool,
+    pub no_count: bool,
+    /// If true, this upgrade will not play a sound effect upon install.
+    pub no_sound: bool,
     /// The amount of technical debt this upgrade adds when you install it.
     pub tech_debt: f64,
     /// How much this upgrade contributes to the Presentation score of your submission.
@@ -120,7 +121,8 @@ impl Default for Upgrade {
             desc: "Undefined.".to_string(),
             value: 0.0,
             no_outline: false,
-            hide_count: false,
+            no_count: false,
+            no_sound: false,
             tech_debt: 0.0,
             presentation_score: 0.0,
             fun_score: 0.0,
@@ -189,6 +191,8 @@ fn process_new_installed_upgrades(
         simulation.fun_score += upgrade.fun_score;
         if !upgrade.no_outline {
             simulation.upgrades += 1;
+        }
+        if !upgrade.no_sound {
             audio.play(audio_assets.random_upgrade());
         }
     }
@@ -640,6 +644,7 @@ generate_upgrade_list!(
     DarkModeDracula: Upgrade {
         name: "Dark Mode (Dracula)".to_string(),
         desc: "Rite of passage for all developers. Required to write code.".to_string(),
+        no_sound: true,
         install: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
@@ -657,7 +662,7 @@ generate_upgrade_list!(
 
             // Start background music
             if let Some(instance) = audio_instances.get_mut(&music.0) {
-                instance.resume(AudioTween::new(Duration::from_secs_f32(0.15), AudioEasing::OutPowi(3)));
+                instance.resume(AudioTween::default());
             } else {
                 error!("Background music has not loaded yet");
             }
@@ -668,6 +673,7 @@ generate_upgrade_list!(
     DarkModeBamboo: Upgrade {
         name: "Dark Mode (Bamboo)".to_string(),
         desc: "Rite of passage for all developers. Required to write code.".to_string(),
+        no_sound: true,
         install: Some(world.register_system(|
             mut commands: Commands,
             root: Res<AppRoot>,
@@ -685,7 +691,7 @@ generate_upgrade_list!(
 
             // Start background music
             if let Some(instance) = audio_instances.get_mut(&music.0) {
-                instance.resume(AudioTween::new(Duration::from_secs_f32(0.15), AudioEasing::OutPowi(3)));
+                instance.resume(AudioTween::default());
             } else {
                 error!("Background music has not loaded yet");
             }
@@ -901,7 +907,7 @@ generate_upgrade_list!(
             name: "10x Dev".to_string(),
             desc: "Multiplies all code generation by VALUE.".to_string(),
             value: 10.0,
-            hide_count: true,
+            no_count: true,
             remaining: 6,
             install: Some(world.register_system(move |
                 mut simulation: ResMut<Simulation>,
@@ -947,7 +953,7 @@ generate_upgrade_list!(
             name: NAMES[0].to_string(),
             desc: "Spawns VALUE entities whenever a line of code is produced.".to_string(),
             value: 4.0,
-            hide_count: true,
+            no_count: true,
             remaining: 6,
             install: Some(world.register_system(move |
                 mut simulation: ResMut<Simulation>,

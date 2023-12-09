@@ -221,7 +221,7 @@ fn update_outline_entry_text(
                 *text = event.name.clone();
 
                 let count = outline.0[&entry.0];
-                if !upgrade.hide_count && count >= 2 {
+                if !upgrade.no_count && count >= 2 {
                     text.push_str(&format!(" ({count})"));
                 }
             }
