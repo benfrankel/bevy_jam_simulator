@@ -713,7 +713,45 @@ generate_upgrade_list!(
         desc: "Doubles the number of characters typed per key press.".to_string(),
         sound: Some(SoundEffectKind::Keyboard),
         base_cost: 50.0,
-        weight: 0.5,
+        weight: 2.0,
+        install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
+            for mut typer in &mut typer_query {
+                typer.chars_per_key *= 2;
+            }
+        })),
+        ..default()
+    },
+    TouchTyping: Upgrade {
+        name: "Touch Typing".to_string(),
+        desc: "\
+            Improves your typing skills. \
+            Doubles the number of characters typed per key press. \
+        ".to_string(),
+        sound: Some(SoundEffectKind::Keyboard),
+        installed_min: vec![(MechanicalKeyboard, 1)],
+        base_cost: 100.0,
+        weight: 1.0,
+        remaining: 4,
+        install: Some(world.register_system(|
+            mut typer_query: Query<&mut CodeTyper>,
+            mut upgrade_list: ResMut<UpgradeList>,
+        | {
+            let this = &mut upgrade_list[TouchTyping];
+            // Cost scaling of this is independent of tech debt.
+            this.base_cost *= 4.0;
+            for mut typer in &mut typer_query {
+                typer.chars_per_key *= 2;
+            }
+        })),
+        ..default()
+    },
+    DvorakLayout: Upgrade {
+        name: "Dvorak Layout".to_string(),
+        desc: "Doubles the number of characters typed per key press.".to_string(),
+        sound: Some(SoundEffectKind::Keyboard),
+        installed_min: vec![(TouchTyping, 4)],
+        base_cost: 200_000.0,
+        weight: 0.25,
         install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
             for mut typer in &mut typer_query {
                 typer.chars_per_key *= 2;
