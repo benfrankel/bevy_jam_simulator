@@ -14,6 +14,7 @@ use crate::audio::BackgroundMusic;
 use crate::audio::SoundEffectKind;
 use crate::config::Config;
 use crate::physics::PhysicsSettings;
+use crate::physics::Velocity;
 use crate::physics::UNIT_SPEED;
 use crate::simulation::AtlasList;
 use crate::simulation::PassiveCodeTyper;
@@ -499,6 +500,33 @@ generate_upgrade_list!(
         | {
             physics_settings.speed_multiplier += UNIT_SPEED;
         })),
+        ..default()
+    },
+
+    NuclearBlastPlugin: Upgrade {
+        name: "NuclearBlastPlugin".to_string(),
+        desc: "Destroys all entities but makes your game a lot more fun.".to_string(),
+        tech_debt: 1.0,
+        base_cost: 100_000.0,
+        fun_score: 100.0,
+        cost_scale_factor: 1.2,
+        weight: 1.0,
+        entity_min: 1_000_000.0,
+        remaining: usize::MAX,
+        install: Some(
+            world.register_system(|
+                mut query: Query<&mut Visibility, With<Velocity>>,
+                mut simulation: ResMut<Simulation>,
+                mut upgrade_list: ResMut<UpgradeList>,
+            | {
+                for mut visibility in &mut query {
+                    *visibility = Visibility::Hidden;
+                }
+                simulation.entities = 0.0;
+                let this = &mut upgrade_list[NuclearBlastPlugin];
+                this.entity_min *= 1_000.0;
+            }),
+        ),
         ..default()
     },
 
