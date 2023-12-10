@@ -1102,7 +1102,8 @@ generate_upgrade_list!(
         no_outline: true,
         base_cost: 100.0,
         weight: 2.5,
-        upgrade_min: 20,
+        upgrade_min: 30,
+        entity_min: 500.0,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.push(
                 vec![TenXDev, RockstarDev],
