@@ -354,7 +354,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
         ),
         (vec![ImportLibrary, SplashOfLifePlugin], String::new()),
         (
-            vec![SpritePackOneBit, SpritePackRpg, SpritePackNinja, Coffee],
+            vec![SkinPlugin, Coffee],
             "\"I should also make the game look pretty for a higher Presentation score.\""
                 .to_string(),
         ),
@@ -407,6 +407,23 @@ generate_upgrade_list!(
 
     // Presentation score
 
+    GfxSpecialization: Upgrade {
+        name: "GFX Specialization".to_string(),
+        desc: "Offers a choice between different graphics options that affect how your game looks.".to_string(),
+        no_outline: true,
+        base_cost: 1.0,
+        weight: 2.0,
+        entity_min: 35.0,
+        install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
+            sequence.push(
+                vec![SpritePackOneBit, SpritePackRpg, SpritePackNinja],
+                "You can only select one option. \
+                 The rejected options will never appear again.".to_string(),
+            );
+        })),
+        ..default()
+    },
+
     SpritePackOneBit: Upgrade {
         name: "Sprite Pack (1-bit)".to_string(),
         desc: "Downloads a 1-bit sprite pack for your entities. Makes your game prettier.".to_string(),
@@ -442,7 +459,7 @@ generate_upgrade_list!(
     },
 
     SpritePackNinja: Upgrade {
-        name: "Sprite Pack (ninja)".to_string(),
+        name: "Sprite Pack (Ninja)".to_string(),
         desc: "Downloads a Ninja sprite pack for your entities. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
         presentation_score: 15.0,
