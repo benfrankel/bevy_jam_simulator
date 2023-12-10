@@ -1224,6 +1224,7 @@ generate_upgrade_list!(
             You see through the entities... everything is code. \
             Writes 1 character per entity every 2 seconds.\
         ".to_string(),
+        sound: Some(SoundEffectKind::Unicorn),
         tech_debt: -5.0,
         entity_min: 5_000.0,
         install: Some(world.register_system(|

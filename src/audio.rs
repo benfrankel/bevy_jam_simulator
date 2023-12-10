@@ -23,6 +23,7 @@ pub enum SoundEffectKind {
     Keyboard,
     Backspace,
     Guitar,
+    Unicorn,
 }
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
@@ -42,6 +43,8 @@ pub struct AudioAssets {
         collection(typed)
     )]
     pub guitar_sounds: Vec<Handle<AudioSource>>,
+    #[asset(paths("audio/unicorn0.ogg", "audio/unicorn1.ogg"), collection(typed))]
+    pub unicorn_sounds: Vec<Handle<AudioSource>>,
     #[asset(path = "music/ingame.ogg")]
     pub music: Handle<AudioSource>,
 }
@@ -59,6 +62,7 @@ impl AudioAssets {
             Keyboard => select_from!(self.keyboard_sounds),
             Backspace => self.backspace_sound.clone(),
             Guitar => select_from!(self.guitar_sounds),
+            Unicorn => select_from!(self.unicorn_sounds),
         }
     }
 }
