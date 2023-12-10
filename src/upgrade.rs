@@ -1137,6 +1137,7 @@ generate_upgrade_list!(
         Upgrade {
             name: "10x Dev".to_string(),
             desc: "Multiplies all code generation by VALUE.".to_string(),
+            sound: Some(SoundEffectKind::Keyboard),
             value: 10.0,
             no_count: true,
             remaining: 6,
