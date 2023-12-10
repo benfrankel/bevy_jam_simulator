@@ -22,6 +22,7 @@ pub enum SoundEffectKind {
     DefaultUpgrade,
     Keyboard,
     Backspace,
+    Guitar,
 }
 
 #[derive(AssetCollection, Resource, Reflect, Default)]
@@ -36,6 +37,11 @@ pub struct AudioAssets {
     pub keyboard_sounds: Vec<Handle<AudioSource>>,
     #[asset(path = "audio/backspace0.ogg")]
     pub backspace_sound: Handle<AudioSource>,
+    #[asset(
+        paths("audio/guitar0.ogg", "audio/guitar1.ogg", "audio/guitar2.ogg"),
+        collection(typed)
+    )]
+    pub guitar_sounds: Vec<Handle<AudioSource>>,
     #[asset(path = "music/ingame.ogg")]
     pub music: Handle<AudioSource>,
 }
@@ -52,6 +58,7 @@ impl AudioAssets {
             DefaultUpgrade => select_from!(self.upgrade_sounds),
             Keyboard => select_from!(self.keyboard_sounds),
             Backspace => self.backspace_sound.clone(),
+            Guitar => select_from!(self.guitar_sounds),
         }
     }
 }

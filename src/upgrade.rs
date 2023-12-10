@@ -1173,16 +1173,18 @@ generate_upgrade_list!(
         const NAMES: [&str; 6] = [
             "Rockstar Dev",
             "Superstar Dev",
-            "Hypergiant Dev",
-            "Neutron Star Dev",
-            "Black Hole Dev",
-            "Quasar Dev",
+            "Megastar Dev",
+            "Gigastar Dev",
+            "Terastar Dev",
+            // "Ultimastar Dev",
+            "True Rockstar Dev",
         ];
         let mut name_idx = 0;
 
         Upgrade {
             name: NAMES[0].to_string(),
             desc: "Spawns VALUE entities whenever a line of code is produced.".to_string(),
+            sound: Some(SoundEffectKind::Guitar),
             value: 4.0,
             no_count: true,
             remaining: 6,
