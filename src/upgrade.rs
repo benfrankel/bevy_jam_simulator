@@ -351,7 +351,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
         ),
         (vec![ImportLibrary, SplashOfLifePlugin], String::new()),
         (
-            vec![SpritePackOneBit, SpritePackRpg, Coffee],
+            vec![SpritePackOneBit, SpritePackRpg, SpritePackNinja, Coffee],
             "\"I should also make the game look pretty for a higher Presentation score.\""
                 .to_string(),
         ),
@@ -408,8 +408,8 @@ generate_upgrade_list!(
         name: "Sprite Pack (1-bit)".to_string(),
         desc: "Downloads a 1-bit sprite pack for your entities. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
-        presentation_score: 10.0,
-        base_cost: 25.0,
+        presentation_score: 5.0,
+        base_cost: 20.0,
         install: Some(world.register_system(|
             mut events: EventWriter<SpritePackEvent>,
             mut simulation: ResMut<Simulation>,
@@ -426,13 +426,30 @@ generate_upgrade_list!(
         desc: "Downloads an RPG sprite pack for your entities. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
         presentation_score: 10.0,
-        base_cost: 25.0,
+        base_cost: 30.0,
         install: Some(world.register_system(|
             mut events: EventWriter<SpritePackEvent>,
             mut simulation: ResMut<Simulation>,
             atlas_list: Res<AtlasList>,
         | {
             simulation.skin_set.replace_sprite_pack(&atlas_list, SpritePack::Rpg, &mut thread_rng());
+            events.send(SpritePackEvent);
+        })),
+        ..default()
+    },
+
+    SpritePackNinja: Upgrade {
+        name: "Sprite Pack (ninja)".to_string(),
+        desc: "Downloads a Ninja sprite pack for your entities. Makes your game prettier.".to_string(),
+        tech_debt: 1.0,
+        presentation_score: 15.0,
+        base_cost: 40.0,
+        install: Some(world.register_system(|
+            mut events: EventWriter<SpritePackEvent>,
+            mut simulation: ResMut<Simulation>,
+            atlas_list: Res<AtlasList>,
+        | {
+            simulation.skin_set.replace_sprite_pack(&atlas_list, SpritePack::Ninja, &mut thread_rng());
             events.send(SpritePackEvent);
         })),
         ..default()

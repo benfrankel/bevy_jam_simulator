@@ -33,10 +33,12 @@ impl Plugin for SpritePackPlugin {
 #[derive(AssetCollection, Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct SpritePackAssets {
+    // None
     #[asset(texture_atlas(tile_size_x = 1.0, tile_size_y = 1.0, rows = 1, columns = 1))]
     #[asset(path = "image/entity/none.png")]
     pub none: Handle<TextureAtlas>,
 
+    // 1-bit
     #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 17, columns = 11))]
     #[asset(path = "image/entity/1-bit/Clothing.png")]
     pub one_bit_clothing: Handle<TextureAtlas>,
@@ -77,6 +79,7 @@ pub struct SpritePackAssets {
     #[asset(path = "image/entity/1-bit/Weapons.png")]
     pub one_bit_weapons: Handle<TextureAtlas>,
 
+    // RPG
     #[asset(path = "image/entity/rpg/armours.png")]
     #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 19, columns = 9))]
     pub rpg_armours: Handle<TextureAtlas>,
@@ -95,6 +98,20 @@ pub struct SpritePackAssets {
     #[asset(path = "image/entity/rpg/weapons.png")]
     #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 9, columns = 8))]
     pub rpg_weapons: Handle<TextureAtlas>,
+
+    // Ninja
+    #[asset(path = "image/entity/ninja/Animals.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 1, columns = 7))]
+    pub ninja_animals: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/ninja/Characters.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 1, columns = 56))]
+    pub ninja_characters: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/ninja/Items.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 1, columns = 2))]
+    pub ninja_items: Handle<TextureAtlas>,
+    #[asset(path = "image/entity/ninja/Monsters.png")]
+    #[asset(texture_atlas(tile_size_x = 16.0, tile_size_y = 16.0, rows = 1, columns = 13))]
+    pub ninja_monsters: Handle<TextureAtlas>,
 }
 
 /// A list of all available atlas metadata
@@ -198,6 +215,23 @@ fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
             path: "rpg_weapons",
             tiles: (0..9 * 8).map(Tile::new).collect(),
         },
+        // Ninja
+        Atlas {
+            path: "ninja_animals",
+            tiles: (0..7).map(Tile::new).collect(),
+        },
+        Atlas {
+            path: "ninja_characters",
+            tiles: (0..56).map(Tile::new).collect(),
+        },
+        Atlas {
+            path: "ninja_items",
+            tiles: (0..2).map(Tile::new).collect(),
+        },
+        Atlas {
+            path: "ninja_monsters",
+            tiles: (0..13).map(Tile::new).collect(),
+        },
     ]);
 }
 
@@ -209,6 +243,7 @@ pub enum SpritePack {
     None,
     OneBit,
     Rpg,
+    Ninja,
 }
 
 impl SpritePack {
@@ -217,6 +252,7 @@ impl SpritePack {
             Self::None => 0..1,
             Self::OneBit => 1..14,
             Self::Rpg => 14..20,
+            Self::Ninja => 20..24,
         }
     }
 
