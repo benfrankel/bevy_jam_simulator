@@ -414,6 +414,7 @@ generate_upgrade_list!(
         base_cost: 1.0,
         weight: 2.0,
         entity_min: 35.0,
+        installed_max: vec![(UnicornDev, 0)],
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.push(
                 vec![SpritePackOneBit, SpritePackRpg, SpritePackNinja, OptimizeShaders],
@@ -454,17 +455,6 @@ generate_upgrade_list!(
         ..default()
     },
 
-    OptimizeShaders: Upgrade {
-        name: "Optimize Shaders".to_string(),
-        desc: "Instead of installing a sprite pack, optimizes your shaders to render squares faster. Doubles the entity spawn rate but does not make your game look pretty.".to_string(),
-        tech_debt: 1.0,
-        base_cost: 100.0,
-        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-            simulation.entity_spawn_multiplier *= 2.0;
-        })),
-        ..default()
-    },
-
     SpritePackNinja: Upgrade {
         name: "Sprite Pack (Ninja)".to_string(),
         desc: "Downloads a Ninja sprite pack for your entities. Makes your game prettier.".to_string(),
@@ -476,6 +466,20 @@ generate_upgrade_list!(
         | {
             simulation.skin_set.replace_sprite_pack(&atlas_list, SpritePack::Ninja, &mut thread_rng());
             events.send(SpritePackEvent);
+        })),
+        ..default()
+    },
+
+    OptimizeShaders: Upgrade {
+        name: "Optimize Shaders".to_string(),
+        desc: "\
+            Optimizes your shaders specifically for rendering squares faster. \
+            Doubles the entity spawn rate.\
+        ".to_string(),
+        tech_debt: 1.0,
+        base_cost: 100.0,
+        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+            simulation.entity_spawn_multiplier *= 2.0;
         })),
         ..default()
     },
@@ -994,21 +998,6 @@ generate_upgrade_list!(
         ..default()
     },
 
-    LlmPlugin: Upgrade {
-        name: "LlmPlugin".to_string(),
-        desc: "Inserts an LlmComponent on all existing and future entities. Each LlmComponent writes 1 character every 2 seconds.".to_string(),
-        tech_debt: 2.0,
-        base_cost: 200.0,
-        cost_scale_factor: 1.2,
-        weight: 0.25,
-        entity_min: 10_000.0,
-        installed_min: vec![(CodingLlm, 1), (OptimizeLlm, 2)],
-        install: Some(world.register_system(|mut typer: ResMut<PassiveCodeTyper>| {
-            typer.chars_per_entity += 1.0;
-        })),
-        ..default()
-    },
-
     // Technical debt (immediate)
 
     Refactor: Upgrade {
@@ -1122,7 +1111,7 @@ generate_upgrade_list!(
         entity_min: 500.0,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.push(
-                vec![TenXDev, RockstarDev],
+                vec![TenXDev, RockstarDev, UnicornDev],
                 "This is a specialization upgrade. \
                  You can only select one path. \
                  The rejected options will never appear again.".to_string(),
@@ -1199,6 +1188,75 @@ generate_upgrade_list!(
                 mut upgrade_list: ResMut<UpgradeList>,
             | {
                 let this = &mut upgrade_list[RockstarDev];
+
+                if name_idx + 1 < NAMES.len() {
+                    name_idx += 1;
+                    this.name = NAMES[name_idx].to_string();
+                }
+                this.value *= 2.0;
+
+                if this.remaining == 5 {
+                    // First time (remaining is decreased beforehand)
+                    simulation.entity_spawn_per_line += 4.0;
+                    // Make subsequent copies of this upgrade available in the random pool.
+                    this.base_cost = 100.0;
+                    this.weight = 1.0;
+                } else {
+                    // Level up
+                    simulation.entity_spawn_per_line *= 2.0;
+                }
+                // Special scaling
+                this.base_cost *= 100.0;
+            })),
+            ..default()
+        }
+    },
+
+    UnicornDev: Upgrade {
+        name: "Unicorn Dev".to_string(),
+        desc: "\
+            You see through the entities... everything is code. \
+            Writes 1 character per entity every 2 seconds.\
+        ".to_string(),
+        tech_debt: -5.0,
+        entity_min: 5_000.0,
+        install: Some(world.register_system(|
+            mut events: EventWriter<SpritePackEvent>,
+            mut simulation: ResMut<Simulation>,
+            mut typer: ResMut<PassiveCodeTyper>,
+            atlas_list: Res<AtlasList>,
+        | {
+            typer.chars_per_entity += 1.0;
+
+            simulation.skin_set.replace_sprite_pack(&atlas_list, SpritePack::Text, &mut thread_rng());
+            events.send(SpritePackEvent);
+        })),
+        ..default()
+    },
+
+    // TODO: WIP
+    CodeNinja: {
+        const NAMES: [&str; 6] = [
+            "Code Monkey",
+            "Code Ninja",
+            "Code Wizard",
+            "Code Luminary",
+            "Code Colossus",
+            "Code Singularity",
+        ];
+        let mut name_idx = 0;
+
+        Upgrade {
+            name: NAMES[0].to_string(),
+            desc: "Spawns VALUE entities whenever a line of code is produced.".to_string(),
+            value: 4.0,
+            no_count: true,
+            remaining: 6,
+            install: Some(world.register_system(move |
+                mut simulation: ResMut<Simulation>,
+                mut upgrade_list: ResMut<UpgradeList>,
+            | {
+                let this = &mut upgrade_list[CodeNinja];
 
                 if name_idx + 1 < NAMES.len() {
                     name_idx += 1;
