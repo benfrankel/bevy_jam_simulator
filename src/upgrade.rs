@@ -17,6 +17,7 @@ use crate::physics::PhysicsSettings;
 use crate::physics::Velocity;
 use crate::physics::UNIT_SPEED;
 use crate::simulation::AtlasList;
+use crate::simulation::LinesAddedEvent;
 use crate::simulation::PassiveCodeTyper;
 use crate::simulation::PassiveEntitySpawner;
 use crate::simulation::Simulation;
@@ -662,12 +663,11 @@ generate_upgrade_list!(
             }),
         ),
         install: Some(world.register_system(|
+            mut events: EventWriter<LinesAddedEvent>,
             upgrade_list: Res<UpgradeList>,
-            mut simulation: ResMut<Simulation>,
         | {
             let this = &upgrade_list[ImportLibrary];
-            // TODO: Should this stack with specialization skills?
-            simulation.lines += this.value;
+            events.send(LinesAddedEvent { count: this.value });
         })),
         ..default()
     },
