@@ -341,14 +341,15 @@ fn load_upgrade_sequence(mut commands: Commands) {
             String::new(),
         ),
         (
-            vec![Inspiration],
+            vec![InitialCommit],
             "\"Much better. Now I can get started.\"".to_string(),
         ),
         (
             vec![TouchOfLifePlugin],
             "\"I don't know what I'm making, but I should start spawning entities.\"".to_string(),
         ),
-        (vec![ImportLibrary], String::new()),
+        (vec![Inspiration], "Is 50 a lot of entities?".to_string()),
+        (vec![ImportLibrary, UtilPlugin], String::new()),
         (
             vec![SkinPlugin],
             "\"I should make the game look nice for a higher Presentation score.\"".to_string(),
@@ -397,11 +398,42 @@ generate_upgrade_list!(
 
     // Exposition
 
+    InitialCommit: Upgrade {
+        name: "Initial Commit".to_string(),
+        desc: "Hello world! The first step of your journey.".to_string(),
+        no_outline: true,
+        base_cost: 2.0,
+        ..default()
+    },
+
     Inspiration: Upgrade {
         name: "Inspiration".to_string(),
         desc: "Allows new types of upgrades to unlock when you have enough entities.".to_string(),
         no_outline: true,
         base_cost: 5.0,
+        ..default()
+    },
+
+    UtilPlugin: Upgrade {
+        name: "UtilPlugin".to_string(),
+        desc: "Immediately quadruples lines and entities.".to_string(),
+        tech_debt: -1.0,
+        base_cost: 15.0,
+        entity_min: 50.0,
+        install: Some(world.register_system(|
+            mut simulation: ResMut<Simulation>,
+            upgrade_list: Res<UpgradeList>,
+        | {
+            let this = &upgrade_list[UtilPlugin];
+
+            // Restore the spent lines before quadrupling
+            simulation.tech_debt += this.tech_debt;
+            simulation.lines += this.cost(&simulation);
+            simulation.tech_debt -= this.tech_debt;
+
+            simulation.lines *= 4.0;
+            simulation.entities *= 4.0;
+        })),
         ..default()
     },
 
@@ -615,11 +647,23 @@ generate_upgrade_list!(
 
     TouchOfLifePlugin: Upgrade {
         name: "TouchOfLifePlugin".to_string(),
-        desc: "Spawns 1 entity whenever you click inside the scene view.".to_string(),
+        desc: "\
+            Spawns 1 entity whenever you click inside the scene view, \
+            and one right now as a treat.\
+        ".to_string(),
         tech_debt: 1.0,
         base_cost: 5.0,
         install: Some(
-            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+            world.register_system(|
+                mut events: EventWriter<SpawnEvent>,
+                bounds: Res<SceneViewBounds>,
+                mut scene_view_query: Query<&mut SceneView>,
+            | {
+                events.send(SpawnEvent {
+                    position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+                    count: 1.0,
+                });
+
                 for mut scene_view in &mut scene_view_query {
                     scene_view.spawns_per_click += 1.0;
                 }
