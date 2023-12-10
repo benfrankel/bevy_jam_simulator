@@ -1103,7 +1103,10 @@ generate_upgrade_list!(
 
     Specialization: Upgrade {
         name: "Specialization".to_string(),
-        desc: "Offers a choice between powerful specialization paths.".to_string(),
+        desc: "\
+            Offers a choice between powerful specialization paths. \
+            Do you feel inspired?\
+        ".to_string(),
         no_outline: true,
         base_cost: 100.0,
         weight: 2.5,
