@@ -2,7 +2,6 @@ use std::ops::Range;
 
 use bevy::prelude::*;
 use bevy_asset_loader::prelude::*;
-use rand::seq::IteratorRandom;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use rand::Rng;
@@ -38,9 +37,42 @@ pub struct SpritePackAssets {
     #[asset(path = "image/entity/none.png")]
     pub none: Handle<TextureAtlas>,
 
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 17, columns = 11))]
+    #[asset(path = "image/entity/1-bit/Clothing.png")]
+    pub one_bit_clothing: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 18, columns = 14))]
+    #[asset(path = "image/entity/1-bit/Creatures.png")]
+    pub one_bit_creatures: Handle<TextureAtlas>,
     #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 5, columns = 17))]
     #[asset(path = "image/entity/1-bit/Food.png")]
     pub one_bit_food: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 5, columns = 8))]
+    #[asset(path = "image/entity/1-bit/Gems-Jewels-and-Money.png")]
+    pub one_bit_gems_jewels_and_money: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 4, columns = 8))]
+    #[asset(path = "image/entity/1-bit/Instruments.png")]
+    pub one_bit_instruments: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 9, columns = 17))]
+    #[asset(path = "image/entity/1-bit/Jewelry.png")]
+    pub one_bit_jewelry: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 9, columns = 4))]
+    #[asset(path = "image/entity/1-bit/Misc-Future.png")]
+    pub one_bit_misc_future: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 10, columns = 6))]
+    #[asset(path = "image/entity/1-bit/Misc.png")]
+    pub one_bit_misc: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 27, columns = 32))]
+    #[asset(path = "image/entity/1-bit/People.png")]
+    pub one_bit_people: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 6, columns = 4))]
+    #[asset(path = "image/entity/1-bit/Potions.png")]
+    pub one_bit_potions: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 8, columns = 9))]
+    #[asset(path = "image/entity/1-bit/Tools.png")]
+    pub one_bit_tools: Handle<TextureAtlas>,
+    #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 19, columns = 21))]
+    #[asset(path = "image/entity/1-bit/UI.png")]
+    pub one_bit_ui: Handle<TextureAtlas>,
     #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 11, columns = 13))]
     #[asset(path = "image/entity/1-bit/Weapons.png")]
     pub one_bit_weapons: Handle<TextureAtlas>,
@@ -71,19 +103,69 @@ pub struct AtlasList(Vec<Atlas>);
 
 fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
     atlas_list.0.extend([
+        // None
         Atlas {
             path: "none",
             tiles: vec![Tile::any_color(0)],
         },
         // 1-bit
-        // TODO: Curate tiles and colors
+        Atlas {
+            path: "one_bit_clothing",
+            tiles: [14, 19, 31].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_creatures",
+            tiles: [
+                10, 12, 15, 17, 18, 27, 30, 46, 55, 58, 75, 93, 96, 107, 128, 140, 166,
+            ]
+            .map(Tile::new)
+            .into(),
+        },
         Atlas {
             path: "one_bit_food",
-            tiles: (0..5 * 17).map(Tile::any_color).collect(),
+            tiles: [5, 12, 19, 22, 28, 35, 38, 39, 43, 55, 68, 69, 72]
+                .map(Tile::new)
+                .into(),
+        },
+        Atlas {
+            path: "one_bit_gems_jewels_and_money",
+            tiles: [0, 8].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_instruments",
+            tiles: [0].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_jewelry",
+            tiles: [24, 88].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_misc_future",
+            tiles: [32].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_misc",
+            tiles: [42, 49, 55].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_people",
+            tiles: [454, 643].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_potions",
+            tiles: [10].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_tools",
+            tiles: [0, 1, 2, 4, 10, 13, 16, 30, 34, 63].map(Tile::new).into(),
+        },
+        Atlas {
+            path: "one_bit_ui",
+            tiles: [157, 177, 231, 315].map(Tile::new).into(),
         },
         Atlas {
             path: "one_bit_weapons",
-            tiles: (0..11 * 13).map(Tile::any_color).collect(),
+            tiles: [7, 28, 44, 92, 122, 140].map(Tile::new).into(),
         },
         // RPG
         Atlas {
@@ -119,7 +201,37 @@ fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
     ]);
 }
 
-/// An atlas tile that can be used for generating skins
+/// A thematically-consistent skin-generating space
+#[derive(Default, Copy, Clone)]
+#[allow(dead_code)]
+pub enum SpritePack {
+    #[default]
+    None,
+    OneBit,
+    Rpg,
+}
+
+impl SpritePack {
+    fn atlases(&self) -> Range<usize> {
+        match self {
+            Self::None => 0..1,
+            Self::OneBit => 1..14,
+            Self::Rpg => 14..20,
+        }
+    }
+
+    fn random(&self, atlas_list: &AtlasList, mut rng: impl Rng) -> Skin {
+        let atlas_idx = *self
+            .atlases()
+            .collect::<Vec<_>>()
+            .choose_weighted(&mut rng, |&i| atlas_list.0[i].tiles.len())
+            .unwrap();
+
+        atlas_list.0[atlas_idx].random(&mut rng)
+    }
+}
+
+/// A view into an atlas that can be used for generating skins
 struct Tile {
     index: usize,
     /// The color of the generated skin, or a random color if None
@@ -152,26 +264,6 @@ impl Atlas {
             atlas_path: self.path,
             index: tile.index,
             color: tile.color.unwrap_or_else(|| gen_color(&mut rng)),
-        }
-    }
-}
-
-/// A thematically-consistent skin-generating space
-#[derive(Default, Copy, Clone)]
-#[allow(dead_code)]
-pub enum SpritePack {
-    #[default]
-    None,
-    OneBit,
-    Rpg,
-}
-
-impl SpritePack {
-    fn atlas_range(&self) -> Range<usize> {
-        match self {
-            Self::None => 0..1,
-            Self::OneBit => 1..3,
-            Self::Rpg => 3..9,
         }
     }
 }
@@ -210,14 +302,14 @@ impl Skin {
 
 /// A set of entity skins
 pub struct SkinSet {
-    pub asset_pack: SpritePack,
+    pub sprite_pack: SpritePack,
     pub skins: Vec<Skin>,
 }
 
 impl Default for SkinSet {
     fn default() -> Self {
         Self {
-            asset_pack: default(),
+            sprite_pack: default(),
             skins: vec![
                 Skin {
                     atlas_path: "none",
@@ -237,12 +329,12 @@ impl Default for SkinSet {
 impl SkinSet {
     pub fn new(
         atlas_list: &AtlasList,
-        atlas_pack: SpritePack,
+        sprite_pack: SpritePack,
         count: usize,
         mut rng: impl Rng,
     ) -> Self {
         let mut this = Self {
-            asset_pack: atlas_pack,
+            sprite_pack,
             skins: Vec::with_capacity(count),
         };
         for _ in 0..count {
@@ -251,16 +343,19 @@ impl SkinSet {
         this
     }
 
-    pub fn add_skin(&mut self, atlas_list: &AtlasList, mut rng: impl Rng) {
-        let atlas = self
-            .asset_pack
-            .atlas_range()
-            .map(|idx| &atlas_list.0[idx])
-            .choose(&mut rng)
-            .unwrap();
+    /// Returns false if it fails to add a non-duplicate skin
+    pub fn add_skin(&mut self, atlas_list: &AtlasList, mut rng: impl Rng) -> bool {
+        // Make a reasonable attempt to prevent duplicates
+        const MAX_ATTEMPTS: usize = 64;
+        for _ in 0..MAX_ATTEMPTS {
+            let skin = self.sprite_pack.random(&atlas_list, &mut rng);
+            if !self.skins.contains(&skin) {
+                self.skins.push(skin);
+                return true;
+            }
+        }
 
-        // TODO: Prevent duplicates
-        self.skins.push(atlas.random(&mut rng));
+        false
     }
 
     pub fn bundle(
@@ -278,10 +373,10 @@ impl SkinSet {
     pub fn replace_sprite_pack(
         &mut self,
         atlas_list: &AtlasList,
-        atlas_pack: SpritePack,
+        sprite_pack: SpritePack,
         rng: impl Rng,
     ) {
-        *self = SkinSet::new(atlas_list, atlas_pack, self.skins.len(), rng);
+        *self = SkinSet::new(atlas_list, sprite_pack, self.skins.len(), rng);
     }
 }
 
