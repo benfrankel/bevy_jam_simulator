@@ -13,24 +13,17 @@ impl Plugin for ScrollPlugin {
     }
 }
 
-#[derive(Component, Reflect, Default)]
+#[derive(Component, Reflect)]
 pub struct ScrollContent {
-    position: f32,
-    sensitivity: f32,
-}
-
-impl ScrollContent {
-    pub fn with_sensitivity(sensitivity: f32) -> Self {
-        Self {
-            sensitivity,
-            ..default()
-        }
-    }
+    pub position: f32,
+    pub sensitivity: f32,
+    pub scrollbar: Entity,
 }
 
 fn mouse_scroll(
     mut events: EventReader<MouseWheel>,
     mut scroll_query: Query<(&mut ScrollContent, &mut Style, &Parent, &Node)>,
+    mut scrollbar_query: Query<&mut Style, Without<ScrollContent>>,
     node_query: Query<&Node>,
 ) {
     let pixels = events
@@ -49,9 +42,20 @@ fn mouse_scroll(
 
         let height = node.size().y;
         let parent_height = node_query.get(parent.get()).unwrap().size().y;
-        let max_scroll = (height - parent_height).max(0.0);
-        scroll.position = scroll.position.clamp(-max_scroll, 0.0);
+        if parent_height <= 0.0 {
+            return;
+        }
+        let overflow = (height - parent_height).max(0.0);
+        scroll.position = scroll.position.clamp(-overflow, 0.0);
 
         style.top = Val::Px(scroll.position);
+
+        // Update scrollbar
+        if let Ok(mut style) = scrollbar_query.get_mut(scroll.scrollbar) {
+            let height = (1.0 - overflow / parent_height).max(0.1);
+            let top = (-scroll.position / parent_height).max(1.0 - height);
+            style.height = Val::Percent(100.0 * height);
+            style.top = Val::Percent(100.0 * top);
+        }
     }
 }

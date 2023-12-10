@@ -348,7 +348,7 @@ impl SkinSet {
         // Make a reasonable attempt to prevent duplicates
         const MAX_ATTEMPTS: usize = 64;
         for _ in 0..MAX_ATTEMPTS {
-            let skin = self.sprite_pack.random(&atlas_list, &mut rng);
+            let skin = self.sprite_pack.random(atlas_list, &mut rng);
             if !self.skins.contains(&skin) {
                 self.skins.push(skin);
                 return true;

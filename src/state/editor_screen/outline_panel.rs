@@ -123,23 +123,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
         .set_parent(hbox)
         .id();
 
-    commands
-        .spawn((
-            Name::new("OutlineContainer"),
-            NodeBundle {
-                style: Style {
-                    width: Percent(100.0),
-                    flex_direction: FlexDirection::Column,
-                    ..default()
-                },
-                ..default()
-            },
-            ScrollContent::with_sensitivity(2.0),
-            IsOutlineContainer,
-        ))
-        .set_parent(scroll_view);
-
-    commands
+    let scrollbar = commands
         .spawn((
             Name::new("OutlineScrollbar"),
             NodeBundle {
@@ -154,7 +138,28 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
                 ..default()
             },
         ))
-        .set_parent(hbox);
+        .set_parent(hbox)
+        .id();
+
+    commands
+        .spawn((
+            Name::new("OutlineContainer"),
+            NodeBundle {
+                style: Style {
+                    width: Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+                ..default()
+            },
+            ScrollContent {
+                position: 0.0,
+                sensitivity: 1.5,
+                scrollbar,
+            },
+            IsOutlineContainer,
+        ))
+        .set_parent(scroll_view);
 
     outline_panel
 }
