@@ -2,6 +2,7 @@ use bevy::prelude::*;
 use bevy::ui::Val::*;
 
 use crate::simulation::Simulation;
+use crate::state::editor_screen::EditorScreenConfig;
 use crate::state::editor_screen::EditorScreenTheme;
 use crate::ui::FontSize;
 use crate::ui::BOLD_FONT_HANDLE;
@@ -17,14 +18,18 @@ impl Plugin for InfoBarPlugin {
     }
 }
 
-pub fn spawn_info_bar(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
+pub fn spawn_info_bar(
+    commands: &mut Commands,
+    config: &EditorScreenConfig,
+    theme: &EditorScreenTheme,
+) -> Entity {
     let info_bar = commands
         .spawn((
             Name::new("InfoBar"),
             NodeBundle {
                 style: Style {
                     width: Percent(100.0),
-                    min_height: theme.info_bar_height,
+                    min_height: config.info_bar_height,
                     padding: UiRect::horizontal(Px(16.0)),
                     align_items: AlignItems::Center,
                     ..default()
@@ -46,7 +51,7 @@ pub fn spawn_info_bar(commands: &mut Commands, theme: &EditorScreenTheme) -> Ent
                     ..default()
                 },
             ),
-            FontSize::new(theme.info_bar_font_size),
+            FontSize::new(config.info_bar_font_size),
             InfoBarText,
         ))
         .set_parent(info_bar);

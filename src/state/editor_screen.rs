@@ -45,36 +45,50 @@ impl Plugin for EditorScreenStatePlugin {
 
 #[derive(Default, Reflect, Serialize, Deserialize, Clone)]
 pub struct EditorScreenTheme {
-    info_bar_height: Val,
     info_bar_background_color: Color,
     info_bar_text_color: Color,
-    info_bar_font_size: Val,
 
-    outline_panel_width: Val,
     outline_panel_background_color: Color,
     outline_panel_highlight_color: Color,
     outline_panel_text_color: Color,
-    outline_panel_font_size: Val,
-    outline_panel_header_font_size: Val,
 
-    code_panel_height: Val,
     code_panel_background_color: Color,
     code_panel_text_color: Color,
-    code_panel_font_size: Val,
-    code_panel_lines_max: usize,
 
-    upgrade_panel_width: Val,
     upgrade_panel_background_color: Color,
     upgrade_panel_text_color: Color,
-    upgrade_panel_header_font_size: Val,
 
-    upgrade_button_height: Val,
     upgrade_button_normal_color: Color,
     upgrade_button_hovered_color: Color,
     upgrade_button_pressed_color: Color,
     upgrade_button_disabled_color: Color,
     upgrade_button_text_color: Color,
+
+    separator_color: Color,
+}
+
+#[derive(Default, Reflect, Serialize, Deserialize)]
+pub struct EditorScreenConfig {
+    scene_view_background_color: Color,
+
+    info_bar_height: Val,
+    info_bar_font_size: Val,
+
+    outline_panel_width: Val,
+    outline_panel_font_size: Val,
+    outline_panel_header_font_size: Val,
+
+    code_panel_height: Val,
+    code_panel_font_size: Val,
+    code_panel_lines_max: usize,
+
+    upgrade_panel_width: Val,
+    upgrade_panel_header_font_size: Val,
+
+    upgrade_button_height: Val,
     upgrade_button_font_size: Val,
+
+    separator_width: Val,
 
     submit_button_height: Val,
     submit_button_normal_color: Color,
@@ -82,14 +96,6 @@ pub struct EditorScreenTheme {
     submit_button_pressed_color: Color,
     submit_button_text_color: Color,
     submit_button_font_size: Val,
-
-    separator_width: Val,
-    separator_color: Color,
-}
-
-#[derive(Default, Reflect, Serialize, Deserialize)]
-pub struct EditorScreenConfig {
-    scene_view_background_color: Color,
 
     pub light_theme: EditorScreenTheme,
     pub dracula_theme: EditorScreenTheme,
@@ -119,13 +125,14 @@ fn enter_editor_screen(
     commands.insert_resource(ClearColor(config.scene_view_background_color));
     commands.insert_resource(EditorScreenStartTime(time.elapsed_seconds_f64()));
 
-    let screen = spawn_editor_screen(&mut commands, config.light_theme.clone(), true);
+    let screen = spawn_editor_screen(&mut commands, &config, &config.light_theme, true);
     commands.entity(screen).set_parent(root.ui);
 }
 
 pub fn spawn_editor_screen(
     commands: &mut Commands,
-    theme: EditorScreenTheme,
+    config: &EditorScreenConfig,
+    theme: &EditorScreenTheme,
     light_mode: bool,
 ) -> Entity {
     let editor_screen = commands
@@ -143,7 +150,7 @@ pub fn spawn_editor_screen(
         ))
         .id();
 
-    let info_bar = spawn_info_bar(commands, &theme);
+    let info_bar = spawn_info_bar(commands, config, theme);
     commands.entity(info_bar).set_parent(editor_screen);
 
     let hbox = commands
@@ -161,7 +168,7 @@ pub fn spawn_editor_screen(
         .set_parent(editor_screen)
         .id();
 
-    let outline_panel = spawn_outline_panel(commands, &theme);
+    let outline_panel = spawn_outline_panel(commands, config, theme);
     commands.entity(outline_panel).set_parent(hbox);
 
     let vbox = commands
@@ -184,16 +191,16 @@ pub fn spawn_editor_screen(
     commands.entity(scene_view).set_parent(vbox);
 
     let code_panel = if light_mode {
-        spawn_light_code_panel(commands, &theme)
+        spawn_light_code_panel(commands, config, theme)
     } else {
-        spawn_code_panel(commands, &theme)
+        spawn_code_panel(commands, config, theme)
     };
     commands.entity(code_panel).set_parent(vbox);
 
-    let upgrade_panel = spawn_upgrade_panel(commands, &theme);
+    let upgrade_panel = spawn_upgrade_panel(commands, config, theme);
     commands.entity(upgrade_panel).set_parent(hbox);
 
-    commands.insert_resource(ActiveEditorTheme(theme));
+    commands.insert_resource(ActiveEditorTheme(theme.clone()));
 
     editor_screen
 }

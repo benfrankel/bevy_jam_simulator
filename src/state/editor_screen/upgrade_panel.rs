@@ -3,8 +3,10 @@ use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy_mod_picking::prelude::*;
 
+use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::ActiveEditorTheme;
+use crate::state::editor_screen::EditorScreenConfig;
 use crate::state::editor_screen::EditorScreenTheme;
 use crate::state::editor_screen::UpgradeOutline;
 use crate::state::AppState;
@@ -40,13 +42,17 @@ impl Plugin for UpgradePanelPlugin {
     }
 }
 
-pub fn spawn_upgrade_panel(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
+pub fn spawn_upgrade_panel(
+    commands: &mut Commands,
+    config: &EditorScreenConfig,
+    theme: &EditorScreenTheme,
+) -> Entity {
     let upgrade_panel = commands
         .spawn((
             Name::new("UpgradePanel"),
             NodeBundle {
                 style: Style {
-                    min_width: theme.upgrade_panel_width,
+                    min_width: config.upgrade_panel_width,
                     height: Percent(100.0),
                     align_items: AlignItems::Center,
                     padding: UiRect::all(Px(12.0)),
@@ -74,7 +80,7 @@ pub fn spawn_upgrade_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
                 margin: UiRect::bottom(Px(15.0)),
                 ..default()
             }),
-            FontSize::new(theme.upgrade_panel_header_font_size),
+            FontSize::new(config.upgrade_panel_header_font_size),
         ))
         .set_parent(upgrade_panel);
 
@@ -111,7 +117,7 @@ pub fn spawn_upgrade_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
         .set_parent(upgrade_panel)
         .id();
 
-    let submit_button = spawn_submit_button(commands, theme);
+    let submit_button = spawn_submit_button(commands, config);
     commands.entity(submit_button).set_parent(submit_container);
 
     upgrade_panel
@@ -119,6 +125,7 @@ pub fn spawn_upgrade_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
 
 fn spawn_upgrade_button(
     commands: &mut Commands,
+    config: &EditorScreenConfig,
     theme: &EditorScreenTheme,
     upgrade_list: &UpgradeList,
     upgrade_kind: UpgradeKind,
@@ -133,7 +140,7 @@ fn spawn_upgrade_button(
             ButtonBundle {
                 style: Style {
                     width: Percent(100.0),
-                    height: theme.upgrade_button_height,
+                    height: config.upgrade_button_height,
                     align_items: AlignItems::Center,
                     justify_content: JustifyContent::Center,
                     margin: UiRect::bottom(Px(10.0)),
@@ -206,7 +213,7 @@ fn spawn_upgrade_button(
                     ..default()
                 },
             ),
-            FontSize::new(theme.upgrade_button_font_size),
+            FontSize::new(config.upgrade_button_font_size),
         ))
         .set_parent(upgrade_button);
 
@@ -225,21 +232,26 @@ fn spawn_upgrade_button(
                     ..default()
                 },
             ),
-            FontSize::new(theme.upgrade_button_font_size),
+            FontSize::new(config.upgrade_button_font_size),
         ))
         .set_parent(upgrade_button);
 
     upgrade_button
 }
 
-fn spawn_separator(commands: &mut Commands, theme: &EditorScreenTheme, parent: Entity) {
+fn spawn_separator(
+    commands: &mut Commands,
+    config: &EditorScreenConfig,
+    theme: &EditorScreenTheme,
+    parent: Entity,
+) {
     commands
         .spawn((
             Name::new("Separator"),
             NodeBundle {
                 style: Style {
                     max_height: Px(0.0),
-                    border: UiRect::top(theme.separator_width),
+                    border: UiRect::top(config.separator_width),
                     margin: UiRect {
                         left: Px(0.0),
                         right: Px(0.0),
@@ -256,26 +268,26 @@ fn spawn_separator(commands: &mut Commands, theme: &EditorScreenTheme, parent: E
         .set_parent(parent);
 }
 
-fn spawn_submit_button(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
+fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
     let submit_button = commands
         .spawn((
             Name::new("SubmitButton"),
             ButtonBundle {
                 style: Style {
                     width: Percent(80.0),
-                    height: theme.submit_button_height,
+                    height: config.submit_button_height,
                     padding: UiRect::all(Px(10.0)),
                     justify_content: JustifyContent::Center,
                     align_items: AlignItems::Center,
                     ..default()
                 },
-                background_color: theme.submit_button_normal_color.into(),
+                background_color: config.submit_button_normal_color.into(),
                 ..default()
             },
             InteractionPalette {
-                normal: theme.submit_button_normal_color,
-                hovered: theme.submit_button_hovered_color,
-                pressed: theme.submit_button_pressed_color,
+                normal: config.submit_button_normal_color,
+                hovered: config.submit_button_hovered_color,
+                pressed: config.submit_button_pressed_color,
                 disabled: Color::NONE,
             },
             On::<Pointer<Click>>::run(|mut next_state: ResMut<NextState<_>>| {
@@ -291,11 +303,11 @@ fn spawn_submit_button(commands: &mut Commands, theme: &EditorScreenTheme) -> En
                 "Submit",
                 TextStyle {
                     font: BOLD_FONT_HANDLE,
-                    color: theme.submit_button_text_color,
+                    color: config.submit_button_text_color,
                     ..default()
                 },
             ),
-            FontSize::new(theme.submit_button_font_size),
+            FontSize::new(config.submit_button_font_size),
         ))
         .set_parent(submit_button);
 
@@ -321,6 +333,7 @@ struct IsUpgradeContainer;
 fn offer_next_upgrades(
     mut commands: Commands,
     mut despawn: ResMut<DespawnSet>,
+    config: Res<Config>,
     theme: Res<ActiveEditorTheme>,
     upgrade_list: Res<UpgradeList>,
     mut sequence: ResMut<UpgradeSequence>,
@@ -328,6 +341,7 @@ fn offer_next_upgrades(
     outline: Res<UpgradeOutline>,
     container_query: Query<(Entity, Option<&Children>), With<IsUpgradeContainer>>,
 ) {
+    let config = &config.editor_screen;
     let theme = &theme.0;
     for (entity, buttons) in &container_query {
         // Despawn old upgrade options
@@ -340,16 +354,22 @@ fn offer_next_upgrades(
         for kind in next_upgrades {
             if kind == UpgradeKind::RefreshUpgradeList {
                 // Add a separator.
-                spawn_separator(&mut commands, theme, entity);
+                spawn_separator(&mut commands, config, theme, entity);
             }
-            let upgrade_button =
-                spawn_upgrade_button(&mut commands, theme, &upgrade_list, kind, &simulation);
+            let upgrade_button = spawn_upgrade_button(
+                &mut commands,
+                config,
+                theme,
+                &upgrade_list,
+                kind,
+                &simulation,
+            );
             commands.entity(upgrade_button).set_parent(entity);
         }
 
         // Show description if present.
         if !desc.is_empty() {
-            spawn_separator(&mut commands, theme, entity);
+            spawn_separator(&mut commands, config, theme, entity);
             let mut text_bundle = TextBundle::from_section(
                 desc,
                 TextStyle {
@@ -364,7 +384,7 @@ fn offer_next_upgrades(
                 .spawn((
                     Name::new("Description"),
                     text_bundle,
-                    FontSize::new(theme.outline_panel_font_size),
+                    FontSize::new(config.outline_panel_font_size),
                 ))
                 .set_parent(entity);
         }

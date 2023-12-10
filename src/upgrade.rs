@@ -706,7 +706,8 @@ generate_upgrade_list!(
             commands.entity(root.ui).despawn_descendants();
             let editor_screen = spawn_editor_screen(
                 &mut commands,
-                config.editor_screen.dracula_theme.clone(),
+                &config.editor_screen,
+                &config.editor_screen.dracula_theme,
                 false,
             );
             commands.entity(editor_screen).set_parent(root.ui);
@@ -735,7 +736,8 @@ generate_upgrade_list!(
             commands.entity(root.ui).despawn_descendants();
             let editor_screen = spawn_editor_screen(
                 &mut commands,
-                config.editor_screen.bamboo_theme.clone(),
+                &config.editor_screen,
+                &config.editor_screen.bamboo_theme,
                 false,
             );
             commands.entity(editor_screen).set_parent(root.ui);

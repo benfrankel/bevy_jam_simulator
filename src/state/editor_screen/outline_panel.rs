@@ -3,8 +3,10 @@ use bevy::prelude::*;
 use bevy::ui::Val::*;
 use bevy::utils::HashMap;
 
+use crate::config::Config;
 use crate::simulation::Simulation;
 use crate::state::editor_screen::ActiveEditorTheme;
+use crate::state::editor_screen::EditorScreenConfig;
 use crate::state::editor_screen::EditorScreenTheme;
 use crate::state::AppState;
 use crate::ui::FontSize;
@@ -44,13 +46,17 @@ impl Plugin for OutlinePanelPlugin {
 pub struct UpgradeOutline(pub HashMap<UpgradeKind, usize>);
 
 // TODO: Add scrollbar
-pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -> Entity {
+pub fn spawn_outline_panel(
+    commands: &mut Commands,
+    config: &EditorScreenConfig,
+    theme: &EditorScreenTheme,
+) -> Entity {
     let outline_panel = commands
         .spawn((
             Name::new("OutlinePanel"),
             NodeBundle {
                 style: Style {
-                    min_width: theme.outline_panel_width,
+                    min_width: config.outline_panel_width,
                     height: Percent(100.0),
                     padding: UiRect::new(Px(12.0), Px(8.0), Px(12.0), Px(12.0)),
                     flex_direction: FlexDirection::Column,
@@ -80,7 +86,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
                 },
                 ..default()
             },
-            FontSize::new(theme.outline_panel_header_font_size),
+            FontSize::new(config.outline_panel_header_font_size),
             IsOutlineHeader,
         ))
         .set_parent(outline_panel);
@@ -166,6 +172,7 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
 
 fn spawn_outline_entry(
     commands: &mut Commands,
+    config: &EditorScreenConfig,
     theme: &EditorScreenTheme,
     upgrade_kind: UpgradeKind,
     upgrade_name: String,
@@ -210,7 +217,7 @@ fn spawn_outline_entry(
                     ..default()
                 },
             ),
-            FontSize::new(theme.outline_panel_font_size),
+            FontSize::new(config.outline_panel_font_size),
         ))
         .set_parent(outline_entry);
 
@@ -223,11 +230,13 @@ struct IsOutlineContainer;
 fn update_outline_container(
     mut commands: Commands,
     mut events: EventReader<UpgradeEvent>,
+    config: Res<Config>,
     theme: Res<ActiveEditorTheme>,
     upgrade_list: Res<UpgradeList>,
     mut outline: ResMut<UpgradeOutline>,
     container_query: Query<Entity, With<IsOutlineContainer>>,
 ) {
+    let config = &config.editor_screen;
     let theme = &theme.0;
     for event in events.read() {
         let upgrade_kind = event.kind;
@@ -243,6 +252,7 @@ fn update_outline_container(
         for container in &container_query {
             let outline_entry = spawn_outline_entry(
                 &mut commands,
+                config,
                 theme,
                 upgrade_kind,
                 event.name.clone(),
