@@ -99,6 +99,7 @@ pub struct EditorScreenConfig {
 
     pub light_theme: EditorScreenTheme,
     pub dracula_theme: EditorScreenTheme,
+    pub synthwave_theme: EditorScreenTheme,
     pub bamboo_theme: EditorScreenTheme,
 }
 
@@ -125,7 +126,7 @@ fn enter_editor_screen(
     commands.insert_resource(ClearColor(config.scene_view_background_color));
     commands.insert_resource(EditorScreenStartTime(time.elapsed_seconds_f64()));
 
-    let screen = spawn_editor_screen(&mut commands, &config, &config.light_theme, true);
+    let screen = spawn_editor_screen(&mut commands, config, &config.light_theme, true);
     commands.entity(screen).set_parent(root.ui);
 }
 

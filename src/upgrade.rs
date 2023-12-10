@@ -336,7 +336,10 @@ fn load_upgrade_sequence(mut commands: Commands) {
     use UpgradeKind::*;
 
     commands.insert_resource(UpgradeSequence::new(vec![
-        (vec![DarkModeDracula, DarkModeBamboo], String::new()),
+        (
+            vec![DarkModeDracula, DarkModeBamboo, DarkModeSynthwave],
+            String::new(),
+        ),
         (
             vec![Inspiration],
             "\"Much better. Now I can get started.\"".to_string(),
@@ -738,6 +741,36 @@ generate_upgrade_list!(
                 &mut commands,
                 &config.editor_screen,
                 &config.editor_screen.bamboo_theme,
+                false,
+            );
+            commands.entity(editor_screen).set_parent(root.ui);
+
+            // Start background music
+            if let Some(instance) = audio_instances.get_mut(&music.0) {
+                instance.resume(AudioTween::default());
+            } else {
+                error!("Background music has not loaded yet");
+            }
+        })),
+        ..default()
+    },
+
+    DarkModeSynthwave: Upgrade {
+        name: "Dark Mode (Synthwave)".to_string(),
+        desc: "Rite of passage for all developers. Required to write code.".to_string(),
+        sound: None,
+        install: Some(world.register_system(|
+            mut commands: Commands,
+            root: Res<AppRoot>,
+            config: Res<Config>,
+            music: Res<BackgroundMusic>,
+            mut audio_instances: ResMut<Assets<AudioInstance>>,
+        | {
+            commands.entity(root.ui).despawn_descendants();
+            let editor_screen = spawn_editor_screen(
+                &mut commands,
+                &config.editor_screen,
+                &config.editor_screen.synthwave_theme,
                 false,
             );
             commands.entity(editor_screen).set_parent(root.ui);
