@@ -575,7 +575,7 @@ generate_upgrade_list!(
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
                 for mut scene_view in &mut scene_view_query {
-                    scene_view.spawns_per_click += 1;
+                    scene_view.spawns_per_click += 1.0;
                 }
             }),
         ),
@@ -584,15 +584,14 @@ generate_upgrade_list!(
 
     Coffee: Upgrade {
         name: "Coffee".to_string(),
-        desc: "Doubles the number of entities spawned per click.".to_string(),
-        tech_debt: 1.0,
+        desc: "Quadruples the number of entities spawned per click.".to_string(),
         base_cost: 25.0,
         weight: 1.0,
         remaining: 3,
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
                 for mut scene_view in &mut scene_view_query {
-                    scene_view.spawns_per_click *= 2;
+                    scene_view.spawns_per_click *= 4.0;
                 }
             }),
         ),

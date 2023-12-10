@@ -26,7 +26,7 @@ impl Plugin for SceneViewPlugin {
 
 #[derive(Component, Reflect, Default)]
 pub struct SceneView {
-    pub spawns_per_click: usize,
+    pub spawns_per_click: f64,
 }
 
 pub fn spawn_scene_view(commands: &mut Commands) -> Entity {
@@ -64,16 +64,13 @@ fn click_spawn(
         .origin
         .truncate();
 
-    for _ in 0..scene_view_query
-        .get(listener.target)
-        .unwrap()
-        .spawns_per_click
-    {
-        events.send(SpawnEvent {
-            position: world_pos,
-            count: 1.0,
-        });
-    }
+    events.send(SpawnEvent {
+        position: world_pos,
+        count: scene_view_query
+            .get(listener.target)
+            .unwrap()
+            .spawns_per_click,
+    });
 }
 
 #[derive(Resource, Reflect, Default)]
