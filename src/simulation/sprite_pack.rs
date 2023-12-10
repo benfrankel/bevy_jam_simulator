@@ -38,6 +38,11 @@ pub struct SpritePackAssets {
     #[asset(path = "image/entity/none.png")]
     pub none: Handle<TextureAtlas>,
 
+    // Text
+    #[asset(texture_atlas(tile_size_x = 8.0, tile_size_y = 12.0, rows = 1, columns = 94))]
+    #[asset(path = "image/entity/text/PyriousPixel-B.png")]
+    pub text: Handle<TextureAtlas>,
+
     // 1-bit
     #[asset(texture_atlas(tile_size_x = 10.0, tile_size_y = 10.0, rows = 17, columns = 11))]
     #[asset(path = "image/entity/1-bit/Clothing.png")]
@@ -124,6 +129,11 @@ fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
         Atlas {
             path: "none",
             tiles: vec![Tile::any_color(0)],
+        },
+        // Text
+        Atlas {
+            path: "text",
+            tiles: (0..94).map(Tile::any_color).collect(),
         },
         // 1-bit
         Atlas {
@@ -241,6 +251,7 @@ fn load_atlas_list(mut atlas_list: ResMut<AtlasList>) {
 pub enum SpritePack {
     #[default]
     None,
+    Text,
     OneBit,
     Rpg,
     Ninja,
@@ -250,9 +261,10 @@ impl SpritePack {
     fn atlases(&self) -> Range<usize> {
         match self {
             Self::None => 0..1,
-            Self::OneBit => 1..14,
-            Self::Rpg => 14..20,
-            Self::Ninja => 20..24,
+            Self::Text => 1..2,
+            Self::OneBit => 2..15,
+            Self::Rpg => 15..21,
+            Self::Ninja => 21..25,
         }
     }
 
