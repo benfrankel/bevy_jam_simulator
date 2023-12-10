@@ -416,7 +416,7 @@ generate_upgrade_list!(
         entity_min: 35.0,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.push(
-                vec![SpritePackOneBit, SpritePackRpg, SpritePackNinja],
+                vec![SpritePackOneBit, SpritePackRpg, SpritePackNinja, OptimizeShaders],
                 "You can only select one option. \
                  The rejected options will never appear again.".to_string(),
             );
@@ -454,6 +454,17 @@ generate_upgrade_list!(
         | {
             simulation.skin_set.replace_sprite_pack(&atlas_list, SpritePack::Rpg, &mut thread_rng());
             events.send(SpritePackEvent);
+        })),
+        ..default()
+    },
+
+    OptimizeShaders: Upgrade {
+        name: "Optimize Shaders".to_string(),
+        desc: "Instead of installing a sprite pack, optimizes your shaders to render squares faster. Doubles the entity spawn rate but does not make your game look pretty.".to_string(),
+        tech_debt: 1.0,
+        base_cost: 100.0,
+        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
+            simulation.entity_spawn_multiplier *= 2.0;
         })),
         ..default()
     },

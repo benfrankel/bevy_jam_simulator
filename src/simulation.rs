@@ -72,6 +72,8 @@ pub struct Simulation {
 
     /// For each added line, this many entities will spawn.
     pub entity_spawn_per_line: f64,
+    /// The count in each SpawnEvent will be multiplied by this.
+    pub entity_spawn_multiplier: f64,
 
     /// Minimum size for new entities.
     pub entity_size_min: f32,
@@ -103,6 +105,7 @@ impl Default for Simulation {
             line_multiplier: 1.0,
 
             entity_spawn_per_line: 0.0,
+            entity_spawn_multiplier: 1.0,
 
             entity_size_min: 8.0,
             entity_size_max: 8.0,
@@ -201,7 +204,8 @@ fn spawn_entities(world: &mut World, mut reader: Local<ManualEventReader<SpawnEv
         .copied()
         .collect::<Vec<_>>()
     {
-        world.resource_mut::<Simulation>().entities += event.count;
+        let mut simulation = world.resource_mut::<Simulation>();
+        simulation.entities += event.count * simulation.entity_spawn_multiplier;
 
         let simulation = world.resource::<Simulation>();
         let spawn_count = MAX_SPAWN_PER_EVENT.min(event.count as usize);
