@@ -1,6 +1,7 @@
 mod code_typer;
 mod font;
 mod interaction_palette;
+mod scroll;
 mod tooltip;
 
 use bevy::prelude::*;
@@ -11,6 +12,7 @@ pub use crate::ui::font::FontSize;
 pub use crate::ui::font::BOLD_FONT_HANDLE;
 pub use crate::ui::font::FONT_HANDLE;
 pub use crate::ui::interaction_palette::InteractionPalette;
+pub use crate::ui::scroll::ScrollContent;
 pub use crate::ui::tooltip::Tooltip;
 pub use crate::ui::tooltip::TooltipConfig;
 pub use crate::ui::tooltip::TooltipSide;
@@ -21,9 +23,10 @@ impl Plugin for UiPlugin {
     fn build(&self, app: &mut App) {
         app.register_type::<Disabled>().add_plugins((
             DefaultPickingPlugins,
-            interaction_palette::InteractionPalettePlugin,
             code_typer::CodeTyperPlugin,
             font::FontPlugin,
+            interaction_palette::InteractionPalettePlugin,
+            scroll::ScrollPlugin,
             tooltip::TooltipPlugin,
         ));
     }

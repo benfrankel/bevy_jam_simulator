@@ -9,6 +9,7 @@ use crate::state::editor_screen::EditorScreenTheme;
 use crate::state::AppState;
 use crate::ui::FontSize;
 use crate::ui::InteractionPalette;
+use crate::ui::ScrollContent;
 use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
 use crate::ui::BOLD_FONT_HANDLE;
@@ -51,14 +52,13 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
                 style: Style {
                     min_width: theme.outline_panel_width,
                     height: Percent(100.0),
-                    padding: UiRect::all(Px(12.0)),
+                    padding: UiRect::new(Px(12.0), Px(8.0), Px(12.0), Px(12.0)),
                     flex_direction: FlexDirection::Column,
                     ..default()
                 },
                 background_color: theme.outline_panel_background_color.into(),
                 ..default()
             },
-            IsOutlineContainer,
         ))
         .id();
 
@@ -75,8 +75,6 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
                     },
                 ),
                 style: Style {
-                    // Hiding this because it looks bad :(
-                    // display: Display::None,
                     margin: UiRect::bottom(Px(10.0)),
                     ..default()
                 },
@@ -86,6 +84,77 @@ pub fn spawn_outline_panel(commands: &mut Commands, theme: &EditorScreenTheme) -
             IsOutlineHeader,
         ))
         .set_parent(outline_panel);
+
+    let hbox = commands
+        .spawn((
+            Name::new("HBox"),
+            NodeBundle {
+                style: Style {
+                    width: Percent(100.0),
+                    justify_content: JustifyContent::End,
+                    flex_grow: 1.0,
+                    column_gap: Px(4.0),
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(outline_panel)
+        .id();
+
+    let scroll_view = commands
+        .spawn((
+            Name::new("OutlineScrollView"),
+            NodeBundle {
+                style: Style {
+                    // TODO: This is a hack.. there seems to be no other way to
+                    // restrict height to available space in the parent node
+                    position_type: PositionType::Absolute,
+                    overflow: Overflow::clip_y(),
+                    width: Percent(100.0),
+                    height: Percent(100.0),
+                    padding: UiRect::right(Px(12.0)),
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+                ..default()
+            },
+        ))
+        .set_parent(hbox)
+        .id();
+
+    commands
+        .spawn((
+            Name::new("OutlineContainer"),
+            NodeBundle {
+                style: Style {
+                    width: Percent(100.0),
+                    flex_direction: FlexDirection::Column,
+                    ..default()
+                },
+                ..default()
+            },
+            ScrollContent::with_sensitivity(2.0),
+            IsOutlineContainer,
+        ))
+        .set_parent(scroll_view);
+
+    commands
+        .spawn((
+            Name::new("OutlineScrollbar"),
+            NodeBundle {
+                style: Style {
+                    width: Px(8.0),
+                    height: Percent(100.0),
+                    justify_self: JustifySelf::End,
+                    ..default()
+                },
+                // TODO
+                background_color: theme.info_bar_background_color.into(),
+                ..default()
+            },
+        ))
+        .set_parent(hbox);
 
     outline_panel
 }
@@ -119,7 +188,7 @@ fn spawn_outline_entry(
             Tooltip {
                 text: upgrade_desc,
                 side: TooltipSide::Right,
-                offset: vec2(12.0, 0.0),
+                offset: vec2(20.0, 0.0),
             },
             OutlineEntry(upgrade_kind),
         ))
