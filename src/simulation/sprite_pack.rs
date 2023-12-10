@@ -39,7 +39,7 @@ pub struct SpritePackAssets {
     pub none: Handle<TextureAtlas>,
 
     // Text
-    #[asset(texture_atlas(tile_size_x = 8.0, tile_size_y = 12.0, rows = 1, columns = 94))]
+    #[asset(texture_atlas(tile_size_x = 12.0, tile_size_y = 12.0, rows = 1, columns = 94))]
     #[asset(path = "image/entity/text/PyriousPixel-B.png")]
     pub text: Handle<TextureAtlas>,
 
