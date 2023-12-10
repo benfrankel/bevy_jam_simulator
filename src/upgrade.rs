@@ -348,16 +348,16 @@ fn load_upgrade_sequence(mut commands: Commands) {
             vec![TouchOfLifePlugin],
             "\"I don't know what I'm making, but I should start spawning entities.\"".to_string(),
         ),
+        (vec![ImportLibrary], String::new()),
+        (
+            vec![SkinPlugin],
+            "\"I should make the game look nice for a higher Presentation score.\"".to_string(),
+        ),
         (
             vec![VelocityPlugin],
-            "\"I should make the game more interesting for a higher Fun score.\"".to_string(),
+            "\"I should also make the game more interesting for a higher Fun score.\"".to_string(),
         ),
-        (vec![ImportLibrary, SplashOfLifePlugin], String::new()),
-        (
-            vec![SkinPlugin, Coffee],
-            "\"I should also make the game look pretty for a higher Presentation score.\""
-                .to_string(),
-        ),
+        (vec![Autocomplete], String::new()),
         (
             vec![Brainstorm],
             "\"Hmm... where should I go from here?\"".to_string(),
@@ -427,9 +427,7 @@ generate_upgrade_list!(
     SpritePackOneBit: Upgrade {
         name: "Sprite Pack (1-bit)".to_string(),
         desc: "Downloads a 1-bit sprite pack for your entities. Makes your game prettier.".to_string(),
-        tech_debt: 1.0,
         presentation_score: 5.0,
-        base_cost: 20.0,
         install: Some(world.register_system(|
             mut events: EventWriter<SpritePackEvent>,
             mut simulation: ResMut<Simulation>,
@@ -444,9 +442,7 @@ generate_upgrade_list!(
     SpritePackRpg: Upgrade {
         name: "Sprite Pack (RPG)".to_string(),
         desc: "Downloads an RPG sprite pack for your entities. Makes your game prettier.".to_string(),
-        tech_debt: 1.0,
         presentation_score: 10.0,
-        base_cost: 30.0,
         install: Some(world.register_system(|
             mut events: EventWriter<SpritePackEvent>,
             mut simulation: ResMut<Simulation>,
@@ -472,9 +468,7 @@ generate_upgrade_list!(
     SpritePackNinja: Upgrade {
         name: "Sprite Pack (Ninja)".to_string(),
         desc: "Downloads a Ninja sprite pack for your entities. Makes your game prettier.".to_string(),
-        tech_debt: 1.0,
         presentation_score: 15.0,
-        base_cost: 40.0,
         install: Some(world.register_system(|
             mut events: EventWriter<SpritePackEvent>,
             mut simulation: ResMut<Simulation>,
@@ -493,8 +487,8 @@ generate_upgrade_list!(
         presentation_score: 4.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
-        weight: 1.0,
-        remaining: 5,
+        weight: 1.5,
+        remaining: 6,
         install: Some(world.register_system(|
             mut simulation: ResMut<Simulation>,
             atlas_list: Res<AtlasList>,
@@ -512,9 +506,8 @@ generate_upgrade_list!(
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
-        remaining: 2,
         install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-            simulation.entity_size_max += 4.0;
+            simulation.entity_size_max += 8.0;
         })),
         ..default()
     },
@@ -815,15 +808,33 @@ generate_upgrade_list!(
 
     // Lines (manual)
 
+    Autocomplete: Upgrade {
+        name: "Autocomplete".to_string(),
+        desc: "\
+            It completes you. \
+            Types an extra 5 characters per key press.\
+        ".to_string(),
+        sound: Some(SoundEffectKind::Keyboard),
+        base_cost: 25.0,
+        install: Some(world.register_system(|
+            mut typer_query: Query<&mut CodeTyper>,
+        | {
+            for mut typer in &mut typer_query {
+                typer.chars_per_key += 5;
+            }
+        })),
+        ..default()
+    },
+
     MechanicalKeyboard: Upgrade {
         name: "Mechanical Keyboard".to_string(),
         desc: "\
             A better keyboard that allows you to type faster. \
-            Doubles the number of characters typed per key press. \
+            Doubles the number of characters typed per key press.\
         ".to_string(),
         sound: Some(SoundEffectKind::Keyboard),
         no_count: true,
-        base_cost: 50.0,
+        base_cost: 75.0,
         weight: 2.0,
         remaining: 2,
         install: Some(world.register_system(|
@@ -843,20 +854,21 @@ generate_upgrade_list!(
             this.desc = "\
                 An even better keyboard that allows you to type faster. \
                 Quadruples the number of characters typed per key press. \
-                Replaces the mechanical keyboard. \
+                Replaces Mechanical Keyboard.\
             ".to_string();
         })),
         ..default()
     },
+
     TouchTyping: Upgrade {
         name: "Touch Typing".to_string(),
         desc: "\
             Improves your typing skills. \
-            Doubles the number of characters typed per key press. \
+            Doubles the number of characters typed per key press.\
         ".to_string(),
         sound: Some(SoundEffectKind::Keyboard),
         installed_min: vec![(MechanicalKeyboard, 1)],
-        base_cost: 100.0,
+        base_cost: 150.0,
         weight: 1.0,
         remaining: 4,
         install: Some(world.register_system(|
@@ -872,9 +884,13 @@ generate_upgrade_list!(
         })),
         ..default()
     },
+
     DvorakLayout: Upgrade {
         name: "Dvorak Layout".to_string(),
-        desc: "Doubles the number of characters typed per key press.".to_string(),
+        desc: "\
+            A more efficient keyboard layout. \
+            Doubles the number of characters typed per key press.\
+        ".to_string(),
         sound: Some(SoundEffectKind::Keyboard),
         installed_min: vec![(TouchTyping, 4)],
         base_cost: 200_000.0,
@@ -891,13 +907,12 @@ generate_upgrade_list!(
         name: "Procedural Macro".to_string(),
         desc: "\
             Writes one line of code for each line you type. \
-            Simplifies the codebase slightly. \
+            Helps keep the codebase DRY.\
         ".to_string(),
         tech_debt: -1.0,
         base_cost: 100.0,
         cost_scale_factor: 1.1,
         weight: 1.0,
-        remaining: 1,
         install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
             simulation.line_multiplier *= 2.0;
         })),
@@ -926,7 +941,7 @@ generate_upgrade_list!(
         macro_rules! desc_template {
             () => {"\
                 A {} billion parameter large language model that writes code. \
-                Types {} characters every 2 seconds. \
+                Types {} characters every 2 seconds.\
             "}
         }
         const PARAMETERS: [u32; 4] = [7, 13, 33, 65];
@@ -936,11 +951,11 @@ generate_upgrade_list!(
         Upgrade {
             name: format!("Coding LLM {}B", PARAMETERS[0]).to_string(),
             desc: format!(desc_template!(), PARAMETERS[0], CHARS[0]).to_string(),
+            no_count: true,
             tech_debt: 1.0,
             base_cost: 1000.0,
             weight: 0.75,
             remaining: 4,
-            no_count: true,
             installed_min: vec![(MetaMacro, 1)],
             install: Some(world.register_system(|
                 mut typer: ResMut<PassiveCodeTyper>,
@@ -1018,9 +1033,9 @@ generate_upgrade_list!(
         name: "Unit Tests".to_string(),
         desc: "Improves the quality of the codebase. Reduces all future technical debt increases by 5%.".to_string(),
         tech_debt: -3.0,
-        base_cost: 20.0,
+        base_cost: 50.0,
         cost_scale_factor: 1.3,
-        weight: 1.0,
+        weight: 1.5,
         remaining: 2,
         tech_debt_min: 3.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
@@ -1038,7 +1053,7 @@ generate_upgrade_list!(
     Rtfm: Upgrade {
         name: "RTFM".to_string(),
         desc: "Reduces all future technical debt increases by 5%.".to_string(),
-        base_cost: 20.0,
+        base_cost: 200.0,
         weight: 1.0,
         remaining: 2,
         tech_debt_min: 5.0,
@@ -1056,7 +1071,7 @@ generate_upgrade_list!(
         name: "CI/CD".to_string(),
         desc: "Reduces all future technical debt increases by 10%.".to_string(),
         tech_debt: 0.5,
-        base_cost: 50.0,
+        base_cost: 500.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: 2,
@@ -1085,9 +1100,10 @@ generate_upgrade_list!(
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
-        base_cost: 20.0,
+        base_cost: 100.0,
         weight: 2.5,
-        upgrade_min: 7,
+        upgrade_min: 10,
+        entity_min: 1000.0,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.slots += 1;
         })),
