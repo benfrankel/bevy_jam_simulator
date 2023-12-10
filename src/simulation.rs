@@ -43,11 +43,13 @@ impl Plugin for SimulationPlugin {
                 Update,
                 (
                     spawn_entities,
-                    type_code_passively,
-                    spawn_entities_passively,
-                    handle_line_added_events,
+                    (
+                        type_code_passively,
+                        spawn_entities_passively,
+                        handle_line_added_events,
+                    )
+                        .run_if(in_state(AppState::EditorScreen)),
                 )
-                    .run_if(in_state(AppState::EditorScreen))
                     .in_set(AppSet::Simulate),
             );
     }
