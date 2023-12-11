@@ -1112,15 +1112,32 @@ generate_upgrade_list!(
         ..default()
     },
 
-    CiCd: Upgrade {
-        name: "CI/CD".to_string(),
+    ContinuousIntegration: Upgrade {
+        name: "Continuous Integration".to_string(),
         desc: "Reduces all future technical debt increases by 10%.".to_string(),
         tech_debt: 0.5,
         base_cost: 500.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
-        remaining: 2,
         installed_min: vec![(Rtfm, 2), (UnitTests, 1)],
+        install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
+            for upgrade in &mut upgrade_list.0 {
+                if upgrade.tech_debt > 0.0 {
+                    upgrade.tech_debt *= 0.9;
+                }
+            }
+        })),
+        ..default()
+    },
+
+    ContinuousDeployment: Upgrade {
+        name: "Continuous Deployment".to_string(),
+        desc: "Reduces all future technical debt increases by 10%.".to_string(),
+        tech_debt: 0.5,
+        base_cost: 1000.0,
+        cost_scale_factor: 1.2,
+        weight: 1.0,
+        installed_min: vec![(ContinuousIntegration, 1)],
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             for upgrade in &mut upgrade_list.0 {
                 if upgrade.tech_debt > 0.0 {
