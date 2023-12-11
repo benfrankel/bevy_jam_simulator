@@ -731,16 +731,66 @@ generate_upgrade_list!(
         ..default()
     },
 
+    LaptopSticker: Upgrade {
+        name: "Laptop Sticker".to_string(),
+        desc: "Spawns 1 more entity per click.".to_string(),
+        base_cost: 15.0,
+        weight: 1.0,
+        remaining: 4,
+        install: Some(
+            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+                for mut scene_view in &mut scene_view_query {
+                    scene_view.spawns_per_click += 1.0;
+                }
+            }),
+        ),
+        ..default()
+    },
+
     Coffee: Upgrade {
         name: "Coffee".to_string(),
         desc: "Quadruples the number of entities spawned per click.".to_string(),
-        base_cost: 25.0,
-        weight: 1.0,
+        base_cost: 200.0,
+        weight: 2.0,
         remaining: 3,
+        installed_min: vec![(LaptopSticker, 4)],
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
                 for mut scene_view in &mut scene_view_query {
                     scene_view.spawns_per_click *= 4.0;
+                }
+            }),
+        ),
+        ..default()
+    },
+
+    ProgrammingSock: Upgrade {
+        name: "Programming Sock".to_string(),
+        desc: "Squares the number of entities spawned per click.".to_string(),
+        base_cost: 5_000.0,
+        weight: 2.0,
+        remaining: 2,
+        installed_min: vec![(Coffee, 3)],
+        install: Some(
+            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+                for mut scene_view in &mut scene_view_query {
+                    scene_view.spawns_per_click *= scene_view.spawns_per_click;
+                }
+            }),
+        ),
+        ..default()
+    },
+
+    StandingDesk: Upgrade {
+        name: "Standing Desk".to_string(),
+        desc: "Doubles the number of entities spawned per click, per click.".to_string(),
+        base_cost: 1e9,
+        weight: 1.0,
+        installed_min: vec![(ProgrammingSock, 2)],
+        install: Some(
+            world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
+                for mut scene_view in &mut scene_view_query {
+                    scene_view.spawns_per_click_multiplier_per_click += 2.0;
                 }
             }),
         ),

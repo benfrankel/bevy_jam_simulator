@@ -23,9 +23,19 @@ impl Plugin for SceneViewPlugin {
     }
 }
 
-#[derive(Component, Reflect, Default)]
+#[derive(Component, Reflect)]
 pub struct SceneView {
     pub spawns_per_click: f64,
+    pub spawns_per_click_multiplier_per_click: f64,
+}
+
+impl Default for SceneView {
+    fn default() -> Self {
+        Self {
+            spawns_per_click: 0.0,
+            spawns_per_click_multiplier_per_click: 1.0,
+        }
+    }
 }
 
 pub fn spawn_scene_view(commands: &mut Commands) -> Entity {
@@ -52,24 +62,25 @@ fn click_spawn(
     mut events: EventWriter<SpawnEvent>,
     root: Res<AppRoot>,
     camera_query: Query<(&Camera, &GlobalTransform)>,
-    scene_view_query: Query<&SceneView>,
+    mut scene_view_query: Query<&mut SceneView>,
 ) {
     let Ok((camera, camera_gt)) = camera_query.get(root.camera) else {
         return;
     };
-    let world_pos = camera
-        .viewport_to_world(camera_gt, listener.pointer_location.position)
-        .unwrap()
-        .origin
-        .truncate();
+    let Some(position) = camera.viewport_to_world_2d(camera_gt, listener.pointer_location.position)
+    else {
+        return;
+    };
+
+    let Ok(mut scene_view) = scene_view_query.get_mut(listener.target) else {
+        return;
+    };
 
     events.send(SpawnEvent {
-        position: world_pos,
-        count: scene_view_query
-            .get(listener.target)
-            .unwrap()
-            .spawns_per_click,
+        position,
+        count: scene_view.spawns_per_click,
     });
+    scene_view.spawns_per_click *= scene_view.spawns_per_click_multiplier_per_click;
 }
 
 #[derive(Resource, Reflect, Default)]
