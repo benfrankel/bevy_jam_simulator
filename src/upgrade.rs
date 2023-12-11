@@ -909,16 +909,18 @@ generate_upgrade_list!(
     },
 
     TouchTyping: Upgrade {
-        name: "Touch Typing".to_string(),
+        name: "Touch Typing (40 WPM)".to_string(),
         desc: "\
             Improves your typing skills. \
-            Doubles the number of characters typed per key press.\
+            Multiplies the characters typed per key press by VALUE.\
         ".to_string(),
+        value: 2.0,
         sound: Some(SoundEffectKind::Keyboard),
-        installed_min: vec![(MechanicalKeyboard, 1)],
+        no_count: true,
         base_cost: 150.0,
         weight: 1.0,
-        remaining: 4,
+        remaining: 3,
+        installed_min: vec![(MechanicalKeyboard, 1)],
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
             mut upgrade_list: ResMut<UpgradeList>,
@@ -926,6 +928,8 @@ generate_upgrade_list!(
             let this = &mut upgrade_list[TouchTyping];
             // Cost scaling of this is independent of tech debt.
             this.base_cost *= 2.0;
+            this.value *= 2.0;
+            this.name = format!("Touch Typing ({} WPM)", 40 * 2i32.pow(3 - this.remaining as u32));
             for mut typer in &mut typer_query {
                 typer.chars_per_key *= 2;
             }
@@ -1005,7 +1009,7 @@ generate_upgrade_list!(
         const COSTS: [f64; 4] = [1000.0, 5000.0, 25_000.0, 500_000.0];
 
         Upgrade {
-            name: format!("Coding LLM {}B", PARAMETERS[0]).to_string(),
+            name: format!("Coding LLM ({}B)", PARAMETERS[0]).to_string(),
             desc: format!(desc_template!(), PARAMETERS[0], CHARS[0]).to_string(),
             no_count: true,
             tech_debt: 1.0,
@@ -1025,7 +1029,7 @@ generate_upgrade_list!(
                 let next_idx = current_idx + 1;
                 if next_idx < 4 {
                     this.base_cost = COSTS[next_idx];
-                    this.name = format!("Coding LLM {}B", PARAMETERS[next_idx]).to_string();
+                    this.name = format!("Coding LLM ({}B)", PARAMETERS[next_idx]).to_string();
                     this.desc = format!(
                         desc_template!(), PARAMETERS[next_idx], CHARS[next_idx],
                     ).to_string();
