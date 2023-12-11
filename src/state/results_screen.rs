@@ -176,7 +176,7 @@ fn enter_results_screen(
     {
         const SUBMISSIONS: f64 = 83.0;
         const LO: f64 = 1.5;
-        const HI: f64 = 4.5;
+        const HI: f64 = 4.9;
         // Clamp score to the interval [LO, HI] and then linearly map to the interval [1, SUBMISSIONS]
         let rank = (1.0 - (score.clamp(LO, HI) - LO) / (HI - LO)) * (SUBMISSIONS - 1.0) + 1.0;
 
