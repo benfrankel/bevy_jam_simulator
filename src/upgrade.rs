@@ -1068,10 +1068,10 @@ generate_upgrade_list!(
         desc: "Improves the quality of the codebase.".to_string(),
         sound: Some(SoundEffectKind::Backspace),
         tech_debt: -5.0,
-        base_cost: 10.0,
+        base_cost: 50.0,
         cost_scale_factor: 1.5,
         weight: 2.0,
-        remaining: usize::MAX,
+        remaining: 8,
         tech_debt_min: 10.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             let this = &mut upgrade_list[Refactor];
@@ -1080,7 +1080,6 @@ generate_upgrade_list!(
         ..default()
     },
 
-    // Unit test reduces both the technical debt and its multiplier slightly.
     UnitTests: Upgrade {
         name: "Unit Tests".to_string(),
         desc: "Improves the quality of the codebase. Reduces all future technical debt increases by 5%.".to_string(),
