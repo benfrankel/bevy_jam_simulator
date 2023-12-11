@@ -988,9 +988,8 @@ generate_upgrade_list!(
         sound: Some(SoundEffectKind::Keyboard),
         no_count: true,
         base_cost: 75.0,
-        weight: 2.5,
+        weight: 3.0,
         remaining: 2,
-        entity_min: 100.0,
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
             mut upgrade_list: ResMut<UpgradeList>,
@@ -1004,6 +1003,7 @@ generate_upgrade_list!(
             this.base_cost *= 8.0;
             this.weight = 0.5;
             this.installed_min.push((TouchTyping, 1));
+            this.entity_min = 200.0;
             this.name = "Ergonomic Keyboard".to_string();
             this.desc = "\
                 An even better keyboard that allows you to type faster. \
@@ -1026,7 +1026,7 @@ generate_upgrade_list!(
         base_cost: 150.0,
         weight: 3.5,
         remaining: 3,
-        entity_min: 150.0,
+        entity_min: 100.0,
         installed_min: vec![(MechanicalKeyboard, 1)],
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
@@ -1170,7 +1170,7 @@ generate_upgrade_list!(
         sound: Some(SoundEffectKind::Backspace),
         tech_debt: -5.0,
         base_cost: 50.0,
-        cost_scale_factor: 1.5,
+        cost_scale_factor: 1.3,
         weight: 4.0,
         remaining: 10,
         tech_debt_min: 5.0,
@@ -1186,7 +1186,7 @@ generate_upgrade_list!(
         desc: "Improves the quality of the codebase. Reduces all future technical debt increases by 5%.".to_string(),
         tech_debt: -3.0,
         base_cost: 50.0,
-        cost_scale_factor: 1.3,
+        cost_scale_factor: 1.2,
         weight: 1.5,
         remaining: 2,
         tech_debt_min: 3.0,
@@ -1269,11 +1269,10 @@ generate_upgrade_list!(
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
-        tech_debt: -2.0,
-        base_cost: 100.0,
-        weight: 2.5,
+        tech_debt: -1.0,
+        base_cost: 30.0,
+        weight: 3.0,
         upgrade_min: 10,
-        entity_min: 1000.0,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.slots += 1;
         })),
