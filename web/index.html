@@ -23,6 +23,55 @@
             Javascript and canvas support is required
         </canvas>
     </div>
+
+    <script>
+        function playMusic() {
+          // Check if the browser supports the Web Audio API
+          if (window.AudioContext || window.webkitAudioContext) {
+            // Create an AudioContext
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Load the audio file
+            const audioFile = './assets/music/ingame.ogg';
+            const request = new XMLHttpRequest();
+            request.open('GET', audioFile, true);
+            request.responseType = 'arraybuffer';
+
+            request.onload = function () {
+              // Decode the audio data
+              audioContext.decodeAudioData(request.response, function (buffer) {
+                // Create a buffer source node
+                const source = audioContext.createBufferSource();
+                source.buffer = buffer;
+
+                // Loop the audio
+                source.loop = true;
+
+                // Connect the source to the audio context's destination (output)
+                source.connect(audioContext.destination);
+
+                // Start playing the audio
+                source.start(0);
+              }, function (error) {
+                console.error('Error decoding audio file', error);
+              });
+            };
+
+            request.send();
+          } else {
+            console.error('Web Audio API is not supported in this browser');
+          }
+
+          // Remove the click event listener after the first click
+          document.removeEventListener('click', playMusic);
+        }
+
+        // Add an event listener for the DOMContentLoaded event
+        document.addEventListener('DOMContentLoaded', function () {
+          // Add a click event listener to the document to trigger playMusic on the first click
+          document.addEventListener('click', playMusic);
+        });
+    </script>
 </body>
 
 </html>

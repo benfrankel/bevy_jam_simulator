@@ -880,6 +880,7 @@ generate_upgrade_list!(
             commands.entity(editor_screen).set_parent(root.ui);
 
             // Start background music
+            #[cfg(not(feature = "web"))]
             if let Some(instance) = audio_instances.get_mut(&music.0) {
                 instance.resume(AudioTween::default());
             } else {
@@ -910,6 +911,7 @@ generate_upgrade_list!(
             commands.entity(editor_screen).set_parent(root.ui);
 
             // Start background music
+            #[cfg(not(feature = "web"))]
             if let Some(instance) = audio_instances.get_mut(&music.0) {
                 instance.resume(AudioTween::default());
             } else {
@@ -940,6 +942,7 @@ generate_upgrade_list!(
             commands.entity(editor_screen).set_parent(root.ui);
 
             // Start background music
+            #[cfg(not(feature = "web"))]
             if let Some(instance) = audio_instances.get_mut(&music.0) {
                 instance.resume(AudioTween::default());
             } else {
