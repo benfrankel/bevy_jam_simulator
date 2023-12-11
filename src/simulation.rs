@@ -198,6 +198,7 @@ const MAX_SPAWN_PER_EVENT: usize = 8;
 pub struct SpawnEvent {
     pub position: Vec2,
     pub count: f64,
+    pub custom_cap: Option<usize>,
 }
 
 fn spawn_entities(world: &mut World, mut reader: Local<ManualEventReader<SpawnEvent>>) {
@@ -213,8 +214,12 @@ fn spawn_entities(world: &mut World, mut reader: Local<ManualEventReader<SpawnEv
         let simulation = world.resource::<Simulation>();
         let mut spawn_count = event.count as usize;
         if simulation.entities >= ENTITY_CAP as f64 {
-            spawn_count = MAX_SPAWN_PER_EVENT.min(spawn_count);
+            spawn_count = event
+                .custom_cap
+                .unwrap_or(MAX_SPAWN_PER_EVENT)
+                .min(spawn_count);
         }
+
         let mut bundles = vec![];
         for _ in 0..spawn_count {
             let angle = rng.gen_range(0.0..=TAU);
@@ -245,7 +250,6 @@ fn spawn_entities(world: &mut World, mut reader: Local<ManualEventReader<SpawnEv
             ));
         }
 
-        // TODO: Technically, we don't need to set the velocity. We can assign random velocities in spawn_entity_pool
         for (visibility, transform, velocity, sprite, texture) in bundles {
             let entity = world.resource_mut::<EntityPool>().recycle();
             let mut entity = world.entity_mut(entity);
@@ -353,6 +357,7 @@ fn spawn_entities_passively(
     events.send(SpawnEvent {
         position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
         count: spawner.amount,
+        custom_cap: None,
     });
 }
 
@@ -381,6 +386,7 @@ fn handle_line_added_events(
         spawn_events.send(SpawnEvent {
             position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
             count: spawned_entities,
+            custom_cap: None,
         });
     }
 }

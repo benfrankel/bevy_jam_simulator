@@ -443,6 +443,7 @@ generate_upgrade_list!(
             spawn_events.send(SpawnEvent {
                 count: simulation.entities * 3.0,
                 position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+                custom_cap: None,
             });
             line_events.send(LinesAddedEvent {
                 count: simulation.lines * 3.0,
@@ -604,7 +605,7 @@ generate_upgrade_list!(
         base_cost: 2_000.0,
         cost_scale_factor: 1.2,
         weight: 0.25,
-        entity_min: 400.0,
+        entity_min: 1_000.0,
         install: Some(world.register_system(|
             mut physics_settings: ResMut<PhysicsSettings>,
         | {
@@ -642,6 +643,7 @@ generate_upgrade_list!(
                 events.send(SpawnEvent {
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
                     count: this.value,
+                    custom_cap: Some(200),
                 });
             }),
         ),
@@ -675,6 +677,7 @@ generate_upgrade_list!(
                 events.send(SpawnEvent {
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
                     count: simulation.lines,
+                    custom_cap: Some(2000),
                 });
 
                 simulation.lines = 0.0;
@@ -702,6 +705,7 @@ generate_upgrade_list!(
                 events.send(SpawnEvent {
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
                     count: 1.0,
+                    custom_cap: None,
                 });
 
                 for mut scene_view in &mut scene_view_query {
@@ -716,7 +720,7 @@ generate_upgrade_list!(
         name: "Laptop Sticker".to_string(),
         desc: "Spawns 1 more entity per click.".to_string(),
         base_cost: 15.0,
-        weight: 1.0,
+        weight: 2.0,
         remaining: 4,
         install: Some(
             world.register_system(|mut scene_view_query: Query<&mut SceneView>| {
@@ -953,7 +957,7 @@ generate_upgrade_list!(
             Types an extra 5 characters per key press.\
         ".to_string(),
         sound: Some(SoundEffectKind::Keyboard),
-        base_cost: 20.0,
+        base_cost: 15.0,
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
         | {
@@ -1009,9 +1013,9 @@ generate_upgrade_list!(
         sound: Some(SoundEffectKind::Keyboard),
         no_count: true,
         base_cost: 150.0,
-        weight: 2.5,
+        weight: 3.5,
         remaining: 3,
-        entity_min: 250.0,
+        entity_min: 150.0,
         installed_min: vec![(MechanicalKeyboard, 1)],
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
@@ -1156,8 +1160,8 @@ generate_upgrade_list!(
         tech_debt: -5.0,
         base_cost: 50.0,
         cost_scale_factor: 1.5,
-        weight: 2.0,
-        remaining: 8,
+        weight: 4.0,
+        remaining: 10,
         tech_debt_min: 5.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             let this = &mut upgrade_list[Refactor];
