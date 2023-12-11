@@ -17,8 +17,7 @@ impl Plugin for SceneViewPlugin {
                 Update,
                 (
                     update_scene_view_bounds.in_set(AppSet::Start),
-                    wrap_sprites_within_scene_view.in_set(AppSet::End),
-                    wrap_atlas_sprites_within_scene_view.in_set(AppSet::End),
+                    wrap_within_scene_view.in_set(AppSet::End),
                 ),
             );
     }
@@ -113,28 +112,13 @@ fn update_scene_view_bounds(
 #[derive(Component, Reflect, Clone, Copy)]
 pub struct WrapWithinSceneView;
 
-fn wrap_sprites_within_scene_view(
-    bounds: Res<SceneViewBounds>,
-    mut wrap_query: Query<(&mut Transform, &Sprite), With<WrapWithinSceneView>>,
-) {
-    for (mut transform, sprite) in &mut wrap_query {
-        let mut min = bounds.min;
-        let mut max = bounds.max;
-
-        if let Some(size) = sprite.custom_size {
-            min -= (size / 2.0).extend(0.0);
-            max += (size / 2.0).extend(0.0);
-        }
-
-        let pos = &mut transform.translation;
-        *pos = (*pos - min).rem_euclid(max - min) + min;
-    }
-}
-
-fn wrap_atlas_sprites_within_scene_view(
+fn wrap_within_scene_view(
     bounds: Res<SceneViewBounds>,
     mut wrap_query: Query<(&mut Transform, &TextureAtlasSprite), With<WrapWithinSceneView>>,
 ) {
+    if bounds.min.cmpge(bounds.max).any() {
+        return;
+    }
     for (mut transform, sprite) in &mut wrap_query {
         let mut min = bounds.min;
         let mut max = bounds.max;

@@ -428,8 +428,11 @@ generate_upgrade_list!(
         base_cost: 15.0,
         entity_min: 50.0,
         install: Some(world.register_system(|
+            mut spawn_events: EventWriter<SpawnEvent>,
+            mut line_events: EventWriter<LinesAddedEvent>,
             mut simulation: ResMut<Simulation>,
             upgrade_list: Res<UpgradeList>,
+            bounds: Res<SceneViewBounds>,
         | {
             let this = &upgrade_list[UtilPlugin];
 
@@ -438,8 +441,14 @@ generate_upgrade_list!(
             simulation.lines += this.cost(&simulation);
             simulation.tech_debt -= this.tech_debt;
 
-            simulation.lines *= 4.0;
-            simulation.entities *= 4.0;
+            spawn_events.send(SpawnEvent {
+                count: simulation.entities * 3.0,
+                position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+            });
+            line_events.send(LinesAddedEvent {
+                count: simulation.lines * 3.0,
+            });
+
         })),
         ..default()
     },
@@ -566,7 +575,7 @@ generate_upgrade_list!(
         install: Some(world.register_system(|
             mut physics_settings: ResMut<PhysicsSettings>,
         | {
-            physics_settings.speed_multiplier = UNIT_SPEED;
+            physics_settings.speed_multiplier += UNIT_SPEED;
         })),
         ..default()
     },
@@ -575,7 +584,7 @@ generate_upgrade_list!(
         name: "SpeedPlugin".to_string(),
         desc: "Increases the entity movement speed. Makes your game more fun.".to_string(),
         tech_debt: 1.0,
-        fun_score: 10.0,
+        fun_score: 5.0,
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
@@ -584,6 +593,42 @@ generate_upgrade_list!(
             mut physics_settings: ResMut<PhysicsSettings>,
         | {
             physics_settings.speed_multiplier += UNIT_SPEED;
+        })),
+        ..default()
+    },
+
+    AttractionPlugin: Upgrade {
+        name: "AttractionPlugin".to_string(),
+        desc: "Attracts entities towards the cursor. Makes your game more fun.".to_string(),
+        tech_debt: 1.0,
+        fun_score: 10.0,
+        base_cost: 100.0,
+        cost_scale_factor: 1.2,
+        weight: 5.0,
+        entity_min: 400.0,
+        installed_max: vec![(RepulsionPlugin, 0)],
+        install: Some(world.register_system(|
+            mut physics_settings: ResMut<PhysicsSettings>,
+        | {
+            physics_settings.mouse_force_strength -= 1000.0;
+        })),
+        ..default()
+    },
+
+    RepulsionPlugin: Upgrade {
+        name: "RepulsionPlugin".to_string(),
+        desc: "Repels entities away from the cursor. Makes your game more fun.".to_string(),
+        tech_debt: 1.0,
+        fun_score: 10.0,
+        base_cost: 100.0,
+        cost_scale_factor: 1.2,
+        weight: 5.0,
+        entity_min: 400.0,
+        installed_max: vec![(AttractionPlugin, 0)],
+        install: Some(world.register_system(|
+            mut physics_settings: ResMut<PhysicsSettings>,
+        | {
+            physics_settings.mouse_force_strength += 1000.0;
         })),
         ..default()
     },

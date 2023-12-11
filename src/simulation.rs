@@ -38,7 +38,7 @@ impl Plugin for SimulationPlugin {
             .init_resource::<PassiveCodeTyper>()
             .init_resource::<PassiveEntitySpawner>()
             .add_systems(Startup, spawn_entity_pool.after(spawn_logical_entities))
-            .add_systems(OnExit(AppState::EditorScreen), reset_entity_pool)
+            .add_systems(OnExit(AppState::ResultsScreen), reset_entity_pool)
             .add_systems(
                 Update,
                 (
