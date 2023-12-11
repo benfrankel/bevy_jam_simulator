@@ -47,8 +47,15 @@
                 // Loop the audio
                 source.loop = true;
 
-                // Connect the source to the audio context's destination (output)
-                source.connect(audioContext.destination);
+                // Create a gain node to control the volume
+                const gainNode = audioContext.createGain();
+                
+                // Set the volume to 80% (0.8)
+                gainNode.gain.value = 0.8;
+
+                // Connect the source to the gain node and the gain node to the audio context's destination
+                source.connect(gainNode);
+                gainNode.connect(audioContext.destination);
 
                 // Start playing the audio
                 source.start(0);
