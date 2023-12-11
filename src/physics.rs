@@ -19,7 +19,7 @@ impl Plugin for PhysicsPlugin {
     }
 }
 
-pub const UNIT_SPEED: f32 = 8.0;
+pub const UNIT_SPEED: f32 = 10.0;
 
 #[derive(Resource, Reflect, Default)]
 #[reflect(Resource)]

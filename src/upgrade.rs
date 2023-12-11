@@ -458,9 +458,9 @@ generate_upgrade_list!(
         name: "GFX Specialization".to_string(),
         desc: "Offers a choice between different graphics options that affect how your game looks.".to_string(),
         no_outline: true,
-        base_cost: 1.0,
-        weight: 2.0,
-        entity_min: 35.0,
+        base_cost: 250.0,
+        weight: 1.0,
+        entity_min: 200.0,
         installed_max: vec![(UnicornDev, 0)],
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.push(
@@ -524,7 +524,7 @@ generate_upgrade_list!(
             Doubles the entity spawn rate.\
         ".to_string(),
         tech_debt: 1.0,
-        base_cost: 100.0,
+        base_cost: 200.0,
         install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
             simulation.entity_spawn_multiplier *= 2.0;
         })),
@@ -536,8 +536,8 @@ generate_upgrade_list!(
         desc: "Introduces a new entity skin. Makes your game prettier.".to_string(),
         tech_debt: 1.0,
         presentation_score: 4.0,
-        base_cost: 10.0,
-        cost_scale_factor: 1.2,
+        base_cost: 5.0,
+        cost_scale_factor: 2.0,
         weight: 1.5,
         remaining: 6,
         install: Some(world.register_system(|
@@ -555,7 +555,7 @@ generate_upgrade_list!(
         tech_debt: 1.0,
         presentation_score: 2.0,
         base_cost: 10.0,
-        cost_scale_factor: 1.2,
+        cost_scale_factor: 2.0,
         weight: 1.0,
         install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
             simulation.entity_size_max += 8.0;
@@ -587,29 +587,11 @@ generate_upgrade_list!(
         base_cost: 10.0,
         cost_scale_factor: 1.2,
         weight: 1.0,
-        remaining: 5,
+        remaining: 4,
         install: Some(world.register_system(|
             mut physics_settings: ResMut<PhysicsSettings>,
         | {
             physics_settings.speed_multiplier += UNIT_SPEED;
-        })),
-        ..default()
-    },
-
-    AttractionPlugin: Upgrade {
-        name: "AttractionPlugin".to_string(),
-        desc: "Attracts entities towards the cursor. Makes your game more fun.".to_string(),
-        tech_debt: 1.0,
-        fun_score: 10.0,
-        base_cost: 100.0,
-        cost_scale_factor: 1.2,
-        weight: 5.0,
-        entity_min: 400.0,
-        installed_max: vec![(RepulsionPlugin, 0)],
-        install: Some(world.register_system(|
-            mut physics_settings: ResMut<PhysicsSettings>,
-        | {
-            physics_settings.mouse_force_strength -= 1000.0;
         })),
         ..default()
     },
@@ -619,11 +601,10 @@ generate_upgrade_list!(
         desc: "Repels entities away from the cursor. Makes your game more fun.".to_string(),
         tech_debt: 1.0,
         fun_score: 10.0,
-        base_cost: 100.0,
+        base_cost: 2_000.0,
         cost_scale_factor: 1.2,
-        weight: 5.0,
+        weight: 0.25,
         entity_min: 400.0,
-        installed_max: vec![(AttractionPlugin, 0)],
         install: Some(world.register_system(|
             mut physics_settings: ResMut<PhysicsSettings>,
         | {
@@ -640,7 +621,7 @@ generate_upgrade_list!(
         tech_debt: 1.0,
         base_cost: 2.0,
         cost_scale_factor: 1.2,
-        weight: 1.0,
+        weight: 0.5,
         remaining: usize::MAX,
         update: Some(
             world.register_system(|
@@ -849,7 +830,7 @@ generate_upgrade_list!(
         desc: "Writes VALUE lines of code immediately.".to_string(),
         tech_debt: 1.0,
         base_cost: 1.0,
-        weight: 1.0,
+        weight: 0.5,
         remaining: usize::MAX,
         update: Some(
             world.register_system(|
@@ -972,7 +953,7 @@ generate_upgrade_list!(
             Types an extra 5 characters per key press.\
         ".to_string(),
         sound: Some(SoundEffectKind::Keyboard),
-        base_cost: 25.0,
+        base_cost: 20.0,
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
         | {
@@ -994,6 +975,7 @@ generate_upgrade_list!(
         base_cost: 75.0,
         weight: 2.5,
         remaining: 2,
+        entity_min: 100.0,
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
             mut upgrade_list: ResMut<UpgradeList>,
@@ -1004,7 +986,7 @@ generate_upgrade_list!(
             // Update this upgrade for the next iteration: Ergonomic Keyboard.
             let this = &mut upgrade_list[MechanicalKeyboard];
             // Cost scaling of this is independent of tech debt.
-            this.base_cost *= 4.0;
+            this.base_cost *= 8.0;
             this.weight = 0.5;
             this.installed_min.push((TouchTyping, 1));
             this.name = "Ergonomic Keyboard".to_string();
@@ -1027,8 +1009,9 @@ generate_upgrade_list!(
         sound: Some(SoundEffectKind::Keyboard),
         no_count: true,
         base_cost: 150.0,
-        weight: 1.0,
+        weight: 2.5,
         remaining: 3,
+        entity_min: 250.0,
         installed_min: vec![(MechanicalKeyboard, 1)],
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
@@ -1053,9 +1036,9 @@ generate_upgrade_list!(
             Doubles the number of characters typed per key press.\
         ".to_string(),
         sound: Some(SoundEffectKind::Keyboard),
-        installed_min: vec![(TouchTyping, 4)],
         base_cost: 200_000.0,
         weight: 0.25,
+        installed_min: vec![(TouchTyping, 4)],
         install: Some(world.register_system(|mut typer_query: Query<&mut CodeTyper>| {
             for mut typer in &mut typer_query {
                 typer.chars_per_key *= 2;
@@ -1071,9 +1054,10 @@ generate_upgrade_list!(
             Helps keep the codebase DRY.\
         ".to_string(),
         tech_debt: -1.0,
-        base_cost: 100.0,
-        cost_scale_factor: 1.1,
+        base_cost: 200.0,
+        cost_scale_factor: 1.6,
         weight: 1.0,
+        entity_min: 1000.0,
         install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
             simulation.line_multiplier *= 2.0;
         })),
@@ -1085,8 +1069,8 @@ generate_upgrade_list!(
         desc: "Squares the output of Procedural Macro.".to_string(),
         no_count: true,
         tech_debt: 1.0,
-        base_cost: 200.0,
-        cost_scale_factor: 1.2,
+        base_cost: 500.0,
+        cost_scale_factor: 1.8,
         weight: 0.5,
         remaining: 3,
         installed_min: vec![(ProceduralMacro, 1)],
@@ -1174,7 +1158,7 @@ generate_upgrade_list!(
         cost_scale_factor: 1.5,
         weight: 2.0,
         remaining: 8,
-        tech_debt_min: 10.0,
+        tech_debt_min: 5.0,
         install: Some(world.register_system(|mut upgrade_list: ResMut<UpgradeList>| {
             let this = &mut upgrade_list[Refactor];
             this.tech_debt_min += 5.0;
@@ -1270,6 +1254,7 @@ generate_upgrade_list!(
     DesignDocument: Upgrade {
         name: "Design Document".to_string(),
         desc: "Adds 1 extra upgrade slot.".to_string(),
+        tech_debt: -2.0,
         base_cost: 100.0,
         weight: 2.5,
         upgrade_min: 10,
@@ -1289,10 +1274,10 @@ generate_upgrade_list!(
             Do you feel inspired?\
         ".to_string(),
         no_outline: true,
-        base_cost: 100.0,
+        base_cost: 10_000.0,
         weight: 2.5,
         upgrade_min: 30,
-        entity_min: 500.0,
+        entity_min: 1000.0,
         install: Some(world.register_system(|mut sequence: ResMut<UpgradeSequence>| {
             sequence.push(
                 vec![TenXDev, RockstarDev, UnicornDev],
