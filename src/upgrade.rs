@@ -348,8 +348,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
             vec![TouchOfLifePlugin],
             "\"I don't know what I'm making, but I should start spawning entities.\"".to_string(),
         ),
-        (vec![Inspiration], "Is 50 a lot of entities?".to_string()),
-        (vec![ImportLibrary, UtilPlugin], String::new()),
+        (vec![ImportLibrary], String::new()),
         (
             vec![SkinPlugin],
             "\"I should make the game look nice for a higher Presentation score.\"".to_string(),
@@ -359,6 +358,14 @@ fn load_upgrade_sequence(mut commands: Commands) {
             "\"I should also make the game more interesting for a higher Fun score.\"".to_string(),
         ),
         (vec![Autocomplete], String::new()),
+        (
+            vec![Inspiration],
+            "\"Is 50 a lot of entities?\"".to_string(),
+        ),
+        (
+            vec![UtilPlugin],
+            "\"I can lay some groundwork now to support all of these entities.\"".to_string(),
+        ),
         (
             vec![Brainstorm],
             "\"Hmm... where should I go from here?\"".to_string(),
@@ -410,7 +417,7 @@ generate_upgrade_list!(
         name: "Inspiration".to_string(),
         desc: "Allows new types of upgrades to unlock when you have enough entities.".to_string(),
         no_outline: true,
-        base_cost: 5.0,
+        base_cost: 10.0,
         ..default()
     },
 
@@ -883,7 +890,7 @@ generate_upgrade_list!(
         sound: Some(SoundEffectKind::Keyboard),
         no_count: true,
         base_cost: 75.0,
-        weight: 2.0,
+        weight: 2.5,
         remaining: 2,
         install: Some(world.register_system(|
             mut typer_query: Query<&mut CodeTyper>,
