@@ -53,7 +53,7 @@ fn mouse_scroll(
         // Update scrollbar
         if let Ok(mut style) = scrollbar_query.get_mut(scroll.scrollbar) {
             let height = (1.0 - overflow / parent_height).max(0.1);
-            let top = (-scroll.position / parent_height).max(1.0 - height);
+            let top = (-scroll.position / parent_height).min(1.0 - height);
             style.height = Val::Percent(100.0 * height);
             style.top = Val::Percent(100.0 * top);
         }
