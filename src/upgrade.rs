@@ -172,7 +172,11 @@ impl Upgrade {
     }
 
     pub fn cost(&self, simulation: &Simulation) -> f64 {
-        (self.base_cost * self.cost_scale_factor.powf(simulation.tech_debt)).floor()
+        (self.base_cost
+            * self
+                .cost_scale_factor
+                .powf(simulation.tech_debt * simulation.tech_debt_multiplier))
+        .floor()
     }
 
     pub fn description(&self) -> String {
@@ -1363,7 +1367,10 @@ generate_upgrade_list!(
 
         Upgrade {
             name: NAMES[0].to_string(),
-            desc: "Spawns VALUE entities whenever a line of code is produced.".to_string(),
+            desc: "\
+                Spawns VALUE entities whenever a line of code is produced. \
+                Decreases the impact of technical debt.\
+            ".to_string(),
             sound: Some(SoundEffectKind::Guitar),
             value: 4.0,
             no_count: true,
@@ -1383,12 +1390,14 @@ generate_upgrade_list!(
                 if this.remaining == 5 {
                     // First time (remaining is decreased beforehand)
                     simulation.entity_spawn_per_line += 4.0;
+                    simulation.tech_debt_multiplier = 0.5;
                     // Make subsequent copies of this upgrade available in the random pool.
                     this.base_cost = 100.0;
                     this.weight = 1.0;
                 } else {
                     // Level up
                     simulation.entity_spawn_per_line *= 2.0;
+                    simulation.tech_debt_multiplier *= 0.875;
                 }
                 // Special scaling
                 this.base_cost *= 100.0;

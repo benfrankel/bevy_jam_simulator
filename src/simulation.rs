@@ -61,6 +61,7 @@ pub struct Simulation {
     pub lines: f64,
     pub entities: f64,
     pub tech_debt: f64,
+    pub tech_debt_multiplier: f64,
     /// Fun score, affects the submission's results.
     pub fun_score: f64,
     /// Presentation factor, affects the submissions' results.
@@ -99,6 +100,7 @@ impl Default for Simulation {
             lines: 0.0,
             entities: 0.0,
             tech_debt: 0.0,
+            tech_debt_multiplier: 1.0,
             fun_score: 0.0,
             presentation_score: 0.0,
 
