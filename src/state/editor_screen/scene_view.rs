@@ -79,7 +79,7 @@ fn click_spawn(
     events.send(SpawnEvent {
         position,
         count: scene_view.spawns_per_click,
-        custom_cap: Some(250),
+        custom_cap: Some(80),
     });
     scene_view.spawns_per_click *= scene_view.spawns_per_click_multiplier_per_click;
 }

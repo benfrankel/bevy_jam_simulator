@@ -12,7 +12,10 @@ impl Plugin for CameraPlugin {
     }
 }
 
+#[cfg(not(feature = "web"))]
 pub const CAMERA_SCALING: f32 = 4.0;
+#[cfg(feature = "web")]
+pub const CAMERA_SCALING: f32 = 6.0;
 
 fn spawn_camera(mut commands: Commands, mut root: ResMut<AppRoot>) {
     root.camera = commands

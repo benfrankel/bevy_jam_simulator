@@ -643,7 +643,7 @@ generate_upgrade_list!(
                 events.send(SpawnEvent {
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
                     count: this.value,
-                    custom_cap: Some(200),
+                    custom_cap: Some(80),
                 });
             }),
         ),
@@ -658,6 +658,7 @@ generate_upgrade_list!(
         cost_scale_factor: 1.2,
         weight: 1.0,
         remaining: usize::MAX,
+        entity_min: 5_000.0,
         line_min: 1_000_000.0,
         install: Some(
             world.register_system(|
@@ -677,7 +678,7 @@ generate_upgrade_list!(
                 events.send(SpawnEvent {
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
                     count: simulation.lines,
-                    custom_cap: Some(2000),
+                    custom_cap: Some(200),
                 });
 
                 simulation.lines = 0.0;

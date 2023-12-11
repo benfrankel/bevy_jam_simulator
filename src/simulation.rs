@@ -96,7 +96,7 @@ impl Default for Simulation {
     fn default() -> Self {
         Self {
             upgrades: 0,
-            lines: 0.0,
+            lines: 1e60, //0.0,
             entities: 0.0,
             tech_debt: 0.0,
             fun_score: 0.0,
@@ -123,7 +123,10 @@ impl Default for Simulation {
     }
 }
 
-const ENTITY_CAP: usize = 5_000;
+#[cfg(feature = "web")]
+const ENTITY_CAP: usize = 1_000;
+#[cfg(not(feature = "web"))]
+const ENTITY_CAP: usize = 10_000;
 
 #[derive(Resource, Reflect)]
 struct EntityPool {
@@ -192,6 +195,9 @@ fn reset_entity_pool(pool: Res<EntityPool>, mut visibility_query: Query<&mut Vis
 
 /// Maximum number of entities that can be spawned in the scene view in a single SpawnEvent
 /// once the entity cap has been reached.
+#[cfg(not(feature = "web"))]
+const MAX_SPAWN_PER_EVENT: usize = 32;
+#[cfg(feature = "web")]
 const MAX_SPAWN_PER_EVENT: usize = 8;
 
 #[derive(Event, Reflect, Clone, Copy)]
