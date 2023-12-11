@@ -96,7 +96,7 @@ impl Default for Simulation {
     fn default() -> Self {
         Self {
             upgrades: 0,
-            lines: 1e60, //0.0,
+            lines: 0.0,
             entities: 0.0,
             tech_debt: 0.0,
             fun_score: 0.0,
