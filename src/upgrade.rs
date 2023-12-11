@@ -969,15 +969,23 @@ generate_upgrade_list!(
 
     MetaMacro: Upgrade {
         name: "Meta Macro".to_string(),
-        desc: "Doubles the output of Procedural Macro.".to_string(),
+        desc: "Squares the output of Procedural Macro.".to_string(),
+        no_count: true,
         tech_debt: 1.0,
         base_cost: 200.0,
         cost_scale_factor: 1.2,
         weight: 0.5,
-        remaining: 5,
+        remaining: 3,
         installed_min: vec![(ProceduralMacro, 1)],
-        install: Some(world.register_system(|mut simulation: ResMut<Simulation>| {
-            simulation.line_multiplier *= 2.0;
+        install: Some(world.register_system(|
+            mut simulation: ResMut<Simulation>,
+            mut upgrade_list: ResMut<UpgradeList>,
+        | {
+            let this = &mut upgrade_list[MetaMacro];
+            this.name = format!("Meta {}", this.name);
+            this.base_cost += 200.0;
+
+            simulation.line_multiplier *= simulation.line_multiplier;
         })),
         ..default()
     },
