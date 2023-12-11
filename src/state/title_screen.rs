@@ -54,7 +54,7 @@ pub struct TitleScreenConfig {
     button_font_size: Val,
 }
 
-const TITLE_TEXT: &str = "Bevy Jam #4 Simulator";
+const TITLE_TEXT: &str = "Bevy Jam Simulator";
 // bevy_text cringe
 const BODY_TEXT: [[&str; 4]; 4] = [
     ["Welcome to the fourth official Bevy Jam!", "", "", ""],

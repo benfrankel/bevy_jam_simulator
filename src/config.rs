@@ -51,7 +51,7 @@ impl Plugin for ConfigPlugin {
     }
 }
 
-const WINDOW_TITLE: &str = "Bevy Jam #4 Simulator";
+const WINDOW_TITLE: &str = "Bevy Jam Simulator";
 
 // TODO: DevConfig
 #[derive(Resource, Default, Reflect, Serialize, Deserialize)]
