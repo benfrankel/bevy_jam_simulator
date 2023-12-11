@@ -9,9 +9,12 @@ pub struct AudioPlugin;
 
 impl Plugin for AudioPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(KiraAudioPlugin)
+            .init_collection::<AudioAssets>();
+
+        // Music will be played by Web Audio API on web.
+        #[cfg(not(feature = "web"))]
         app.register_type::<BackgroundMusic>()
-            .add_plugins(KiraAudioPlugin)
-            .init_collection::<AudioAssets>()
             .init_resource::<BackgroundMusic>()
             .add_systems(Startup, spawn_background_music);
     }
@@ -45,6 +48,7 @@ pub struct AudioAssets {
     pub guitar_sounds: Vec<Handle<AudioSource>>,
     #[asset(paths("audio/unicorn0.ogg", "audio/unicorn1.ogg"), collection(typed))]
     pub unicorn_sounds: Vec<Handle<AudioSource>>,
+    #[cfg(not(feature = "web"))]
     #[asset(path = "music/ingame.ogg")]
     pub music: Handle<AudioSource>,
 }
@@ -67,10 +71,12 @@ impl AudioAssets {
     }
 }
 
+#[cfg(not(feature = "web"))]
 #[derive(Resource, Reflect, Default)]
 #[reflect(Resource)]
 pub struct BackgroundMusic(pub Handle<AudioInstance>);
 
+#[cfg(not(feature = "web"))]
 fn spawn_background_music(
     mut commands: Commands,
     audio: Res<Audio>,

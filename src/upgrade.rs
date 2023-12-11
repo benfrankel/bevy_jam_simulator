@@ -10,6 +10,7 @@ use rand::thread_rng;
 use strum::EnumCount;
 
 use crate::audio::AudioAssets;
+#[cfg(not(feature = "web"))]
 use crate::audio::BackgroundMusic;
 use crate::audio::SoundEffectKind;
 use crate::config::Config;
@@ -867,7 +868,9 @@ generate_upgrade_list!(
             mut commands: Commands,
             root: Res<AppRoot>,
             config: Res<Config>,
+            #[cfg(not(feature = "web"))]
             music: Res<BackgroundMusic>,
+            #[cfg(not(feature = "web"))]
             mut audio_instances: ResMut<Assets<AudioInstance>>,
         | {
             commands.entity(root.ui).despawn_descendants();
@@ -898,7 +901,9 @@ generate_upgrade_list!(
             mut commands: Commands,
             root: Res<AppRoot>,
             config: Res<Config>,
+            #[cfg(not(feature = "web"))]
             music: Res<BackgroundMusic>,
+            #[cfg(not(feature = "web"))]
             mut audio_instances: ResMut<Assets<AudioInstance>>,
         | {
             commands.entity(root.ui).despawn_descendants();
@@ -929,7 +934,9 @@ generate_upgrade_list!(
             mut commands: Commands,
             root: Res<AppRoot>,
             config: Res<Config>,
+            #[cfg(not(feature = "web"))]
             music: Res<BackgroundMusic>,
+            #[cfg(not(feature = "web"))]
             mut audio_instances: ResMut<Assets<AudioInstance>>,
         | {
             commands.entity(root.ui).despawn_descendants();
