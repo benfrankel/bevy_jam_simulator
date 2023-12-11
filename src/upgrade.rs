@@ -1247,11 +1247,10 @@ generate_upgrade_list!(
         const NAMES: [&str; 6] = [
             "Rockstar Dev",
             "Superstar Dev",
-            "Megastar Dev",
-            "Gigastar Dev",
-            "Terastar Dev",
-            // "Ultimastar Dev",
-            "True Rockstar Dev",
+            "Hypergiant Dev",
+            "Neutron Star Dev",
+            "Black Hole Dev",
+            "Quasar Dev",
         ];
         let mut name_idx = 0;
 
