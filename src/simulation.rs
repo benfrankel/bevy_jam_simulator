@@ -123,7 +123,7 @@ impl Default for Simulation {
     }
 }
 
-const ENTITY_CAP: usize = 10_000;
+const ENTITY_CAP: usize = 5_000;
 
 #[derive(Resource, Reflect)]
 struct EntityPool {
@@ -190,8 +190,9 @@ fn reset_entity_pool(pool: Res<EntityPool>, mut visibility_query: Query<&mut Vis
     }
 }
 
-/// Maximum number of entities that can be spawned in the scene view in a single SpawnEvent.
-const MAX_SPAWN_PER_EVENT: usize = 16;
+/// Maximum number of entities that can be spawned in the scene view in a single SpawnEvent
+/// once the entity cap has been reached.
+const MAX_SPAWN_PER_EVENT: usize = 8;
 
 #[derive(Event, Reflect, Clone, Copy)]
 pub struct SpawnEvent {
@@ -210,7 +211,10 @@ fn spawn_entities(world: &mut World, mut reader: Local<ManualEventReader<SpawnEv
         simulation.entities += event.count * simulation.entity_spawn_multiplier;
 
         let simulation = world.resource::<Simulation>();
-        let spawn_count = MAX_SPAWN_PER_EVENT.min(event.count as usize);
+        let mut spawn_count = event.count as usize;
+        if simulation.entities >= ENTITY_CAP as f64 {
+            spawn_count = MAX_SPAWN_PER_EVENT.min(spawn_count);
+        }
         let mut bundles = vec![];
         for _ in 0..spawn_count {
             let angle = rng.gen_range(0.0..=TAU);
