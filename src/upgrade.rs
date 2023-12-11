@@ -1355,7 +1355,7 @@ generate_upgrade_list!(
         const NAMES: [&str; 6] = [
             "Rockstar Dev",
             "Superstar Dev",
-            "Hypergiant Dev",
+            "Hyperstar Dev",
             "Neutron Star Dev",
             "Black Hole Dev",
             "Quasar Dev",
