@@ -14,7 +14,6 @@ use crate::audio::BackgroundMusic;
 use crate::audio::SoundEffectKind;
 use crate::config::Config;
 use crate::physics::PhysicsSettings;
-use crate::physics::Velocity;
 use crate::physics::UNIT_SPEED;
 use crate::simulation::AtlasList;
 use crate::simulation::LinesAddedEvent;
@@ -633,33 +632,6 @@ generate_upgrade_list!(
         ..default()
     },
 
-    NuclearBlastPlugin: Upgrade {
-        name: "NuclearBlastPlugin".to_string(),
-        desc: "Destroys all entities but makes your game a lot more fun.".to_string(),
-        tech_debt: 1.0,
-        base_cost: 1_000_000.0,
-        fun_score: 100.0,
-        cost_scale_factor: 1.2,
-        weight: 1.0,
-        entity_min: 1_000_000.0,
-        remaining: 3,
-        install: Some(
-            world.register_system(|
-                mut query: Query<&mut Visibility, With<Velocity>>,
-                mut simulation: ResMut<Simulation>,
-                mut upgrade_list: ResMut<UpgradeList>,
-            | {
-                for mut visibility in &mut query {
-                    *visibility = Visibility::Hidden;
-                }
-                simulation.entities = 0.0;
-                let this = &mut upgrade_list[NuclearBlastPlugin];
-                this.entity_min *= 1_000_000.0;
-            }),
-        ),
-        ..default()
-    },
-
     // Entities (immediate)
 
     SplashOfLifePlugin: Upgrade {
@@ -690,6 +662,41 @@ generate_upgrade_list!(
                     position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
                     count: this.value,
                 });
+            }),
+        ),
+        ..default()
+    },
+
+    NukeOfLifePlugin: Upgrade {
+        name: "NukeOfLifePlugin".to_string(),
+        desc: "Immediately converts all existing lines of code into entities.".to_string(),
+        tech_debt: 1.0,
+        base_cost: 1_000_000.0,
+        cost_scale_factor: 1.2,
+        weight: 1.0,
+        remaining: usize::MAX,
+        line_min: 1_000_000.0,
+        install: Some(
+            world.register_system(|
+                mut events: EventWriter<SpawnEvent>,
+                mut simulation: ResMut<Simulation>,
+                mut upgrade_list: ResMut<UpgradeList>,
+                bounds: Res<SceneViewBounds>,
+            | {
+                let this = &mut upgrade_list[NukeOfLifePlugin];
+                this.line_min *= 1_000_000.0;
+
+                // Restore the spent lines before spawning
+                simulation.tech_debt += this.tech_debt;
+                simulation.lines += this.cost(&simulation);
+                simulation.tech_debt -= this.tech_debt;
+
+                events.send(SpawnEvent {
+                    position: (bounds.min.xy() + bounds.max.xy()) / 2.0,
+                    count: simulation.lines,
+                });
+
+                simulation.lines = 0.0;
             }),
         ),
         ..default()
