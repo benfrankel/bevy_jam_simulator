@@ -82,7 +82,6 @@ pub struct Tooltip {
 
 fn show_tooltip_on_hover(
     root: Res<AppRoot>,
-    ui_scale: Res<UiScale>,
     window_query: Query<&Window, With<PrimaryWindow>>,
     mut tooltip_query: Query<(&mut Visibility, &mut Style)>,
     mut tooltip_text_query: Query<&mut Text>,
@@ -99,17 +98,16 @@ fn show_tooltip_on_hover(
         return;
     };
 
-    let scale_factor = window.scale_factor();
     for (interaction, tooltip, gt, node) in &interaction_query {
         if matches!(interaction, Interaction::None) {
             *tooltip_visibility = Visibility::Hidden;
             continue;
         }
 
-        let rect = node.physical_rect(gt, scale_factor, ui_scale.0);
+        let rect = node.logical_rect(gt);
 
-        let width = window.physical_width() as f32;
-        let height = window.physical_height() as f32;
+        let width = window.width() as f32;
+        let height = window.height() as f32;
         let (left, right, top, bottom) = (
             rect.min.x + tooltip.offset.x,
             rect.max.x + tooltip.offset.x,
