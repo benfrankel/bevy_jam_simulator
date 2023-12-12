@@ -93,15 +93,10 @@ pub struct SceneViewBounds {
 
 fn update_scene_view_bounds(
     root: Res<AppRoot>,
-    ui_scale: Res<UiScale>,
     mut bounds: ResMut<SceneViewBounds>,
-    window_query: Query<&Window>,
     camera_query: Query<(&Camera, &OrthographicProjection, &GlobalTransform), Without<SceneView>>,
     scene_view_query: Query<(&Node, &GlobalTransform), With<SceneView>>,
 ) {
-    let Ok(window) = window_query.get(root.window) else {
-        return;
-    };
     let Ok((camera, proj, camera_gt)) = camera_query.get(root.camera) else {
         return;
     };
@@ -109,7 +104,7 @@ fn update_scene_view_bounds(
         return;
     };
 
-    let rect = scene_view.physical_rect(scene_view_gt, window.scale_factor(), ui_scale.0);
+    let rect = scene_view.logical_rect(scene_view_gt);
     let rect = Rect::from_corners(
         camera.viewport_to_world_2d(camera_gt, rect.min).unwrap(),
         camera.viewport_to_world_2d(camera_gt, rect.max).unwrap(),

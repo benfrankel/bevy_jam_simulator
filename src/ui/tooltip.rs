@@ -106,8 +106,8 @@ fn show_tooltip_on_hover(
 
         let rect = node.logical_rect(gt);
 
-        let width = window.width() as f32;
-        let height = window.height() as f32;
+        let width = window.width();
+        let height = window.height();
         let (left, right, top, bottom) = (
             rect.min.x + tooltip.offset.x,
             rect.max.x + tooltip.offset.x,
