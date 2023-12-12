@@ -1,5 +1,7 @@
 #![allow(clippy::type_complexity)]
 #![allow(clippy::too_many_arguments)]
+// Disable console on windows for release builds
+#![cfg_attr(not(feature = "dev"), windows_subsystem = "windows")]
 
 mod audio;
 mod camera;
