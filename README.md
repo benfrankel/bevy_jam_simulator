@@ -17,7 +17,9 @@ The code is written by [Pyrious](https://github.com/benfrankel) and [necrashter]
 
 The following assets are made by [necrashter](https://github.com/necrashter/):
 - The music (`ingame.ogg`) is licensed under [CC BY-NC-SA 4.0](https://creativecommons.org/licenses/by-nc-sa/4.0/).
-- All sound effects are public domain (CC0). They have been recorded or made from other CC0 sounds.
+- `backspace0.ogg`, `keyboard*.ogg`, and `guitar*.ogg` were recorded from scratch and are licensed under CC0.
+- `upgrade0.ogg` is edited from [this CC0 sound](https://freesound.org/people/deleted_user_958643/sounds/254980/). `upgrade0.ogg` itself is also CC0.
+- `upgrade1.ogg` is [this CC0 sound](https://freesound.org/people/the_semen_incident/sounds/39013/).
 
 Other assets:
 - Sprites (1-bit): https://v3x3d.itch.io/bit-bonanza
