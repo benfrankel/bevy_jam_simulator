@@ -21,6 +21,9 @@ The following assets are made by [necrashter](https://github.com/necrashter/):
 - `upgrade0.ogg` is edited from [this CC0 sound](https://freesound.org/people/deleted_user_958643/sounds/254980/). `upgrade0.ogg` itself is also CC0.
 - `upgrade1.ogg` is [this CC0 sound](https://freesound.org/people/the_semen_incident/sounds/39013/).
 
+The following assets are made by [Pyrious](https://github.com/benfrankel/):
+- The fonts (`PyriousPixel-R.ttf` and `PyriousPixel-B.ttf`) are licensed under [CC0](https://creativecommons.org/public-domain/cc0/).
+
 Other assets:
 - Sprites (1-bit): https://v3x3d.itch.io/bit-bonanza
 - Sprites (RPG): https://merchant-shade.itch.io/16x16-mixed-rpg-icons
