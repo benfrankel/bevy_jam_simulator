@@ -1,10 +1,10 @@
-# Bevy Jam 4 Simulator
+# Bevy Jam Simulator
 
-This is our submission to Bevy Jam 4. The game can be played on web [at this itch.io link](https://pyrious.itch.io/bevy-jam-4-simulator).
+This is our submission to Bevy Jam #4. The game can be played [on web here](https://pyrious.itch.io/bevy-jam-simulator).
 
 Type, click, and put on your programming socks as a Bevy Jam #4 participant in this gamedev simulating incremental game! Spawn entities to unlock better upgrades, and spend lines of code to install them.
 
-You can listen to the soundtrack [at this YouTube link](https://youtu.be/0JXQqLwuy6E).
+You can listen to [the soundtrack here](https://youtu.be/0JXQqLwuy6E).
 
 ## Controls
 

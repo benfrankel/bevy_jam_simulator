@@ -13,9 +13,9 @@ on:
 
 env:
   EXE_NAME: run
-  GAME_NAME: bevy-jam-4-simulator
+  GAME_NAME: bevy-jam-simulator
   ADD_BINARIES_TO_GITHUB_RELEASE: true
-  ITCH_TARGET: pyrious/bevy-jam-4-simulator
+  ITCH_TARGET: pyrious/bevy-jam-simulator
 
 jobs:
   get-version:
