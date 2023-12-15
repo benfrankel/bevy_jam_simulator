@@ -8,6 +8,8 @@ use bevy_kira_audio::prelude::*;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 use strum::EnumCount;
+use strum::EnumIter;
+use strum::IntoEnumIterator;
 
 use crate::audio::AudioAssets;
 #[cfg(not(feature = "web"))]
@@ -41,7 +43,6 @@ impl Plugin for UpgradePlugin {
         app.register_type::<UpgradeEvent>()
             .register_type::<UpgradeSequence>()
             .add_event::<UpgradeEvent>()
-            .init_resource::<UpgradeList>()
             .init_resource::<UpgradeUpdateSystems>()
             .add_systems(
                 OnEnter(AppState::EditorScreen),
@@ -230,7 +231,7 @@ fn install_upgrades(world: &mut World, mut reader: Local<ManualEventReader<Upgra
     }
 
     // Update all upgrades
-    for kind in ALL_UPGRADE_KINDS {
+    for kind in UpgradeKind::iter() {
         if let Some(update) = world.resource::<UpgradeList>()[kind].update {
             world.run_system(update).unwrap();
         }
@@ -244,23 +245,6 @@ fn run_installed_upgrades(world: &mut World) {
     #[allow(clippy::unnecessary_to_owned)]
     for run in world.resource::<UpgradeUpdateSystems>().0.to_vec() {
         world.run_system(run).unwrap();
-    }
-}
-
-#[derive(Resource, Default)]
-pub struct UpgradeList(pub Vec<Upgrade>);
-
-impl Index<UpgradeKind> for UpgradeList {
-    type Output = Upgrade;
-
-    fn index(&self, index: UpgradeKind) -> &Self::Output {
-        &self.0[index as usize]
-    }
-}
-
-impl IndexMut<UpgradeKind> for UpgradeList {
-    fn index_mut(&mut self, index: UpgradeKind) -> &mut Self::Output {
-        &mut self.0[index as usize]
     }
 }
 
@@ -309,8 +293,7 @@ impl UpgradeSequence {
 
         // Filter the list of all upgrade kinds into just the ones that are unlocked
         // Then, (weighted) randomly choose from those upgrades for the available slots
-        let mut upgrades = ALL_UPGRADE_KINDS
-            .into_iter()
+        let mut upgrades = UpgradeKind::iter()
             .filter(|&kind| {
                 let upgrade = &upgrade_list[kind];
                 // This prevents the tutorial upgrades from being offered when
@@ -382,20 +365,33 @@ fn load_upgrade_sequence(mut commands: Commands) {
 macro_rules! generate_upgrade_list {
     (|$world:ident| $($enumname:ident: $upgrade:expr),+ $(,)?) => {
         /// Enum containing all upgrade types.
-        #[derive(Reflect, Clone, Copy, PartialEq, Eq, Hash, EnumCount, Debug, PartialOrd, Ord)]
+        #[derive(Reflect, Debug, Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Hash, EnumCount, EnumIter)]
         pub enum UpgradeKind {
             $($enumname),+
         }
 
-        pub const ALL_UPGRADE_KINDS: [UpgradeKind; UpgradeKind::COUNT] = [
-            $(UpgradeKind::$enumname),+
-        ];
+        #[derive(Resource)]
+        pub struct UpgradeList(pub [Upgrade; UpgradeKind::COUNT]);
+
+        impl Index<UpgradeKind> for UpgradeList {
+            type Output = Upgrade;
+
+            fn index(&self, index: UpgradeKind) -> &Self::Output {
+                &self.0[index as usize]
+            }
+        }
+
+        impl IndexMut<UpgradeKind> for UpgradeList {
+            fn index_mut(&mut self, index: UpgradeKind) -> &mut Self::Output {
+                &mut self.0[index as usize]
+            }
+        }
 
         /// A system that initializes and inserts the UpgradeList resource.
         fn load_upgrade_list($world: &mut World) {
             use UpgradeKind::*;
 
-            let upgrade_list = UpgradeList(vec![
+            let upgrade_list = UpgradeList([
                 $($upgrade),+
             ]);
 
