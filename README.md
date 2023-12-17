@@ -22,7 +22,7 @@ The following assets are made by [necrashter](https://github.com/necrashter/):
 - `upgrade1.ogg` is [this CC0 sound](https://freesound.org/people/the_semen_incident/sounds/39013/).
 
 The following assets are made by [Pyrious](https://github.com/benfrankel/):
-- The fonts (`PyriousPixel-R.ttf` and `PyriousPixel-B.ttf`) are licensed under [CC0](https://creativecommons.org/public-domain/cc0/).
+- The fonts (`PyriousPixel-R.ttf`, `PyriousPixel-B.ttf`, and `PyriousBlocky.ttf`) are licensed under [CC0](https://creativecommons.org/public-domain/cc0/).
 
 Other assets:
 - Sprites (1-bit): https://v3x3d.itch.io/bit-bonanza

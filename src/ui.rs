@@ -11,6 +11,7 @@ pub use crate::ui::code_typer::CodeTyper;
 pub use crate::ui::font::FontSize;
 pub use crate::ui::font::BOLD_FONT_HANDLE;
 pub use crate::ui::font::FONT_HANDLE;
+pub use crate::ui::font::HEADER_FONT_HANDLE;
 pub use crate::ui::interaction_palette::InteractionPalette;
 pub use crate::ui::scroll::ScrollContent;
 pub use crate::ui::tooltip::Tooltip;

@@ -18,6 +18,7 @@ use crate::ui::FontSize;
 use crate::ui::InteractionPalette;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
+use crate::ui::HEADER_FONT_HANDLE;
 use crate::AppRoot;
 
 pub struct ResultsScreenStatePlugin;
@@ -101,7 +102,7 @@ fn enter_results_screen(
             TextBundle::from_section(
                 TITLE_TEXT,
                 TextStyle {
-                    font: BOLD_FONT_HANDLE,
+                    font: HEADER_FONT_HANDLE,
                     color: config.title_text_color,
                     ..default()
                 },
@@ -305,7 +306,7 @@ fn spawn_return_button(commands: &mut Commands, config: &ResultsScreenConfig) ->
             TextBundle::from_section(
                 "Try another jam?",
                 TextStyle {
-                    font: BOLD_FONT_HANDLE,
+                    font: HEADER_FONT_HANDLE,
                     color: config.return_button_text_color,
                     ..default()
                 },

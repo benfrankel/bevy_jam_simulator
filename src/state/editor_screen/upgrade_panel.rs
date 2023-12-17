@@ -15,8 +15,8 @@ use crate::ui::FontSize;
 use crate::ui::InteractionPalette;
 use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
-use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
+use crate::ui::HEADER_FONT_HANDLE;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
@@ -71,7 +71,7 @@ pub fn spawn_upgrade_panel(
             TextBundle::from_section(
                 "Upgrades",
                 TextStyle {
-                    font: BOLD_FONT_HANDLE,
+                    font: HEADER_FONT_HANDLE,
                     color: theme.upgrade_panel_text_color,
                     ..default()
                 },
@@ -302,7 +302,7 @@ fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> 
             TextBundle::from_section(
                 "Submit",
                 TextStyle {
-                    font: BOLD_FONT_HANDLE,
+                    font: HEADER_FONT_HANDLE,
                     color: config.submit_button_text_color,
                     ..default()
                 },

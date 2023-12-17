@@ -14,8 +14,8 @@ use crate::ui::InteractionPalette;
 use crate::ui::ScrollContent;
 use crate::ui::Tooltip;
 use crate::ui::TooltipSide;
-use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
+use crate::ui::HEADER_FONT_HANDLE;
 use crate::upgrade::UpgradeEvent;
 use crate::upgrade::UpgradeKind;
 use crate::upgrade::UpgradeList;
@@ -75,7 +75,7 @@ pub fn spawn_outline_panel(
                 text: Text::from_section(
                     "",
                     TextStyle {
-                        font: BOLD_FONT_HANDLE,
+                        font: HEADER_FONT_HANDLE,
                         color: theme.outline_panel_text_color,
                         ..default()
                     },

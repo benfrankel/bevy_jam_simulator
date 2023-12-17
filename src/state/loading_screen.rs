@@ -12,7 +12,7 @@ use crate::simulation::SpritePackAssets;
 use crate::state::editor_screen::EditorScreenAssets;
 use crate::state::AppState::*;
 use crate::ui::FontSize;
-use crate::ui::BOLD_FONT_HANDLE;
+use crate::ui::HEADER_FONT_HANDLE;
 use crate::AppRoot;
 
 pub struct LoadingScreenStatePlugin;
@@ -94,7 +94,7 @@ fn enter_loading(mut commands: Commands, root: Res<AppRoot>, config: Res<Config>
                     text: Text::from_section(
                         "Loading...",
                         TextStyle {
-                            font: BOLD_FONT_HANDLE,
+                            font: HEADER_FONT_HANDLE,
                             color: config.foreground_color,
                             ..default()
                         },

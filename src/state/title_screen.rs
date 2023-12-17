@@ -15,6 +15,7 @@ use crate::ui::FontSize;
 use crate::ui::InteractionPalette;
 use crate::ui::BOLD_FONT_HANDLE;
 use crate::ui::FONT_HANDLE;
+use crate::ui::HEADER_FONT_HANDLE;
 use crate::AppRoot;
 
 pub struct TitleScreenStatePlugin;
@@ -149,7 +150,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             TextBundle::from_section(
                 TITLE_TEXT,
                 TextStyle {
-                    font: BOLD_FONT_HANDLE,
+                    font: HEADER_FONT_HANDLE,
                     color: config.text_color,
                     ..default()
                 },
@@ -262,7 +263,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
             TextBundle::from_section(
                 "Join",
                 TextStyle {
-                    font: BOLD_FONT_HANDLE,
+                    font: HEADER_FONT_HANDLE,
                     color: config.button_text_color,
                     ..default()
                 },
