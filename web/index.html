@@ -8,6 +8,15 @@
 </head>
 
 <body>
+    <div class="game-container">
+        <canvas id="bevy">
+            Javascript and canvas support is required
+        </canvas>
+        <div id="loading">
+            <span class="loader"></span>
+        </div>
+    </div>
+
     <script type="module">
         import './restart-audio-context.js'
         import init from './run.js'
@@ -16,18 +25,19 @@
                 throw error;
             }
         });
-    </script>
 
-    <div class="game-container">
-        <canvas id="bevy">
-            Javascript and canvas support is required
-        </canvas>
-    </div>
+        // Hide loading screen when the game starts
+        const bevy = document.getElementById('bevy');
+        const loading = document.getElementById('loading');
+        const observer = new MutationObserver(() => {
+            if (bevy.height > 1) {
+                loading.style.display = 'none';
+            }
+        });
+        observer.observe(bevy, { attributes: true });
 
-    <script>
+        // Play background music
         function playMusic() {
-          // Check if the browser supports the Web Audio API
-          if (window.AudioContext || window.webkitAudioContext) {
             // Create an AudioContext
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -38,46 +48,47 @@
             request.responseType = 'arraybuffer';
 
             request.onload = function () {
-              // Decode the audio data
-              audioContext.decodeAudioData(request.response, function (buffer) {
-                // Create a buffer source node
-                const source = audioContext.createBufferSource();
-                source.buffer = buffer;
+                // Decode the audio data
+                audioContext.decodeAudioData(request.response, function (buffer) {
+                    // Create a buffer source node
+                    const source = audioContext.createBufferSource();
+                    source.buffer = buffer;
 
-                // Loop the audio
-                source.loop = true;
+                    // Loop the audio
+                    source.loop = true;
 
-                // Create a gain node to control the volume
-                const gainNode = audioContext.createGain();
-                
-                // Set the volume to 80% (0.8)
-                gainNode.gain.value = 0.8;
+                    // Create a gain node to control the volume
+                    const gainNode = audioContext.createGain();
 
-                // Connect the source to the gain node and the gain node to the audio context's destination
-                source.connect(gainNode);
-                gainNode.connect(audioContext.destination);
+                    // Set the volume to 80% (0.8)
+                    gainNode.gain.value = 0.8;
 
-                // Start playing the audio
-                source.start(0);
-              }, function (error) {
-                console.error('Error decoding audio file', error);
-              });
+                    // Connect the source to the gain node and the gain node to the audio context's destination
+                    source.connect(gainNode);
+                    gainNode.connect(audioContext.destination);
+
+                    // Start playing the audio
+                    source.start(0);
+                }, function (error) {
+                    console.error('Error decoding audio file', error);
+                });
             };
 
             request.send();
-          } else {
-            console.error('Web Audio API is not supported in this browser');
-          }
 
-          // Remove the click event listener after the first click
-          document.removeEventListener('click', playMusic);
+            // Remove the click event listener after the first click
+            document.removeEventListener('click', playMusic);
         }
 
-        // Add an event listener for the DOMContentLoaded event
-        document.addEventListener('DOMContentLoaded', function () {
-          // Add a click event listener to the document to trigger playMusic on the first click
-          document.addEventListener('click', playMusic);
-        });
+        // Add an event listener for the DOMContentLoaded event (if the browser supports the Web Audio API)
+        if (window.AudioContext || window.webkitAudioContext) {
+            document.addEventListener('DOMContentLoaded', function () {
+                // Add a click event listener to the document to trigger playMusic on the first click
+                document.addEventListener('click', playMusic);
+            });
+        } else {
+            console.error('Web Audio API is not supported in this browser');
+        }
     </script>
 </body>
 
