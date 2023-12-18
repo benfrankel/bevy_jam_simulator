@@ -36,8 +36,18 @@
         });
         observer.observe(bevy, { attributes: true });
 
+
         // Play background music
+        let clicks = 0;
         function playMusic() {
+            // Trigger and remove the event listener on the second click
+            clicks++;
+            if (clicks < 2) {
+                return;
+            } else {
+                document.removeEventListener('click', playMusic);
+            }
+
             // Create an AudioContext
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -75,9 +85,6 @@
             };
 
             request.send();
-
-            // Remove the click event listener after the first click
-            document.removeEventListener('click', playMusic);
         }
 
         // Add an event listener for the DOMContentLoaded event (if the browser supports the Web Audio API)

@@ -16,8 +16,8 @@ You can listen to [the soundtrack here](https://youtu.be/0JXQqLwuy6E).
 ## Licenses
 
 ### Code
-- The CSS loader / spinner is MIT ([https://github.com/vineethtrv/css-loader]).
-- The CSS background pattern is MIT ([https://github.com/Afif13/CSS-Pattern]).
+- The CSS loader / spinner is MIT: https://github.com/vineethtrv/css-loader
+- The CSS background pattern is MIT: https://github.com/Afif13/CSS-Pattern
 - The remainder of the code is written by [Pyrious](https://github.com/benfrankel) and [necrashter](https://github.com/necrashter/), and is dual-licensed under MIT and Apache 2.0.
 
 ### Audio

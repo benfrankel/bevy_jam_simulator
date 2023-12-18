@@ -336,7 +336,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
             vec![TouchOfLifePlugin],
             "\"I don't know what I'm making, but I should start spawning entities.\"".to_string(),
         ),
-        
+
         // Reward
         (vec![ImportLibrary], String::new()),
 
@@ -353,14 +353,14 @@ fn load_upgrade_sequence(mut commands: Commands) {
             vec![Inspiration],
             "\"I should spawn a lot of entities for a higher Theme Interpretation score... Is 50 enough?\"".to_string(),
         ),
-        
+
         // Reward
         (
             vec![UtilPlugin],
             "\"I can lay some groundwork now to support all of these entities.\"".to_string(),
         ),
         (vec![Autocomplete], String::new()),
-        
+
         // Explain technical debt
         (
             vec![SpeedPlugin],
@@ -375,7 +375,6 @@ fn load_upgrade_sequence(mut commands: Commands) {
             "\"Much better.\"".to_string(),
         ),
 
-        
         // End tutorial
         (
             vec![Brainstorm],
