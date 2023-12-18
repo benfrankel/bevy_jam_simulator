@@ -92,6 +92,8 @@ pub fn type_code(
 ) {
     let keys = char_events
         .read()
+        // Filter out Escape, Backspace, and Delete
+        .filter(|ev| !"\u{1b}\u{8}\u{7f}".contains(ev.char))
         .count()
         .min(keyboard_input.get_just_pressed().count());
     if keys == 0 {
