@@ -36,4 +36,4 @@ The following assets are made by [Pyrious](https://github.com/benfrankel/):
 - The 1-bit sprite pack is CC0: https://v3x3d.itch.io/bit-bonanza
 - The RPG sprite pack is CC0: https://merchant-shade.itch.io/16x16-mixed-rpg-icons
 - The Ninja sprite pack is CC0: https://pixel-boy.itch.io/ninja-adventure-asset-pack
-- The cover art (`cover.png`) was made by Pyrious and is CC0.
+- The cover art (`cover.aseprite`, `cover.gif`) was made by Pyrious and is CC0.
