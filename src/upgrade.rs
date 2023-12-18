@@ -409,7 +409,7 @@ generate_upgrade_list!(
         name: "Initial Commit".to_string(),
         desc: "Hello world! The first step of your journey.".to_string(),
         no_outline: true,
-        base_cost: 2.0,
+        base_cost: 1.0,
         ..default()
     },
 

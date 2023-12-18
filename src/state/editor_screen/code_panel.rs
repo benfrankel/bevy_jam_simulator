@@ -9,11 +9,9 @@ use crate::ui::FONT_HANDLE;
 
 const LIGHT_THEME_TEXT: &str = "Aargh, my eyes!
 
-I cannot work with this light theme!
+I should pick a dark theme from the panel on the right.
 
-I need to install a dark theme from the panel on the right.
-
-The installed upgrades will appear on the left panel.";
+Installed upgrades will appear on the left.";
 
 /// Spawns the fake code panel with light theme.
 pub fn spawn_light_code_panel(

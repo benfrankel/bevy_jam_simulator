@@ -77,7 +77,7 @@ pub fn spawn_upgrade_panel(
                 },
             )
             .with_style(Style {
-                margin: UiRect::bottom(Px(15.0)),
+                margin: UiRect::bottom(Px(20.0)),
                 ..default()
             }),
             FontSize::new(config.upgrade_panel_header_font_size),
