@@ -323,6 +323,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
     use UpgradeKind::*;
 
     commands.insert_resource(UpgradeSequence::new(vec![
+        // Intro
         (
             vec![DarkModeDracula, DarkModeBamboo, DarkModeSynthwave],
             String::new(),
@@ -335,24 +336,47 @@ fn load_upgrade_sequence(mut commands: Commands) {
             vec![TouchOfLifePlugin],
             "\"I don't know what I'm making, but I should start spawning entities.\"".to_string(),
         ),
+        
+        // Reward
         (vec![ImportLibrary], String::new()),
+
+        // Explain scoring
         (
             vec![SkinPlugin],
-            "\"I should make the game look nice for a higher Presentation score.\"".to_string(),
+            "\"I should make the game pretty for a higher Presentation score.\"".to_string(),
         ),
         (
             vec![VelocityPlugin],
-            "\"I should also make the game more interesting for a higher Fun score.\"".to_string(),
+            "\"I should make the game interesting for a higher Fun score.\"".to_string(),
         ),
-        (vec![Autocomplete], String::new()),
         (
             vec![Inspiration],
-            "\"Is 50 a lot of entities?\"".to_string(),
+            "\"I should spawn a lot of entities for a higher Theme Interpretation score... Is 50 enough?\"".to_string(),
         ),
+        
+        // Reward
         (
             vec![UtilPlugin],
             "\"I can lay some groundwork now to support all of these entities.\"".to_string(),
         ),
+        (vec![Autocomplete], String::new()),
+        
+        // Explain technical debt
+        (
+            vec![SpeedPlugin],
+            "\"The codebase is getting messy...\"".to_string(),
+        ),
+        (
+            vec![Rustfmt],
+            "\"I should reduce technical debt to make future plugins cheaper.\"".to_string(),
+        ),
+        (
+            vec![SpeedPlugin],
+            "\"Much better.\"".to_string(),
+        ),
+
+        
+        // End tutorial
         (
             vec![Brainstorm],
             "\"Hmm... where should I go from here?\"".to_string(),
@@ -415,7 +439,7 @@ generate_upgrade_list!(
 
     Inspiration: Upgrade {
         name: "Inspiration".to_string(),
-        desc: "Allows new types of upgrades to unlock when you have enough entities.".to_string(),
+        desc: "Allows better upgrades to appear when you have enough entities.".to_string(),
         no_outline: true,
         base_cost: 10.0,
         ..default()
@@ -1163,6 +1187,15 @@ generate_upgrade_list!(
     },
 
     // Technical debt (immediate)
+
+    Rustfmt: Upgrade {
+        name: "Rustfmt".to_string(),
+        desc: "Autoformats your code. Improves the quality of the codebase.".to_string(),
+        sound: Some(SoundEffectKind::Backspace),
+        tech_debt: -4.0,
+        base_cost: 25.0,
+        ..default()
+    },
 
     Refactor: Upgrade {
         name: "Refactor".to_string(),
