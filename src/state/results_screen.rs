@@ -75,8 +75,6 @@ fn enter_results_screen(
     let config = &config.results_screen;
     commands.insert_resource(ClearColor(config.background_color));
 
-    let elapsed = time.elapsed_seconds_f64() - start_time.0;
-
     let screen = commands
         .spawn((
             Name::new("ResultsScreen"),
@@ -169,16 +167,18 @@ fn enter_results_screen(
             .set_parent(cell);
     }
 
-    let scores: [f64; 4] = simulation.calculate_scores();
+    const SUBMISSIONS: f64 = 90.0;
+    const LO: f64 = 1.5;
+    const HI: f64 = 4.8;
+    let elapsed = time.elapsed_seconds_f64() - start_time.0;
+    let ratings = (elapsed / 60.0).clamp(5.0, 120.0);
+    let scores: [f64; 4] = simulation.calculate_scores(ratings);
     for (row, (&criterion, score)) in TABLE_CRITERIA_TEXT
         .iter()
         .zip(scores.into_iter())
         .enumerate()
     {
-        const SUBMISSIONS: f64 = 83.0;
-        const LO: f64 = 1.5;
-        const HI: f64 = 4.9;
-        // Clamp score to the interval [LO, HI] and then linearly map to the interval [1, SUBMISSIONS]
+        // Calculate rank by linearly mapping score from [LO, HI] to [1, SUBMISSIONS]
         let rank = (1.0 - (score.clamp(LO, HI) - LO) / (HI - LO)) * (SUBMISSIONS - 1.0) + 1.0;
 
         let entries = [
@@ -245,10 +245,7 @@ fn enter_results_screen(
         .spawn((
             Name::new("RankedText"),
             TextBundle::from_section(
-                format!(
-                    "Ranked from {} ratings.",
-                    ((elapsed / 60.0) as usize).clamp(5, 120),
-                ),
+                format!("Ranked from {ratings:.0} ratings."),
                 TextStyle {
                     font: FONT_HANDLE,
                     color: config.text_color,

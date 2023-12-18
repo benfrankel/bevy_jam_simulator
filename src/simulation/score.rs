@@ -25,18 +25,26 @@ impl Simulation {
     /// 2. Presentation
     /// 3. Theme Interpretation
     /// 4. Overall
-    pub fn calculate_scores(&self) -> [f64; 4] {
+    pub fn calculate_scores(&self, ratings: f64) -> [f64; 4] {
         let mut scores: [f64; 4] = [
             // Fun
-            calculate_score(self.fun_score, 0.0, 17.5),
+            calculate_score(self.fun_score, 0.0, 28.0),
             // Presentation
-            calculate_score(self.presentation_score, 0.0, 21.0),
+            calculate_score(self.presentation_score, 0.0, 30.0),
             // Theme Interpretation
-            calculate_score((self.entities.abs() + 1.0).log10(), -20.0, 40.0),
+            calculate_score((self.entities.abs() + 1.0).log10(), 0.0, 50.0),
             // Overall
             0.0,
         ];
+
+        // Floor scores to multiples of 1 / ratings
+        for score in &mut scores {
+            *score = (*score * ratings).floor() / ratings
+        }
+
+        // Calculate overall score
         scores[3] = scores.iter().sum::<f64>() / 3.0;
+
         scores
     }
 }

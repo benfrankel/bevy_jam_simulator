@@ -48,6 +48,7 @@ pub struct AudioAssets {
     pub guitar_sounds: Vec<Handle<AudioSource>>,
     #[asset(paths("audio/unicorn0.ogg", "audio/unicorn1.ogg"), collection(typed))]
     pub unicorn_sounds: Vec<Handle<AudioSource>>,
+
     #[cfg(not(feature = "web"))]
     #[asset(path = "music/ingame.ogg")]
     pub music: Handle<AudioSource>,
@@ -56,18 +57,16 @@ pub struct AudioAssets {
 impl AudioAssets {
     pub fn get_sfx(&self, kind: SoundEffectKind) -> Handle<AudioSource> {
         use SoundEffectKind::*;
-        macro_rules! select_from {
-            ($a:expr) => {
-                $a.choose(&mut thread_rng()).unwrap().clone()
-            };
-        }
         match kind {
-            DefaultUpgrade => select_from!(self.upgrade_sounds),
-            Keyboard => select_from!(self.keyboard_sounds),
-            Backspace => self.backspace_sound.clone(),
-            Guitar => select_from!(self.guitar_sounds),
-            Unicorn => select_from!(self.unicorn_sounds),
+            DefaultUpgrade => &self.upgrade_sounds,
+            Keyboard => &self.keyboard_sounds,
+            Backspace => return self.backspace_sound.clone(),
+            Guitar => &self.guitar_sounds,
+            Unicorn => &self.unicorn_sounds,
         }
+        .choose(&mut thread_rng())
+        .unwrap()
+        .clone()
     }
 }
 

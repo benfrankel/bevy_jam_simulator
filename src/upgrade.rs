@@ -602,7 +602,7 @@ generate_upgrade_list!(
         name: "RepulsionPlugin".to_string(),
         desc: "Repels entities away from the cursor. Makes your game more fun.".to_string(),
         tech_debt: 1.0,
-        fun_score: 10.0,
+        fun_score: 20.0,
         base_cost: 2_000.0,
         cost_scale_factor: 1.2,
         weight: 0.25,

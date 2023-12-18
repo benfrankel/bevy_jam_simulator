@@ -195,7 +195,7 @@ fn enter_title_screen(mut commands: Commands, root: Res<AppRoot>, config: Res<Co
                     TextSection::new(
                         line[1],
                         TextStyle {
-                            font: FONT_HANDLE,
+                            font: BOLD_FONT_HANDLE,
                             color: config.hyperlink_text_color,
                             ..default()
                         },
