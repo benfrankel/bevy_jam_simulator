@@ -60,10 +60,12 @@ pub fn scale_font_size(
     };
     let viewport_size = Vec2::new(window.resolution.width(), window.resolution.height());
 
+    const STEP: f32 = 8.0;
     for (mut font_size, node, mut text) in &mut font_size_query {
         let Ok(resolved) = font_size.size.resolve(node.size().x, viewport_size) else {
             continue;
         };
+        let resolved = (resolved / STEP).floor().max(1.0) * STEP;
         if font_size.cache == resolved {
             continue;
         }

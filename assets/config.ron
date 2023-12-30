@@ -21,7 +21,7 @@
         border_width: VMin(1.0),
         text_color: Rgba(red: 0.149, green: 0.149, blue: 0.149, alpha: 1.000),
         hyperlink_text_color: Rgba(red: 0.000, green: 0.188, blue: 0.702, alpha: 1.000),
-        font_size: Vw(1.8),
+        font_size: Vw(2.0),
 
         title_background_color: Rgba(red: 0.549, green: 0.647, blue: 0.796, alpha: 1.000),
         title_font_size: Vw(4.5),
@@ -170,7 +170,7 @@
         border_width: VMin(0.9),
         text_color: Rgba(red: 0.737, green: 0.737, blue: 0.737, alpha: 1.000),
         hyperlink_text_color: Rgba(red: 0.435, green: 0.624, blue: 1.000, alpha: 1.000),
-        font_size: Vw(2.0),
+        font_size: Vw(2.3),
 
         title_text_color: Rgba(red: 0.737, green: 0.737, blue: 0.737, alpha: 1.000),
         title_font_size: Vw(5.0),
