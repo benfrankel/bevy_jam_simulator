@@ -171,7 +171,7 @@ fn enter_results_screen(
     const LO: f64 = 1.5;
     const HI: f64 = 4.8;
     let elapsed = time.elapsed_seconds_f64() - start_time.0;
-    let ratings = (elapsed / 60.0).clamp(5.0, 120.0);
+    let ratings = (elapsed / 60.0).clamp(5.0, 120.0).floor();
     let scores: [f64; 4] = simulation.calculate_scores(ratings);
     for (row, (&criterion, score)) in TABLE_CRITERIA_TEXT
         .iter()
