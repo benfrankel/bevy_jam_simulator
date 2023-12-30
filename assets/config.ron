@@ -6,7 +6,7 @@
         max_width: Vw(40.0),
         background_color: Rgba(red: 0.106, green: 0.118, blue: 0.122, alpha: 0.850),
         text_color: Rgba(red: 1.000, green: 1.000, blue: 1.000, alpha: 1.000),
-        font_size: Px(14.0),
+        font_size: Px(16.0),
     ),
     
     splash_screen: SplashScreenConfig(
@@ -47,20 +47,20 @@
         info_bar_font_size: Px(32.0),
 
         outline_panel_width: Px(280.0),
-        outline_panel_font_size: Px(14.0),
+        outline_panel_font_size: Px(16.0),
         outline_panel_header_font_size: Px(24.0),
 
         scene_view_background_color: Rgba(red: 0.500, green: 0.500, blue: 0.500, alpha: 1.000),
 
         code_panel_height: Px(200.0),
-        code_panel_font_size: Px(14.0),
+        code_panel_font_size: Px(16.0),
         code_panel_lines_max: 10,
 
         upgrade_panel_width: Px(280.0),
         upgrade_panel_header_font_size: Px(24.0),
 
         upgrade_button_height: Px(56.0),
-        upgrade_button_font_size: Px(14.0),
+        upgrade_button_font_size: Px(16.0),
 
         separator_width: Px(4.0),
 

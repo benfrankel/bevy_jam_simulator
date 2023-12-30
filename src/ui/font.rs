@@ -11,19 +11,19 @@ impl Plugin for FontPlugin {
         load_internal_binary_asset!(
             app,
             FONT_HANDLE,
-            "../../assets/font/PyriousPixel-R.ttf",
+            "../../assets/font/pypx.ttf",
             |bytes: &[u8], _path: String| Font::try_from_bytes(bytes.to_vec()).unwrap()
         );
         load_internal_binary_asset!(
             app,
             BOLD_FONT_HANDLE,
-            "../../assets/font/PyriousPixel-B.ttf",
+            "../../assets/font/pypx-B.ttf",
             |bytes: &[u8], _path: String| Font::try_from_bytes(bytes.to_vec()).unwrap()
         );
         load_internal_binary_asset!(
             app,
             HEADER_FONT_HANDLE,
-            "../../assets/font/PyriousBlocky.ttf",
+            "../../assets/font/pypx-T.ttf",
             |bytes: &[u8], _path: String| Font::try_from_bytes(bytes.to_vec()).unwrap()
         );
 

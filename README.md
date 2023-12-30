@@ -29,7 +29,7 @@ The following assets are made by [necrashter](https://github.com/necrashter/):
 
 ### Fonts
 The following assets are made by [Pyrious](https://github.com/benfrankel/):
-- The fonts (`PyriousPixel-R.ttf`, `PyriousPixel-B.ttf`, and `PyriousBlocky.ttf`) are licensed under [CC0](https://creativecommons.org/public-domain/cc0/).
+- The fonts (`pypx.ttf`, `pypx-B.ttf`, and `pypx-T.ttf`) are licensed under [CC0](https://creativecommons.org/public-domain/cc0/).
 
 ### Images
 - The splash screen image belongs to Bevy and is not covered by any of the licenses in this repository.

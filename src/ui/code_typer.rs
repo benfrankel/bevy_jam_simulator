@@ -17,7 +17,7 @@ impl Plugin for CodeTyperPlugin {
 
 const FILLER_CODE: &str = concat!(
     " to generate lines of code!
-// Install TouchOfLifePlugin, then click to spawn entities.
+// Click to spawn entities after installing TouchOfLifePlugin.
 
 ",
     include_str!("code_typer.rs"),
