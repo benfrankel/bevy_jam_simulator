@@ -38,7 +38,12 @@ impl Plugin for UpgradePanelPlugin {
                         .and_then(state_changed::<AppState>().or_else(on_event::<UpgradeEvent>())),
                 ),
             )
-            .add_systems(Update, update_upgrade_button_disabled.in_set(AppSet::End));
+            .add_systems(
+                Update,
+                update_upgrade_button_disabled
+                    .in_set(AppSet::End)
+                    .run_if(in_state(AppState::EditorScreen)),
+            );
     }
 }
 

@@ -51,7 +51,7 @@ impl Plugin for UpgradePlugin {
             .add_systems(
                 Update,
                 (
-                    process_new_installed_upgrades,
+                    process_new_installed_upgrades.run_if(on_event::<UpgradeEvent>()),
                     install_upgrades.run_if(on_event::<UpgradeEvent>()),
                     run_installed_upgrades,
                     apply_deferred,
