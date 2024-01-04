@@ -57,6 +57,7 @@ pub fn spawn_upgrade_panel(
             Name::new("UpgradePanel"),
             NodeBundle {
                 style: Style {
+                    width: Val::ZERO,
                     min_width: config.upgrade_panel_width,
                     height: Percent(100.0),
                     align_items: AlignItems::Center,
@@ -95,6 +96,7 @@ pub fn spawn_upgrade_panel(
             NodeBundle {
                 style: Style {
                     width: Percent(100.0),
+                    align_items: AlignItems::Center,
                     flex_direction: FlexDirection::Column,
                     flex_grow: 1.0,
                     ..default()
@@ -248,29 +250,23 @@ fn spawn_separator(
     commands: &mut Commands,
     config: &EditorScreenConfig,
     theme: &EditorScreenTheme,
-    parent: Entity,
-) {
+) -> Entity {
     commands
         .spawn((
             Name::new("Separator"),
             NodeBundle {
                 style: Style {
+                    width: Percent(100.0),
                     max_height: Px(0.0),
                     border: UiRect::top(config.separator_width),
-                    margin: UiRect {
-                        left: Px(0.0),
-                        right: Px(0.0),
-                        // 16 vertical margin, compensates for buttons
-                        top: Px(6.0),
-                        bottom: Px(16.0),
-                    },
+                    margin: UiRect::vertical(Px(16.0)),
                     ..default()
                 },
                 border_color: theme.separator_color.into(),
                 ..default()
             },
         ))
-        .set_parent(parent);
+        .id()
 }
 
 fn spawn_submit_button(commands: &mut Commands, config: &EditorScreenConfig) -> Entity {
@@ -348,7 +344,7 @@ fn offer_next_upgrades(
 ) {
     let config = &config.editor_screen;
     let theme = &theme.0;
-    for (entity, buttons) in &container_query {
+    for (container, buttons) in &container_query {
         // Despawn old upgrade options
         for &button in buttons.into_iter().flatten() {
             despawn.recursive(button);
@@ -359,7 +355,8 @@ fn offer_next_upgrades(
         for kind in next_upgrades {
             if kind == UpgradeKind::RefreshUpgradeList {
                 // Add a separator.
-                spawn_separator(&mut commands, config, theme, entity);
+                let separator = spawn_separator(&mut commands, config, theme);
+                commands.entity(separator).set_parent(container);
             }
             let upgrade_button = spawn_upgrade_button(
                 &mut commands,
@@ -369,29 +366,29 @@ fn offer_next_upgrades(
                 kind,
                 &simulation,
             );
-            commands.entity(upgrade_button).set_parent(entity);
+            commands.entity(upgrade_button).set_parent(container);
         }
 
         // Show description if present.
         if !desc.is_empty() {
-            spawn_separator(&mut commands, config, theme, entity);
-            let mut text_bundle = TextBundle::from_section(
-                desc,
-                TextStyle {
-                    font: FONT_HANDLE,
-                    color: theme.outline_panel_text_color,
-                    ..default()
-                },
-            );
-            // Panel width - horizontal padding
-            text_bundle.style.max_width = Px(280.0 - 24.0);
+            let separator = spawn_separator(&mut commands, config, theme);
+            commands.entity(separator).set_parent(container);
+
             commands
                 .spawn((
                     Name::new("Description"),
-                    text_bundle,
+                    TextBundle::from_section(
+                        desc,
+                        TextStyle {
+                            font: FONT_HANDLE,
+                            color: theme.outline_panel_text_color,
+                            ..default()
+                        },
+                    )
+                    .with_text_alignment(TextAlignment::Center),
                     FontSize::new(config.outline_panel_font_size),
                 ))
-                .set_parent(entity);
+                .set_parent(container);
         }
     }
 }

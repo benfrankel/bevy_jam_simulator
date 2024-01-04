@@ -25,6 +25,7 @@ pub fn spawn_light_code_panel(
             NodeBundle {
                 style: Style {
                     width: Percent(100.0),
+                    height: Val::ZERO,
                     min_height: config.code_panel_height,
                     padding: UiRect::all(VMin(2.0)),
                     ..default()

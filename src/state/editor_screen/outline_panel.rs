@@ -45,7 +45,6 @@ impl Plugin for OutlinePanelPlugin {
 #[reflect(Resource)]
 pub struct UpgradeOutline(pub HashMap<UpgradeKind, usize>);
 
-// TODO: Add scrollbar
 pub fn spawn_outline_panel(
     commands: &mut Commands,
     config: &EditorScreenConfig,
@@ -56,6 +55,7 @@ pub fn spawn_outline_panel(
             Name::new("OutlinePanel"),
             NodeBundle {
                 style: Style {
+                    width: Val::ZERO,
                     min_width: config.outline_panel_width,
                     height: Percent(100.0),
                     padding: UiRect::new(Px(12.0), Px(8.0), Px(12.0), Px(12.0)),

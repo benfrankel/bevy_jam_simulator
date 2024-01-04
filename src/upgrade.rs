@@ -334,7 +334,7 @@ fn load_upgrade_sequence(mut commands: Commands) {
         ),
         (
             vec![TouchOfLifePlugin],
-            "\"I don't know what I'm making, but I should start spawning entities.\"".to_string(),
+            "\"I don't know what I'm making, but I should start by spawning some entities.\"".to_string(),
         ),
 
         // Reward

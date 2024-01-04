@@ -29,6 +29,7 @@ pub fn spawn_info_bar(
             NodeBundle {
                 style: Style {
                     width: Percent(100.0),
+                    height: Val::ZERO,
                     min_height: config.info_bar_height,
                     padding: UiRect::horizontal(Px(16.0)),
                     align_items: AlignItems::Center,
